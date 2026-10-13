@@ -1,1 +1,0 @@
-# agent-coding-guidelines
