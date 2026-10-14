@@ -1,6 +1,6 @@
 # Sample identity and duplicate detection guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.0 (2026-10-14)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.1 (2026-10-14)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys point to `OMICS_REFERENCES.md`; keys with a
 > dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by ***Why***, ***Trade-off*** and
@@ -10,7 +10,7 @@
 
 * Verify that every sample comes from the individual and tissue it is labelled with, and find duplicated, swapped,
   mixed or contaminated samples, before any analysis that combines samples.
-* Applies to bulk RNA-seq, single-cell and single-nucleus RNA-seq, and to comparisons of RNA with DNA (WGS, exome,
+* Applies to bulk RNA-seq, single-cell and single-nucleus RNA-seq, and to comparisons of RNA with DNA (WGS: whole-genome sequencing, exome,
   arrays); human and mouse.
 * Copy with `OMICS_REFERENCES.md` and `SEX_INFERENCE_GUIDELINES.md`, which provides the sex check used here.
 * Vocabulary: a **duplicate** is the same library or sequencing data present twice (e.g. a re-deposit); a **replicate
@@ -66,7 +66,7 @@
   * *Trade-off:* fingerprints need the BAM; extract them before BAMs are deleted, and keep them.
 * **Match site names to the reference**: rename contigs of the sites file (`chr1` versus `1`) to match the BAMs.
 * **Metrics per pair**: relatedness (about 1 for the same individual, about 0.5 for first-degree relatives, about 0
-  for unrelated), IBS0 (near 0 for the same individual and for parent–child), IBS2, and the number of informative sites
+  for unrelated), IBS0 (proportion of sites where two samples share no allele; near 0 for the same individual and for parent–child), IBS2 (proportion of sites where two samples share both alleles), and the number of informative sites
   shared.
 * **Thresholds come from the cohort distribution, not from fixed values.**
   * *Why:* in RNA only expressed genes are covered, and allele-specific expression or RNA editing make heterozygous
@@ -118,7 +118,7 @@
 | Excess heterozygosity, Y in XX | Mixture | Exclude, or keep with a flag only for analyses robust to it |
 
 * **Never correct silently.** Every change and exclusion is recorded in the decisions log with the evidence and kept
-  in a sample-level QC table.
+  in a sample-level QC (quality control) table.
 
 ## 8. Outputs and report
 

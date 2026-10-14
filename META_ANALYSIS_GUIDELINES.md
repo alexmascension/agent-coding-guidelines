@@ -1,6 +1,6 @@
 # Meta-analysis guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-14)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.1 (2026-10-14)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Borenstein 2023]` point to
 > `OMICS_REFERENCES.md`; keys marked with a dagger point to `STATISTICS_REFERENCES.md`.
@@ -26,7 +26,7 @@
   (`STATISTICS_GUIDELINES.md` §1, design).
   * *Trade-off:* the protocol may need amendments once studies are seen; amendments are allowed if dated and
     justified, and analyses added later are labelled as post hoc.
-* **Report the selection process with a PRISMA 2020 flow diagram**: records found, screened, excluded with reasons,
+* **Report the selection process with a PRISMA (Preferred Reporting Items for Systematic reviews and Meta-Analyses) 2020 flow diagram**: records found, screened, excluded with reasons,
   and included [Page 2021].
 * Screening and data extraction SHOULD be checked by a second person or a second independent pass, and disagreements
   recorded.
@@ -39,7 +39,7 @@
   ratios).
   * *Why:* combining a study that reports treated versus control with one that reports control versus treated
     cancels real effects; mixing natural and log scales distorts weights.
-* Assess risk of bias per study with a structured tool appropriate to the design (RoB 2 for randomized trials
+* Assess risk of bias per study with a structured tool appropriate to the design (RoB 2, the Cochrane risk-of-bias tool, for randomized trials
   [Sterne 2019]); for omics studies, record at least replication, confounding of batch with condition, and sample
   quality.
 
@@ -61,7 +61,7 @@
     gain influence; small-study effects (§6) then matter more.
 * A fixed-effect (common-effect) model is justified only when the studies estimate the same true effect (same
   population and protocol); state the justification.
-* **Estimate the between-study variance $\tau^2$ with REML or Paule-Mandel, not DerSimonian-Laird**
+* **Estimate the between-study variance $\tau^2$ with REML (restricted maximum likelihood) or Paule-Mandel, not DerSimonian-Laird**
   [Veroniki 2015; Langan 2018].
   * *Why:* DerSimonian-Laird underestimates $\tau^2$ when heterogeneity is substantial or studies are few, which
     makes confidence intervals too narrow [Veroniki 2015; Langan 2018].
@@ -117,7 +117,7 @@ Decide, in the protocol, which of these strategies is used and why [Ramasamy 200
 | Strategy | When | Main risk |
 |---|---|---|
 | **Pooled re-analysis**: uniformly reprocess raw data and fit one model with `study` as covariate | Raw data available, same technology | Study effects confounded with condition when a study contains only one group |
-| **Effect-size combination**: per-study DE, then random-effects meta-analysis of $\log_2$FC and SE per gene | Default for heterogeneous studies | Needs comparable effect measures and standard errors |
+| **Effect-size combination**: per-study differential expression (DE), then random-effects meta-analysis of $\log_2$FC and SE per gene | Default for heterogeneous studies | Needs comparable effect measures and standard errors |
 | **p-value combination** (Fisher, Stouffer) | Effect sizes not comparable across platforms | Loses direction and magnitude unless done per direction |
 | **Rank-based** (RankProd, SumRank) | Mixed platforms, outlier-prone studies | Less interpretable effect sizes |
 

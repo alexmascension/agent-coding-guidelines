@@ -5,6 +5,74 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-14 (third release of the day)
+
+### SCRNASEQ_GUIDELINES.md [2.1.0]
+
+#### Added
+
+- §3 STARsolo as the default mapper and gene-level quantifier, with parameters to reproduce Cell Ranger (≥ 4)
+  cell calling (`EmptyDrops_CR`), `Gene` for cells and `GeneFull` for nuclei, and `Velocyto` output for the
+  spliced/unspliced/ambiguous layers. Isoform-level work: Salmon preferred over alevin, and only with full-length or
+  long-read data.
+- §6 detailed procedure to test the robustness of the number of PCs ($p \pm 5$, ARI and per-cluster Jaccard), with
+  the reference implementation `recipes/scrnaseq/pc_robustness.py`.
+- §8 number of subsampling iterations by dataset size (10 / 5 / 1) and reference implementation
+  `recipes/scrnaseq/clustering_stability.py`.
+
+#### Changed
+
+- §1.3 the `var` index is the stable Ensembl ID without version; the versioned ID is kept in
+  `var["gene_id_version"]`.
+- §4.1 CellBender runs on the raw STARsolo matrix and its calls are compared with `EmptyDrops_CR`; the nuclear
+  fraction is computed from the STARsolo `Velocyto` layers.
+- §8 resolution grid 0.1–2.0; stability reading made explicit for the interval [0.5, 0.75).
+- §5 pooled size factors in Python with `scranPY` (sfortma2/scranPY, pinned commit) instead of the Bioconductor
+  `scranpy`, which has no pooled size factors; R scran kept as cross-check.
+- §4.3 citation fixed: DoubletDetection is [Gayoso 2020]; [Wolock 2019] is Scrublet.
+- Links to the recipes of §1.3, §4, §5, §9, §10 and §11.
+
+### RNASEQ_BULK_GUIDELINES.md [2.1.0]
+
+#### Added
+
+- Links to the recipes of §4 (count import), §5 (filter, length bias), §7 (hidden factors and $k$ sensitivity) and §8
+  (pydeseq2 wrapper, FDR calibration by permutation).
+- §8 note: `pydeseq2` 0.5 has no likelihood-ratio test; use DESeq2 in R.
+
+### CODING_GUIDELINES.md [2.3.0]
+
+#### Added
+
+- §26 *Recipes*: use the linked reference implementation instead of re-implementing; adapt through parameters;
+  changes of logic are recorded as overrides.
+
+### All other guidelines [PATCH]
+
+STATISTICS_GUIDELINES.md [1.1.1],
+SPATIAL_GUIDELINES.md [1.1.1], META_ANALYSIS_GUIDELINES.md [1.1.1], SEX_INFERENCE_GUIDELINES.md [1.0.1],
+SAMPLE_IDENTITY_GUIDELINES.md [1.0.1], DECONVOLUTION_GUIDELINES.md [1.0.1].
+
+#### Changed
+
+- Acronyms expanded at their first occurrence in every guideline, including those listed above (e.g. RUV, RIN, qSVA, LOY, VST, TMM). No rule changed.
+
+### recipes/ [0.1.0]
+
+#### Added
+
+- Reference implementations with tests on synthetic data (`pytest`, 42 tests; R-dependent tests are skipped
+  without R):
+  - `recipes/common/gene_ids.py`;
+  - `recipes/scrnaseq/`: `pc_robustness.py`, `clustering_stability.py`, `qc.py`, `doublets.py`,
+    `normalization.py` (+ `scran_size_factors.R`), `marker_annotation.py`, `pseudobulk.py`, `abundance.py`;
+  - `recipes/bulk/`: `counts_io.py`, `tximport_lengthscaled.R`, `deseq2.py`, `length_bias.py`,
+    `hidden_factors.py`, `fdr_calibration.py`;
+  - `recipes/stats/permutation.py`.
+- `pyproject.toml` with dependencies, pytest and ruff configuration.
+- STATISTICS_GUIDELINES.md §10 links `recipes/stats/permutation.py` (PATCH).
+- OMICS_REFERENCES.md: two software records, [Fortmann 2023] (scranPY) and [Gayoso 2020] (DoubletDetection).
+
 ## 2026-10-14 (second release of the day)
 
 ### SEX_INFERENCE_GUIDELINES.md, SAMPLE_IDENTITY_GUIDELINES.md, DECONVOLUTION_GUIDELINES.md [1.0.0]

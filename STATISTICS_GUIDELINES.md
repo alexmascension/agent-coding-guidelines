@@ -1,6 +1,6 @@
 # Statistics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-14)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.1 (2026-10-14)
 >
 > Key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** follow RFC 2119, as in
 > `CODING_GUIDELINES.md`. Bracketed keys such as `[Squair 2021]` point to entries in
@@ -15,7 +15,7 @@
   involves statistical analysis. Project-specific deviations go in the *Overrides* section of
   `PROJECT_CONTEXT.md`, as described in `CODING_GUIDELINES.md` §0 (how to use the guidelines).
 * This file covers principles that apply to any data type. Tool-specific procedures for
-  sequencing data (normalization, DE packages, single-cell workflows) belong in
+  sequencing data (normalization, differential expression (DE) packages, single-cell workflows) belong in
   `RNASEQ_BULK_GUIDELINES.md`, `SCRNASEQ_GUIDELINES.md` and `SPATIAL_GUIDELINES.md`; figure design belongs in `FIGURE_GUIDELINES.md`.
 * Priority when rules conflict: **validity of the inference > transparency of what was done >
   statistical power > convenience**.
@@ -64,7 +64,7 @@
 ## 2. Exploration and quality control
 
 * **Plot the raw data before modelling**: distributions per sample, scatter plots of key
-  variables, PCA of samples coloured by condition and by every batch variable.
+  variables, PCA (principal component analysis) of samples coloured by condition and by every batch variable.
   *Why:* outlier samples, label swaps and batch structure are usually visible before any test.
 * **Missing is not zero.** Decide for every variable what a missing value means (not measured,
   below detection, not applicable) and encode it as null, never silently as 0.
@@ -73,7 +73,7 @@
 * **Zeros must be explicit.** When counting events per group (e.g. cells of a type per sample),
   combinations with no events MUST appear as rows with count 0; otherwise means and tests are
   computed on the wrong denominator.
-* **Outliers are removed only by a rule fixed before looking at the results** (e.g. a QC metric
+* **Outliers are removed only by a rule fixed before looking at the results** (e.g. a quality control (QC) metric
   threshold), applied blindly to all groups, and reported with the number of units removed.
   MUST NOT remove points because they weaken an effect.
   * *Trade-off:* a fixed rule may keep a few bad points or remove a few good ones; that is preferable to a decision
@@ -91,7 +91,7 @@
 
 * **Prefer fitting a model and testing on it over standalone tests.** Most classical tests are
   special cases of linear or generalized linear models: the two-sample t-test is a regression on
-  a binary group variable; one-way ANOVA is a regression on a categorical variable; Mann-Whitney
+  a binary group variable; one-way ANOVA (analysis of variance) is a regression on a categorical variable; Mann-Whitney
   corresponds to a proportional-odds model with one binary predictor.
   *Why:* a model can include covariates (age, sex, batch), interactions and arbitrary contrasts,
   and makes the assumptions explicit (Practitioner sources, Olszewski).
@@ -107,16 +107,16 @@
 
 | Response | Default model | Notes |
 |---|---|---|
-| Continuous, roughly symmetric | Linear model (OLS); Welch t-test for two groups | Use heteroscedasticity-robust errors (`HC3`) if variances differ. |
-| Continuous, positive and right-skewed | Gamma GLM (log link) or linear model on log scale | State which; they estimate different quantities (mean vs geometric mean). |
+| Continuous, roughly symmetric | Linear model (OLS, ordinary least squares); Welch t-test for two groups | Use heteroscedasticity-robust errors (`HC3`) if variances differ. |
+| Continuous, positive and right-skewed | Gamma GLM (generalized linear model; log link) or linear model on log scale | State which; they estimate different quantities (mean vs geometric mean). |
 | Counts | Negative binomial GLM; Poisson only if no overdispersion | Sequencing counts: use dedicated tools (`RNASEQ_BULK_GUIDELINES.md`). |
 | Binary (yes/no) | Logistic regression | Reports odds ratios; a classifier is a separate thresholding step. |
 | Proportion out of $k$ trials | Binomial GLM with $k$ as trials | Do not analyse percentages as continuous values when $k$ is known. |
 | Proportion without known $k$ (0–1) | Beta regression | |
 | Ordered categories (scores, grades) | Proportional-odds (ordinal logistic) model | |
 | Time to event | Cox proportional hazards or parametric survival model | Censored observations MUST NOT be dropped. |
-| Compositions (relative abundances summing to 1) | Log-ratio methods (CLR, ALR) | Correlations between raw proportions are spurious [Gloor 2017]. |
-| Repeated or nested measurements | Mixed model, GEE, or aggregation to the experimental unit | §4 (hierarchical data). |
+| Compositions (relative abundances summing to 1) | Log-ratio methods (CLR: centred log-ratio, ALR: additive log-ratio) | Correlations between raw proportions are spurious [Gloor 2017]. |
+| Repeated or nested measurements | Mixed model, GEE: generalized estimating equations, or aggregation to the experimental unit | §4 (hierarchical data). |
 
 ### 3.3 Specific rules
 
@@ -143,7 +143,7 @@
   [Altman 2006].
   * *Deviate when:* a clinically defined cut-off is itself the question (e.g. a diagnostic threshold); state the
     cut-off and its source.
-* **Before/after designs: adjust for the baseline (ANCOVA)**, i.e. model the follow-up value with
+* **Before/after designs: adjust for the baseline (ANCOVA, analysis of covariance)**, i.e. model the follow-up value with
   the baseline as covariate, rather than analysing change scores or comparing within-group
   p-values [Vickers 2001].
 * **Test interactions directly.** "The effect is significant in males and not in females" is not
@@ -210,7 +210,7 @@
 * **The test set is used once**, after all choices are fixed.
   * *Why:* every look at the test set followed by a change in the model is a fit to the test set, and the final
     error estimate becomes optimistic.
-* **MUST NOT draw quantitative conclusions from 2-D embeddings** (t-SNE, UMAP): distances and
+* **MUST NOT draw quantitative conclusions from 2-D embeddings** (t-SNE: t-distributed stochastic neighbour embedding, UMAP: uniform manifold approximation and projection): distances and
   cluster sizes in the plot are not interpretable [Chari 2023]. Use them for display only.
 
 ## 7. Multiple testing
@@ -271,7 +271,7 @@
   genes) with an established method, and say so [Zhu 2018; Stephens 2016].
   * *Trade-off:* shrunken estimates are biased towards zero; they are for ranking and display, while tests use the
     model's own estimates and standard errors.
-* **State which error bar is shown**: SD describes the spread of the data; SEM and confidence
+* **State which error bar is shown**: SD (standard deviation) describes the spread of the data; SEM (standard error of the mean) and confidence
   intervals describe the precision of the mean. Always give $n$ next to it [Cumming 2007].
   * *Why:* the SEM shrinks with $n$ while the SD does not, so the same data look more or less variable depending on
     the bar; an unlabelled bar cannot be interpreted.
@@ -302,9 +302,10 @@
 * **Permutation p-values are $p = (b + 1)/(m + 1)$**, where $b$ is the number of permutations with
   a statistic at least as extreme as the observed one and $m$ the number of permutations; they
   are never 0 [Phipson 2010].
+  * Recipe: `recipes/stats/permutation.py` (permutation within strata and this p-value).
 * **The number of permutations limits the smallest attainable p-value** ($1/(m+1)$). Choose $m$
   so that this minimum is well below the threshold after multiple-testing correction.
-* **Bootstrap resamples experimental units**, not measurements within them. Prefer BCa or
+* **Bootstrap resamples experimental units**, not measurements within them. Prefer BCa (bias-corrected and accelerated) or
   percentile intervals from an established implementation.
   * *Why:* resampling measurements within a unit ignores the variation between units, so the intervals are too
     narrow.
@@ -354,13 +355,13 @@ recoverable, in the result itself or in a linked methods note [Lang 2015; Percie
 | Welch t-test | `scipy.stats.ttest_ind(a, b, equal_var=False)` | |
 | Rank tests | `scipy.stats.mannwhitneyu`, `scipy.stats.kruskal` | Interpret as in §3.3 (rank tests). |
 | Tukey, Dunnett | `scipy.stats.tukey_hsd`, `scipy.stats.dunnett` | |
-| Equivalence (TOST) | `statsmodels.stats.weightstats.ttost_ind` | |
-| Multiple testing (BH, BY, Holm) | `statsmodels.stats.multitest.multipletests` | `method="fdr_bh"`, `"fdr_by"`, `"holm"`. |
+| Equivalence (TOST, two one-sided tests) | `statsmodels.stats.weightstats.ttost_ind` | |
+| Multiple testing (BH, BY: Benjamini-Yekutieli, Holm) | `statsmodels.stats.multitest.multipletests` | `method="fdr_bh"`, `"fdr_by"`, `"holm"`. |
 | Permutation tests, bootstrap | `scipy.stats.permutation_test`, `scipy.stats.bootstrap` | Randomized permutations already use the formula of §10 (resampling); custom loops MUST apply it. |
 | Power and sample size | `statsmodels.stats.power` | |
 | Bulk RNA-seq DE | `pydeseq2` | See `RNASEQ_BULK_GUIDELINES.md`; validate against DESeq2 (`CODING_GUIDELINES.md` §3, languages). |
 
-* When no adequate Python implementation exists (IHW, `qvalue`, `limma`, `emmeans`, GLMMs), call
+* When no adequate Python implementation exists (IHW: independent hypothesis weighting; `qvalue`; `limma`; `emmeans`; GLMMs: generalized linear mixed models), call
   the R reference implementation through a standalone script, as `CODING_GUIDELINES.md` §3
   (languages) prescribes.
 * Analysis parameters (thresholds, $\alpha$, number of permutations, seeds) are named constants in
@@ -376,7 +377,7 @@ recoverable, in the result itself or in a linked methods note [Lang 2015; Percie
   95% of repeated experiments; the values reasonably compatible with the data under the model.
 * **Type I error / false positive**: declaring an effect that does not exist. **Type II error /
   false negative**: missing a real effect. **Power**: $1 -$ probability of a type II error.
-* **FWER**: probability of at least one false positive in the family. **FDR**: expected
+* **FWER (family-wise error rate)**: probability of at least one false positive in the family. **FDR**: expected
   proportion of false positives among the results declared significant.
 * **Effect size**: the magnitude of the difference or association, in interpretable units.
 * **Overdispersion**: variance larger than the Poisson model predicts; typical of biological

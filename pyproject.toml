@@ -1,0 +1,36 @@
+[project]
+name = "agent-coding-guidelines-recipes"
+version = "0.1.0"
+description = "Reference implementations (recipes) for the agent coding guidelines"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy", "pandas", "scipy", "polars", "scikit-learn", "statsmodels",
+    "anndata", "scanpy", "leidenalg", "python-igraph", "scikit-image",
+    "doubletdetection", "decoupler>=2", "pydeseq2>=0.5,<0.6",
+    # pooled size factors; distribution name collides with the Bioconductor "scranpy" (do not install both)
+    "scranPY @ git+https://github.com/sfortma2/scranPY.git@62292a039158fce0123bdec9a5e6b73ecf5db123",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+# R scripts (recipes/**/*.R) need R with: scran, tximport, Matrix, optparse (Bioconductor / CRAN).
+# Tests that call R are skipped unless RECIPES_RSCRIPT (or Rscript on PATH) points to such an installation.
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["recipes/tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "D"]
+ignore = ["G004"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.per-file-ignores]
+"recipes/tests/*" = ["D"]
+"**/__init__.py" = ["D104"]

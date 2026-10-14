@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.0 (2026-10-14)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.3.0 (2026-10-14)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints. SHOULD rules are strong defaults; deviating from
@@ -529,9 +529,25 @@ Available in the same repository; copy the ones relevant to the project:
 * `FIGURE_GUIDELINES.md` — chart choice, colour, layout, export.
 * `RNASEQ_BULK_GUIDELINES.md` — bulk RNA-seq from reads to differential expression and enrichment.
 * `SCRNASEQ_GUIDELINES.md` — single-cell and single-nucleus RNA-seq.
-* `SPATIAL_GUIDELINES.md` — spatial transcriptomics (Visium, Xenium, MERFISH).
+* `SPATIAL_GUIDELINES.md` — spatial transcriptomics (Visium, Xenium, MERFISH: multiplexed error-robust fluorescence in situ hybridization).
 * `META_ANALYSIS_GUIDELINES.md` — combining results across studies, including omics data.
 * `SEX_INFERENCE_GUIDELINES.md` — sex-chromosome complement from expression; reference routing.
 * `SAMPLE_IDENTITY_GUIDELINES.md` — duplicates, swaps, mixtures and genotype fingerprints.
 * `DECONVOLUTION_GUIDELINES.md` — cell-type composition of bulk samples.
 * `STATISTICS_REFERENCES.md`, `OMICS_REFERENCES.md` — references cited by the guidelines above.
+
+### Recipes (reference implementations)
+
+* Non-obvious procedures of the domain guidelines have a tested reference implementation in `recipes/` of the same
+  repository, linked from the guideline as `Recipe: recipes/<area>/<module>.py`. Each recipe states the guideline
+  section it implements, its inputs and outputs, and its defaults with their source; tests on synthetic data are in
+  `recipes/tests/`.
+* **When a guideline links a recipe, use it instead of re-implementing the procedure**: copy the module (with its
+  tests) into the project, or install the repository at a pinned commit and import it. Record which one, and the
+  commit, in `PROJECT_CONTEXT.md`.
+  * *Why:* several agents implementing the same procedure from prose diverge in details (seeds, subsampling, how
+    clusters are matched, which tail of a distribution is filtered), and their results stop being comparable.
+* Adapt a recipe through its parameters and named constants. A change to its logic is a deviation: record it under
+  *Overrides* in `PROJECT_CONTEXT.md` and keep the recipe's tests passing (or replace them with tests of the new
+  behaviour).
+* If a recipe and its guideline disagree, the guideline wins; report the discrepancy upstream.

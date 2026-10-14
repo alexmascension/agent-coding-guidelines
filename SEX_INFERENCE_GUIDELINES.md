@@ -1,6 +1,6 @@
 # Sex inference guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.0 (2026-10-14)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.1 (2026-10-14)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Olney 2020]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by its
@@ -50,7 +50,7 @@
   * *Why:* the X homolog is a built-in denominator. The ratio cancels library size, tissue and RNA quality, and
     separates XY ($r$ substantial) from XX ($r \approx 0$) without a cohort-level threshold. It is also the most
     sensitive signal for male material mixed into an XX sample.
-  * *Trade-off:* homologs share sequence; with a reference that does not mask the Y PAR, or with multi-mapping reads,
+  * *Trade-off:* homologs share sequence; with a reference that does not mask the Y PAR (pseudoautosomal region), or with multi-mapping reads,
     reads can be misassigned (§4).
 
 ## 3. Counting and normalization
@@ -118,7 +118,7 @@
 ## 6. Combining evidence and deciding
 
 * **Order of evidence** for the karyotype used in analysis and for reference routing:
-  1. WGS (or genotyping array) karyotype of the donor, when available.
+  1. WGS (whole-genome sequencing) or genotyping-array karyotype of the donor, when available.
   2. Expression call (this guide).
   3. Reported sex.
 * **Genotype-based sex** from the same RNA BAM: heterozygosity on non-PAR X (XX and XXY have heterozygous sites; XY

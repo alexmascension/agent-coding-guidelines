@@ -1,6 +1,6 @@
 # Bulk RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.0.0 (2026-10-14)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-14)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Conesa 2016]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Schurch 2016†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -20,11 +20,11 @@
 ## 1. Design
 
 * **The experimental unit is the biological sample**; technical replicates (re-sequencing of a library) are summed.
-* **At least 6 biological replicates per group** for a general DE study [Schurch 2016†].
+* **At least 6 biological replicates per group** for a general DE (differential expression) study [Schurch 2016†].
   * *Why:* with fewer, only large changes are detected, and estimates of dispersion are unstable.
 * **More replicates rather than more depth** beyond about 20 million reads per sample [Ching 2014].
 * **Balance technical factors across conditions** (extraction, library and sequencing batches) and record them with
-  RIN or DV200, library kit, strandedness, read length, and, for postmortem tissue, postmortem interval.
+  RIN (RNA integrity number) or DV200 (percentage of RNA fragments longer than 200 nucleotides), library kit, strandedness, read length, and, for postmortem tissue, postmortem interval.
   * *Why:* a technical factor confounded with the condition cannot be removed afterwards [Leek 2010†]; RNA quality is
     the main technical factor in postmortem tissue (§7).
 * **Record sex, age and other biological covariates** and plan them in the model.
@@ -35,13 +35,13 @@
   * *Why:* the gene model changes counts substantially: comparing RefSeq and Ensembl annotations, only 16% of genes had
     identical counts and 9% differed by 50% or more [Zhao 2015]. Changing the annotation mid-project requires
     re-quantifying everything.
-* **Sex-matched references** (Y masked for XX; Y PAR masked for XY) are recommended when sex-chromosome or PAR genes
+* **Sex-matched references** (Y masked for XX; Y PAR: pseudoautosomal region, masked for XY) are recommended when sex-chromosome or PAR genes
   matter; routing follows `SEX_INFERENCE_GUIDELINES.md` §4–6 [Olney 2020].
 * **Full annotation, filtered at analysis time**: quantify against the complete transcript annotation and apply
   filters (e.g. primary or MANE transcripts, expression) afterwards.
   * *Why:* removing transcripts from the index forces their reads onto similar isoforms, biasing those isoforms.
   * *Trade-off:* more ambiguity between isoforms, larger outputs; inferential replicates (§4) quantify that ambiguity.
-  * *Deviate when:* for transcript-usage analyses, prefiltering lowly used isoforms improves FDR control [Soneson 2016b];
+  * *Deviate when:* for transcript-usage analyses, prefiltering lowly used isoforms improves FDR (false discovery rate) control [Soneson 2016b];
     it is done on the expression estimates, after quantification.
 * **Identify genes by stable Ensembl IDs**; map to symbols only for display, through the same release.
 
@@ -57,8 +57,8 @@
 
 * **Default: `nf-core/rnaseq` with `--aligner star_salmon`** [Ewels 2020], pinned to a release.
   * *What it does:* STAR aligns to the genome [Dobin 2012] and writes a second BAM projected onto the transcriptome;
-    Salmon in alignment mode distributes each fragment among compatible transcripts with an EM algorithm [Patro 2017].
-  * *Why:* genome BAMs are needed for QC, sex and identity fingerprints, splice junctions and regions of interest,
+    Salmon in alignment mode distributes each fragment among compatible transcripts with an EM (expectation-maximization) algorithm [Patro 2017].
+  * *Why:* genome BAMs are needed for QC (quality control), sex and identity fingerprints, splice junctions and regions of interest,
     and the transcript-level estimates come from the same alignments.
   * *Deviate when:* no BAMs are needed: Salmon in selective-alignment mode with the genome as decoys is faster and
     nearly as accurate [Srivastava 2020]; kallisto is similar [Bray 2016]. In benchmarks the differences between
@@ -81,7 +81,9 @@
     factors but not gene-by-sample offsets.
   * *Why:* gene counts that ignore changes in isoform length between samples bias gene-level DE; both options correct
     for it [Soneson 2016a].
-* **DE tools take counts, never TPM, FPKM or normalized values**; TPM and RPKM are within-sample measures and MUST NOT
+  * Recipe: `recipes/bulk/counts_io.py` (nf-core gene tables) and `recipes/bulk/tximport_lengthscaled.R` (Salmon
+    runs outside nf-core).
+* **DE tools take counts, never TPM (transcripts per million), FPKM (fragments per kilobase per million mapped fragments) or normalized values**; TPM and RPKM (reads per kilobase per million mapped reads) are within-sample measures and MUST NOT
   be used to compare samples or protocols [Zhao 2020].
 
 ## 5. Filtering and normalization
@@ -90,18 +92,21 @@
   the smallest group.
   * *Why:* low-count genes cannot reach significance and only increase the multiple-testing burden. The rule uses group
     size, not the condition of individual samples, so it does not bias the test.
-* **Use the normalization of the DE method**: median-of-ratios (DESeq2, `pydeseq2`) [Anders 2010] or TMM (edgeR)
+  * Recipe: `recipes/bulk/deseq2.py` (`filter_genes`).
+* **Use the normalization of the DE method**: median-of-ratios (DESeq2, `pydeseq2`) [Anders 2010] or TMM (trimmed mean of M-values; edgeR)
   [Robinson 2010]. Both assume that most genes are not DE.
   * *Deviate when:* a global shift in expression is expected (transcriptional amplification, very different
-    composition); use spike-ins or control genes (RUV) [Risso 2014; Evans 2017].
+    composition); use spike-ins or control genes (RUV, removal of unwanted variation) [Risso 2014; Evans 2017].
 * **Gene length bias can be sample-specific** and is not removed by TMM, median-of-ratios or RPKM; it creates false
   enrichment of short-gene (ribosomal) and long-gene (extracellular matrix) sets [Mandelboum 2019]. Check it by
   plotting log fold changes against gene length; if present, use conditional quantile normalization (cqn) or EDASeq
   with length as a sample-specific covariate.
+  * Recipe: `recipes/bulk/length_bias.py` (per-sample length slopes, their association with the condition, and
+    log fold change by length decile).
 
 ## 6. Exploration
 
-* **Transformation for PCA, heatmaps and clustering: VST** (`pydeseq2`: `dds.vst(use_design=False)`).
+* **Transformation for PCA (principal component analysis), heatmaps and clustering: VST (variance-stabilizing transformation)** (`pydeseq2`: `dds.vst(use_design=False)`).
   * *Why VST:* it stabilizes the variance across the expression range (raw or simply log-transformed counts are
     dominated by noise at low counts); for high counts it approaches $\log_2$ of normalized counts, so it remains
     interpretable; it is available in Python and scales to thousands of samples.
@@ -125,20 +130,22 @@
 
   | Method | Use when | Main risk |
   |---|---|---|
-  | **qSVA** [Jaffe 2017] | Postmortem brain, RNA quality correlated with diagnosis | Developed in cortex; transfer to other tissues (e.g. spinal cord) is untested |
+  | **qSVA** (quality surrogate variable analysis) [Jaffe 2017] | Postmortem brain, RNA quality correlated with diagnosis | Developed in cortex; transfer to other tissues (e.g. spinal cord) is untested |
   | **RUV** with control genes, replicate samples (RUVs), or RUV-III with pseudo-replicates (PRPS) for large multi-batch cohorts [Gagnon-Bartsch 2011; Risso 2014; Molania 2022] | Negative controls or replicate samples exist | Poor controls absorb biology |
-  | **SVA / svaseq** [Leek 2007; Leek 2014] | No controls, moderate sample size | Removes real biological signal not in the model (e.g. sex, copy number) [Jaffe 2015] |
-  | **PCA of expression** | QTL mapping (no single condition of interest) | In DE, PCs can absorb the condition; SVA and RUV protect it |
+  | **SVA** (surrogate variable analysis) / svaseq [Leek 2007; Leek 2014] | No controls, moderate sample size | Removes real biological signal not in the model (e.g. sex, copy number) [Jaffe 2015] |
+  | **PCA of expression** | QTL (quantitative trait locus) mapping (no single condition of interest) | In DE, PCs can absorb the condition; SVA and RUV protect it |
 
   * *Why qSVA in postmortem brain:* when RNA quality correlates with diagnosis, quality metrics alone do not remove the
     confounding; qSVA, based on degradation-associated regions, more than tripled replication across independent
     studies [Jaffe 2017].
-  * *Why PCA only for QTL:* for molecular QTL mapping PCA matched or outperformed SVA, PEER and HCP and is much faster
+  * *Why PCA only for QTL:* for molecular QTL mapping PCA matched or outperformed SVA, PEER (probabilistic estimation of expression residuals) and HCP (hidden covariates with prior) and is much faster
     [Zhou 2022; Stegle 2012], but in DE the factors must be estimated with the condition protected.
 * **Number of factors**: use the method's estimate (`num.sv` in SVA; for RUV, choose $k$ with relative log expression
   plots and p-value histograms), and report how the DE list changes over a range of $k$.
   * *Why:* too many factors absorb real signal; too few leave confounding. Stability over $k$ shows whether
     conclusions depend on the choice.
+  * Recipe: `recipes/bulk/hidden_factors.py` (principal components of residuals with the known design protected;
+    DE across a grid of $k$ with overlap against the chosen $k$).
 * MUST NOT use batch-corrected matrices for testing [Nygaard 2015†; Zhang 2020†].
 
 ## 8. Differential expression
@@ -147,18 +154,23 @@
   [Chen 2016], limma-voom [Law 2014†]. When `pydeseq2` results are reported, verify on one contrast that they agree with
   DESeq2.
 * **Wald test** for a two-level contrast; **likelihood-ratio test** for factors with several levels or time courses.
+  `pydeseq2` 0.5 has no likelihood-ratio test; run it with DESeq2 in R through a script (`CODING_GUIDELINES.md` §3,
+  languages and tooling).
 * **Shrunken log fold changes** for ranking and plots [Zhu 2018†]; keep unshrunken estimates and standard errors in the
   results table.
 * **Minimum effect**: test against a threshold (`lfcThreshold`, TREAT) rather than filtering by fold change afterwards
   [McCarthy 2009†; Ebrahimpoor 2021†].
 * **Large human cohorts**: check FDR calibration by repeating the analysis with permuted condition labels
   [Li 2022†].
+  * Recipe: `recipes/bulk/fdr_calibration.py`.
 * Results table: `gene_id`, `gene_symbol`, `base_mean`, `log2_fold_change`, `lfc_se`, `log2_fold_change_shrunk`,
   `stat`, `p_value`, `p_adjusted`, contrast name.
+* Recipe: `recipes/bulk/deseq2.py` (pydeseq2 with this results table, minimum-effect test, shrinkage and VST).
 
 ## 9. Transcript-level analyses
 
-* Distinguish DGE (gene expression), DTE (transcript expression) and DTU (change in isoform proportions).
+* Distinguish DGE (differential gene expression), DTE (differential transcript expression) and DTU (differential
+  transcript usage: a change in isoform proportions).
 * **DTE and DTU use inferential replicates** (§4): swish [Zhu 2019] or edgeR/limma with divided counts [Baldoni 2023;
   Baldoni 2025]. Without replicates, DRIMSeq or DEXSeq with stage-wise testing [Love 2018; Anders 2012] and isoform
   prefiltering [Soneson 2016b].
@@ -167,7 +179,7 @@
 
 ## 10. Enrichment and activity inference
 
-* **Ranked tests (GSEA)** on all tested genes ranked by a signed statistic [Subramanian 2005; Korotkevich 2016;
+* **Ranked tests (GSEA, gene set enrichment analysis)** on all tested genes ranked by a signed statistic [Subramanian 2005; Korotkevich 2016;
   Fang 2022].
 * **Over-representation analysis** with the tested genes as background (`STATISTICS_GUIDELINES.md` §9)
   [Wijesooriya 2022†].
@@ -217,5 +229,5 @@ In addition to `STATISTICS_GUIDELINES.md` §12:
 | Known/hidden factors | — | `sva`, `RUVSeq`, `ruv`, qSVA (`qsvaR`) |
 | Length bias | — | `cqn`, `EDASeq` |
 | Transcript expression and usage | — | `fishpond` (swish), edgeR (`catchSalmon`), DRIMSeq, DEXSeq, stageR |
-| GSEA / ORA | `gseapy` | `fgsea`, `goseq`, `limma::camera` |
-| Pathway and TF activity | `decoupler` (PROGENy, CollecTRI) | `decoupleR` |
+| GSEA / ORA (over-representation analysis) | `gseapy` | `fgsea`, `goseq`, `limma::camera` |
+| Pathway and transcription factor (TF) activity | `decoupler` (PROGENy, CollecTRI) | `decoupleR` |

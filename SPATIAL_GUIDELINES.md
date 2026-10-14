@@ -1,6 +1,6 @@
 # Spatial transcriptomics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-14)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.1 (2026-10-14)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Palla 2022b]` point to
 > `OMICS_REFERENCES.md`; keys marked with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`.
@@ -9,9 +9,9 @@
 
 * Audience: coding agents and people with introductory statistics. Each rule is followed by its rationale (*Why*, *Trade-off*, *Deviate when*) where it applies.
 * Copy this file with `SCRNASEQ_GUIDELINES.md`, `OMICS_REFERENCES.md`, `STATISTICS_GUIDELINES.md` and
-  `STATISTICS_REFERENCES.md`. Once a cell- or spot-by-gene matrix exists, QC, normalization, clustering and annotation
+  `STATISTICS_REFERENCES.md`. Once a cell- or spot-by-gene matrix exists, QC (quality control), normalization, clustering and annotation
   follow `SCRNASEQ_GUIDELINES.md` except where this file says otherwise.
-* Platforms covered: 10x **Visium** (spot-based sequencing), 10x **Xenium** and **MERFISH** (Vizgen MERSCOPE)
+* Platforms covered: 10x **Visium** (spot-based sequencing), 10x **Xenium** and **MERFISH (multiplexed error-robust fluorescence in situ hybridization)** (Vizgen MERSCOPE)
   (imaging-based, single-cell resolution). Human and mouse.
 * Ecosystem: `spatialdata` and `spatialdata-io` for data and readers [Marconato 2024], `squidpy` for spatial
   statistics [Palla 2022b], `scanpy` for expression analysis. R tools are called through scripts
@@ -42,7 +42,7 @@
 * Spread conditions across slides and runs; the slide or run is a batch variable and MUST be recorded.
   * *Why:* slide and run effects (permeabilization, imaging, chemistry lot) are large; if each condition sits on
     its own slide, condition and slide cannot be separated.
-* Record tissue preparation (fresh frozen or FFPE), RNA quality (RIN or DV200), section thickness, and time from
+* Record tissue preparation (fresh frozen or FFPE: formalin-fixed paraffin-embedded), RNA quality (RIN: RNA integrity number, or DV200: percentage of RNA fragments longer than 200 nucleotides), section thickness, and time from
   sectioning to run. MERSCOPE results are especially sensitive to sample quality and protocol deviations
   [Wang 2025].
 * Where possible, profile matched scRNA-seq or snRNA-seq from the same tissue and species; it serves as reference for
@@ -155,7 +155,7 @@
   * *Why:* a neighbourhood statistic computed on pooled cells from several donors reflects the donors with most
     cells; per-section statistics weight donors correctly and give a valid between-condition test.
 * **Differential expression between conditions:** pseudobulk per donor and cell type (imaging) or per donor and domain
-  (Visium), then DE as in `SCRNASEQ_GUIDELINES.md` §10 (condition DE). Cells or spots MUST NOT be used as replicates.
+  (Visium), then DE (differential expression) as in `SCRNASEQ_GUIDELINES.md` §10 (condition DE). Cells or spots MUST NOT be used as replicates.
 * Neighbouring cells and spots are correlated (spatial autocorrelation), which violates the independence assumption
   of standard tests even within one section.
 

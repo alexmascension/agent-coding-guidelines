@@ -208,6 +208,8 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
   Optimizing transcriptomic references—by recovering false intergenic reads, using hybrid pre-mRNA mapping, and resolving gene overlaps—recovers missing scRNA-seq gene expression, improving cellular resolution and warranting reanalysis of existing datasets.
 - **[Montserrat-Ayuso 2024]** Montserrat-Ayuso & Esteve-Codina (2024). High content of nuclei-free low-quality cells in reference single-cell atlases: a call for more stringent quality control using nuclear fraction. *BMC Genomics*. [doi:10.1186/s12864-024-11015-5](https://doi.org/10.1186/s12864-024-11015-5)  
   Single-cell RNA-seq quality control should incorporate cell intronic fraction (or MALAT1 expression as a proxy) to detect and filter nuclei-free, low-quality cells overlooked by current permissive standards.
+- **[Gayoso 2020]** Gayoso, Shor, Carr, Sharma & Pe'er (2020). DoubletDetection (software, version 3.0). *Zenodo*. [doi:10.5281/zenodo.2678041](https://doi.org/10.5281/zenodo.2678041)  
+  Doublet classifier that repeatedly simulates doublets, clusters observed and synthetic cells together, and scores cells by hypergeometric enrichment of synthetic doublets in their cluster across iterations. Software record; metadata taken from the package README (not in Crossref).
 
 ### Normalization, features and visualization
 
@@ -217,6 +219,8 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
   Optimal hard threshold for singular values of a noisy low-rank matrix: an objective criterion for the number of components when noise is homogeneous.
 - **[Lun 2016]** Lun et al. (2016). Pooling across cells to normalize single-cell RNA sequencing data with many zero counts. *Genome Biology*. [doi:10.1186/s13059-016-0947-7](https://doi.org/10.1186/s13059-016-0947-7)  
   Pool-based deconvolution of size factors across groups of cells outperforms existing methods for normalizing single-cell RNA-seq data dominated by zero counts, improving downstream analysis accuracy.
+- **[Fortmann 2023]** Fortmann (2023). scranPY: a Python implementation of r-scran::computeSumFactors, normalization by deconvolution for single-cell RNA-sequencing (software, version 0.1). *Zenodo*. [doi:10.5281/zenodo.10072109](https://doi.org/10.5281/zenodo.10072109)  
+  Python port of the pooling-and-deconvolution size factors of scran (Lun 2016); requires a dense count matrix. Software record; metadata taken from the repository README (not in Crossref).
 - **[Vallejos 2017]** Vallejos et al. (2017). Normalizing single-cell RNA sequencing data: challenges and opportunities. *Nature Methods*. [doi:10.1038/nmeth.4292](https://doi.org/10.1038/nmeth.4292)  
   Commonly used bulk RNA-seq/microarray normalization methods can produce misleading results when applied to single-cell RNA-seq data; the paper recommends alternative normalization approaches specifically suited to single-cell transcriptomics rather than defaulting to standard bulk methods.
 - **[Hafemeister 2019]** Hafemeister & Satija (2019). Normalization and variance stabilization of single-cell RNA-seq data using regularized negative binomial regression. *Genome Biology*. [doi:10.1186/s13059-019-1874-1](https://doi.org/10.1186/s13059-019-1874-1)  

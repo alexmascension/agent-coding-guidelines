@@ -1,6 +1,6 @@
 # Cell-type deconvolution guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.0 (2026-10-14)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.1 (2026-10-14)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys point to `OMICS_REFERENCES.md`; keys with a
 > dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by ***Why***, ***Trade-off*** and
@@ -41,14 +41,14 @@
   material [Avila Cobos 2023].
 * **Marker selection**: select genes specific to each cell type in the reference (e.g. ratio of expression in the
   target type to the next highest type, the "Mean Ratio" approach) [Huuki-Myers 2025].
-* **Reference QC**: ambient-corrected counts, doublets removed, annotation verified (`SCRNASEQ_GUIDELINES.md` §4 and §9).
+* **Reference QC (quality control)**: ambient-corrected counts, doublets removed, annotation verified (`SCRNASEQ_GUIDELINES.md` §4 and §9).
 
 ## 3. Data preparation
 
 * **Linear scale, not log**: deconvolution models a bulk profile as a weighted sum of cell-type profiles, which is
   additive only on the linear scale [Avila Cobos 2020].
 * Use the same gene identifiers and annotation release in reference and bulk; keep genes measured in both.
-* Normalize bulk counts for library size (CPM or TPM consistent with the method's requirement); never use VST or
+* Normalize bulk counts for library size (counts per million, CPM, or transcripts per million, TPM, consistent with the method's requirement); never use VST (variance-stabilizing transformation) or
   log-transformed values as input.
 
 ## 4. Methods
@@ -87,7 +87,7 @@
 
 ## 6. Using the estimates downstream
 
-* **As covariates in DE**, estimated proportions reduce false associations caused by composition differences
+* **As covariates in DE (differential expression)**, estimated proportions reduce false associations caused by composition differences
   [Patrick 2020].
   * *Trade-off:* when composition change is the disease effect (e.g. neuronal loss in ALS), adjusting for it changes
     the question from "what differs in the tissue" to "what differs given the composition". Report both analyses and
