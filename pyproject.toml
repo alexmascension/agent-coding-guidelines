@@ -1,28 +1,41 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "agent-coding-guidelines-recipes"
-version = "0.1.0"
+version = "0.2.0"
 description = "Reference implementations (recipes) for the agent coding guidelines"
 requires-python = ">=3.11"
-dependencies = [
-    "numpy", "pandas", "scipy", "polars", "scikit-learn", "statsmodels",
-    "anndata", "scanpy", "leidenalg", "python-igraph", "scikit-image",
-    "doubletdetection", "decoupler>=2", "pydeseq2>=0.5,<0.6",
+license = {text = "MIT"}
+dependencies = ["numpy", "pandas", "scipy", "polars", "statsmodels", "anndata"]
+
+[project.optional-dependencies]
+scrnaseq = [
+    "scanpy", "leidenalg", "python-igraph", "scikit-learn", "scikit-image",
+    "doubletdetection", "decoupler>=2",
     # pooled size factors; distribution name collides with the Bioconductor "scranpy" (do not install both)
     "scranPY @ git+https://github.com/sfortma2/scranPY.git@62292a039158fce0123bdec9a5e6b73ecf5db123",
 ]
-
-[project.optional-dependencies]
+bulk = ["pydeseq2>=0.5,<0.6"]
 dev = ["pytest", "ruff"]
 
 # R scripts (recipes/**/*.R) need R with: scran, tximport, Matrix, optparse (Bioconductor / CRAN).
 # Tests that call R are skipped unless RECIPES_RSCRIPT (or Rscript on PATH) points to such an installation.
+
+[tool.setuptools.packages.find]
+include = ["recipes*"]
+
+[tool.setuptools.package-data]
+"recipes.scrnaseq" = ["*.R"]
+"recipes.bulk" = ["*.R"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["recipes/tests"]
 
 [tool.ruff]
-line-length = 120
+line-length = 99
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "N", "D"]
@@ -32,5 +45,5 @@ ignore = ["G004"]
 convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
-"recipes/tests/*" = ["D"]
+"recipes/tests/*" = ["D", "E501"]
 "**/__init__.py" = ["D104"]

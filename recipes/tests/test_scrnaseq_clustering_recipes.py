@@ -2,7 +2,11 @@ import numpy as np
 import pytest
 
 from recipes.scrnaseq._clustering import best_match_jaccard
-from recipes.scrnaseq.clustering_stability import choose_resolution, clustering_stability, default_n_iter
+from recipes.scrnaseq.clustering_stability import (
+    choose_resolution,
+    clustering_stability,
+    default_n_iter,
+)
 from recipes.scrnaseq.pc_robustness import (
     elbow_index,
     gavish_donoho_rank,
@@ -67,7 +71,9 @@ def test_propose_n_pcs_takes_larger_criterion(blobs):
 
 
 def test_pc_robustness_is_robust_for_separated_clusters(blobs):
-    per_n, per_cluster = pc_robustness(blobs["embedding"], n_pcs=8, resolution=0.3, delta=2, seed=0)
+    per_n, per_cluster = pc_robustness(
+        blobs["embedding"], n_pcs=8, resolution=0.3, delta=2, seed=0
+    )
     verdict = robustness_verdict(per_n, per_cluster)
     assert per_n.height == 5
     assert verdict["robust"], verdict

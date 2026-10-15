@@ -9,10 +9,13 @@ import logging
 import anndata as ad
 import numpy as np
 import scanpy as sc
+import scipy.sparse as sp
 
 logger = logging.getLogger(__name__)
 
-LEIDEN_N_ITERATIONS = 2  # igraph flavour; 2 iterations is the scanpy recommendation for this flavour
+LEIDEN_N_ITERATIONS = (
+    2  # igraph flavour; 2 iterations is the scanpy recommendation for this flavour
+)
 
 
 def leiden_labels(
@@ -22,12 +25,13 @@ def leiden_labels(
     n_neighbors: int = 15,
     seed: int = 0,
 ) -> np.ndarray:
-    """Cluster cells with Leiden on a k-NN graph built from the first ``n_dims`` columns of an embedding.
+    """Cluster cells with Leiden on a k-NN graph of the first ``n_dims`` embedding columns.
 
     Parameters
     ----------
     embedding : np.ndarray
-        Cells x components (e.g. ``adata.obsm["X_pca"]`` or an integrated embedding such as Harmony).
+        Cells x components (e.g. ``adata.obsm["X_pca"]`` or an integrated embedding such as
+        Harmony).
     n_dims : int
         Number of leading components used to build the neighbour graph.
     resolution : float
@@ -66,8 +70,11 @@ def leiden_labels(
 def best_match_jaccard(reference: np.ndarray, other: np.ndarray) -> dict[int, float]:
     """Jaccard index of each reference cluster with its best-matching cluster in another labelling.
 
-    Both labellings refer to the same cells, in the same order. For a reference cluster A and a cluster B of the other
-    labelling, J = |A & B| / |A | B|; the best match maximises J.
+    Both labellings refer to the same cells, in the same order. For a reference cluster A and a
+    cluster B of the other
+    labelling, J = |A & B| / (|A| + |B| - |A & B|); the best match maximises J. Computed from the
+    contingency table,
+    so memory grows with the number of cluster pairs, not with cells x clusters.
 
     Parameters
     ----------
@@ -86,16 +93,19 @@ def best_match_jaccard(reference: np.ndarray, other: np.ndarray) -> dict[int, fl
     ValueError
         If the two label arrays differ in length.
     """
+    reference, other = np.asarray(reference), np.asarray(other)
     if reference.shape != other.shape:
         raise ValueError(f"label arrays differ in length: {reference.shape} vs {other.shape}")
-    other_masks = [other == label for label in np.unique(other)]
-    result = {}
-    for ref_label in np.unique(reference):
-        in_ref = reference == ref_label
-        best = 0.0
-        for in_other in other_masks:
-            intersection = np.count_nonzero(in_ref & in_other)
-            if intersection:
-                best = max(best, intersection / np.count_nonzero(in_ref | in_other))
-        result[int(ref_label)] = best
-    return result
+    ref_levels, ref_codes = np.unique(reference, return_inverse=True)
+    other_levels, other_codes = np.unique(other, return_inverse=True)
+    table = sp.coo_matrix(
+        (np.ones(reference.size), (ref_codes, other_codes)),
+        shape=(ref_levels.size, other_levels.size),
+    ).toarray()
+    ref_sizes = table.sum(axis=1, keepdims=True)
+    other_sizes = table.sum(axis=0, keepdims=True)
+    jaccard = table / (ref_sizes + other_sizes - table)
+    return {
+        int(level): float(best)
+        for level, best in zip(ref_levels, jaccard.max(axis=1), strict=True)
+    }

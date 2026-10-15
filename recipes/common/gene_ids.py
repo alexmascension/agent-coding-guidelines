@@ -1,20 +1,26 @@
-"""Recipe: gene annotation table from the GTF, stable Ensembl IDs, and marker dictionaries resolved to IDs.
+"""Recipe: gene annotation from the GTF, stable Ensembl IDs, marker dictionaries resolved to IDs.
 
-Guidelines: ``SCRNASEQ_GUIDELINES.md`` §1.3 (gene identifiers and symbols) and §4.2 (mitochondrial genes by
+Guidelines: ``SCRNASEQ_GUIDELINES.md`` §1.3 (gene identifiers and symbols) and §4.2 (mitochondrial
+genes by
 chromosome); ``RNASEQ_BULK_GUIDELINES.md`` §2 (reference genome and annotation).
 
 Procedure
 ---------
-1. ``annotation_table_from_gtf``: one row per gene from the GTF used for quantification (``gene_id`` stable, without
-   version; ``gene_id_version``; ``gene_symbol``; ``chromosome``; ``gene_biotype``). Works for Ensembl GTFs (version in
+1. ``annotation_table_from_gtf``: one row per gene from the GTF used for quantification
+   (``gene_id`` stable, without
+   version; ``gene_id_version``; ``gene_symbol``; ``chromosome``; ``gene_biotype``). Works for
+   Ensembl GTFs (version in
    the ``gene_version`` attribute) and GENCODE GTFs (version inside ``gene_id``).
-2. ``set_var_gene_ids``: re-index ``adata.var`` by stable ID and add ``gene_id_version`` and ``gene_symbol``.
-3. ``resolve_markers``: translate a marker dictionary written in symbols into IDs, with a report of every symbol that
+2. ``set_var_gene_ids``: re-index ``adata.var`` by stable ID and add ``gene_id_version`` and
+   ``gene_symbol``.
+3. ``resolve_markers``: translate a marker dictionary written in symbols into IDs, with a report of
+   every symbol that
    was not found, matched only with a different capitalization, or matched several IDs.
 
 Adapting
 --------
-* The rule for symbols with several IDs (``multi_id_rule``) is a project decision recorded in ``PROJECT_CONTEXT.md``.
+* The rule for symbols with several IDs (``multi_id_rule``) is a project decision recorded in
+  ``PROJECT_CONTEXT.md``.
 * Case-insensitive matches are reported, never used: human symbols are not mouse symbols (§1.3).
 """
 
@@ -32,6 +38,7 @@ logger = logging.getLogger(__name__)
 
 MITOCHONDRIAL_CHROMOSOMES = ("MT", "chrM", "M")  # Ensembl, UCSC/GENCODE, some custom references
 _ATTRIBUTE = re.compile(r'(\S+) "([^"]*)"')
+_ENSEMBL_ID = re.compile(r"^ENS[A-Z]*G\d{11}")
 _VERSION = re.compile(r"\.\d+")  # first ".N"; keeps GENCODE suffixes such as "_PAR_Y"
 
 ANNOTATION_SCHEMA = {
@@ -42,6 +49,7 @@ ANNOTATION_SCHEMA = {
     "gene_biotype": pl.Utf8,
 }
 REPORT_COLUMNS = ("cell_type", "symbol", "status", "gene_ids", "candidates")
+MULTI_ID_RULES = ("keep_all", "most_expressed")
 
 
 def strip_version(gene_id: str) -> str:
@@ -60,7 +68,8 @@ def annotation_table_from_gtf(gtf_path: str | Path) -> pl.DataFrame:
     Returns
     -------
     pl.DataFrame
-        Columns of ``ANNOTATION_SCHEMA``, one row per gene. Missing symbols are null, never replaced by the ID.
+        Columns of ``ANNOTATION_SCHEMA``, one row per gene. Missing symbols are null, never
+        replaced by the ID.
 
     Raises
     ------
@@ -101,9 +110,10 @@ def annotation_table_from_gtf(gtf_path: str | Path) -> pl.DataFrame:
 
 
 def set_var_gene_ids(adata: ad.AnnData, annotation: pl.DataFrame) -> pl.DataFrame:
-    """Index ``adata.var`` by stable Ensembl ID and add ``gene_id_version`` and ``gene_symbol`` (in place).
+    """Index ``adata.var`` by stable Ensembl ID; add version and symbol (in place).
 
-    The current index may contain versioned or unversioned IDs. Genes absent from the annotation keep null symbol and
+    The current index may contain versioned or unversioned IDs. Genes absent from the annotation
+    keep null symbol and
     version and are returned in the report.
 
     Parameters
@@ -124,9 +134,19 @@ def set_var_gene_ids(adata: ad.AnnData, annotation: pl.DataFrame) -> pl.DataFram
         If ``var_names`` are not unique after removing versions.
     """
     stable = np.array([strip_version(g) for g in adata.var_names])
+    not_ensembl = [g for g in stable if not _ENSEMBL_ID.match(g)]
+    if not_ensembl:
+        logger.warning(
+            f"{len(not_ensembl)} var_names do not look like Ensembl gene IDs, "
+            f"e.g. {not_ensembl[:3]}"
+        )
     if len(set(stable)) != stable.size:
         raise ValueError("var_names are not unique after removing versions")
-    lookup = annotation.select("gene_id", "gene_id_version", "gene_symbol").to_pandas().set_index("gene_id")
+    lookup = (
+        annotation.select("gene_id", "gene_id_version", "gene_symbol")
+        .to_pandas()
+        .set_index("gene_id")
+    )
     matched = lookup.reindex(stable)
     adata.var_names = stable
     adata.var["gene_id_version"] = matched["gene_id_version"].to_numpy()
@@ -162,8 +182,10 @@ def resolve_markers(
     resolved : dict[str, list[str]]
         Cell type -> marker IDs (order preserved, no duplicates).
     report : pl.DataFrame
-        One row per (cell type, symbol): ``cell_type``, ``symbol``, ``status`` (``resolved``, ``multiple_ids``,
-        ``case_mismatch``, ``not_found``), ``gene_ids`` (semicolon-separated IDs kept), ``candidates`` (all IDs, or
+        One row per (cell type, symbol): ``cell_type``, ``symbol``, ``status`` (``resolved``,
+        ``multiple_ids``,
+        ``case_mismatch``, ``not_found``), ``gene_ids`` (semicolon-separated IDs kept),
+        ``candidates`` (all IDs, or
         the symbols that match only with different capitalization).
 
     Raises
@@ -171,6 +193,8 @@ def resolve_markers(
     ValueError
         If ``multi_id_rule="most_expressed"`` and ``expression`` is missing.
     """
+    if multi_id_rule not in MULTI_ID_RULES:
+        raise ValueError(f"multi_id_rule must be one of {MULTI_ID_RULES}, got {multi_id_rule!r}")
     if multi_id_rule == "most_expressed" and expression is None:
         raise ValueError("multi_id_rule='most_expressed' needs the expression mapping")
     by_symbol: dict[str, list[str]] = {}
@@ -193,7 +217,12 @@ def resolve_markers(
                 if multi_id_rule == "keep_all":
                     chosen = ids
                 else:
-                    chosen = [max(ids, key=lambda g: expression.get(g, float("-inf")))]
+                    missing = [g for g in ids if g not in expression]
+                    if missing:
+                        raise ValueError(f"{symbol}: no expression value for {missing}")
+                    # highest expression; equal values resolved by the smallest ID, so the choice
+                    # is deterministic
+                    chosen = [sorted(ids, key=lambda g: (-expression[g], g))[0]]
             else:
                 chosen = []
                 near = [s for s in by_upper.get(symbol.upper(), []) if s != symbol]
@@ -217,6 +246,6 @@ def resolve_markers(
 
 
 def symbols_for(gene_ids: list[str], annotation: pl.DataFrame) -> list[str]:
-    """Return display labels for IDs: the symbol when it exists, otherwise the ID (for plots and tables, §1.3)."""
+    """Return display labels for IDs: the symbol if it exists, else the ID (§1.3)."""
     lookup = dict(annotation.select("gene_id", "gene_symbol").iter_rows())
     return [lookup.get(g) or g for g in gene_ids]

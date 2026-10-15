@@ -5,6 +5,138 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-15 (external review integrated; rule identifiers)
+
+Changes after an external review of commit `97ae0ce`. Each code finding has a regression test in
+`recipes/tests/test_review_regressions.py`.
+
+### All guidelines [MAJOR]
+
+- **Stable rule identifiers** (`PREFIX-TOPIC-NNN`, e.g. `SC-QC-004`) on every rule, with the registry
+  `RULE_IDS.tsv` (563 active rules) and `tools/rule_ids.py` (`assign`, `check`). Overrides now refer to rules by
+  identifier (`CODE-USE-008`, `CODE-PROJ-008`); existing overrides that point to section numbers should be rewritten
+  with identifiers. Versioning redefined (`CODE-USE-007`): renumbering sections is no longer MAJOR.
+- Key words: MUST reserved for checkable validity conditions; a rule without a key word has the force of SHOULD
+  (header of every guide). MUST rules whose *Deviate when* described cases outside their scope now say *Scope*
+  (`SEX-WHY-001`, `STAT-DES-004`, `STAT-MOD-007`); `CODE-LANG-004` (shellcheck) is SHOULD; `ID-POOL-001` covers
+  hashtag pools.
+- `LICENSE` (MIT) for the whole repository.
+
+### SEX_INFERENCE_GUIDELINES.md [2.0.0]
+
+#### Changed (MAJOR: a rule reversed)
+
+- §6 "within a donor, all samples MUST agree; discordance indicates a swap" replaced by: discordance MUST trigger
+  review and MUST NOT by itself trigger reassignment; other explanations (mosaic loss of Y, pathology, quality,
+  transplantation) listed. Expression calls are screening results; a complement is confirmed only with DNA.
+- §2 *XIST* limits (XXY, some tumours of male patients); the homolog ratio cancels shared scale factors, not
+  differential effects of tissue or quality.
+- §3, §5 depth, minimum reads and ratio thresholds are starting values that MUST be calibrated.
+- §4 single routing rule (SHOULD when sex-chromosome or PAR genes are analysed or sex is a variable; uncertain calls to
+  the XY reference), shared with RNASEQ_BULK §2.
+
+### DECONVOLUTION_GUIDELINES.md [2.0.0]
+
+#### Changed (MAJOR: a rule reversed)
+
+- §3 "linear scale, not log" replaced by "use the input scale each method documents" (hspe takes log-scale input);
+  normalization only as each method requires (Bisque and BayesPrism take raw counts).
+- §1 the estimand depends on the method (RNA fraction, cell proportion, fraction of reads); method contract table.
+- §4 agreement between methods is necessary, not sufficient (shared biases); §5 validation adds bias per cell type,
+  abundance range and an incomplete reference; §8 aligned.
+
+### STATISTICS_GUIDELINES.md [2.0.0]
+
+- §10 exchangeability is a property of the design; permuting within strata does not preserve associations with
+  other covariates; two-sided permutation p-values with the SciPy convention; Monte Carlo uncertainty of permutation
+  frequencies.
+- §7 Bonferroni is valid under any dependence (union bound); FDR is an expectation; p-value histograms: a peak near 1
+  can come from conservative or discrete tests.
+- §3 Student vs Welch as models; Mann-Whitney as the score test of the proportional-odds model; rank tests stated as
+  $P(X>Y)$ hypotheses; ANCOVA limited to randomized before/after comparisons; Wald/LRT/score disagreement needs a
+  method for the cause (Firth, parametric bootstrap, exact), not a switch to the LRT; beta regression support (0, 1).
+- §1 low power and false positives qualified by significance level and proportion of true effects.
+
+### SCRNASEQ_GUIDELINES.md [3.0.0]
+
+- §1.1 table of the layer each step reads (`counts` for QC and doublets; ambient-corrected counts downstream).
+- §2 donor minimums are planning minimums; aggregate to the donor only when it contributes to one level of every
+  compared factor; §10 aggregation unit defined by the design.
+- §4.2 scaled MAD defined (5 scaled = 7.41 unscaled); non-finite metrics and MAD = 0 handled explicitly; panels.
+- §6 PCA recomputed instead of truncating the proposal; "no reproducible partition" as an outcome; check runs on the
+  embedding used for clustering; removed "extra PCs add little noise"; stability is not biological validity.
+- §7 the Harmony benchmark described with its scope.
+
+### RNASEQ_BULK_GUIDELINES.md [3.0.0]
+
+- §8 permutation check renamed global-null diagnostic, with exchangeability and Monte Carlo uncertainty; it does not
+  establish FDR control under alternatives.
+- §7 residual PCs described as exploratory, not qSVA/RUV/SVA; §2 routing deferred to SEX_INFERENCE §4; §1 replicate
+  minimum is a planning default.
+
+### META_ANALYSIS_GUIDELINES.md [2.0.0]
+
+- §2 independence between studies (shared donors, reused controls, re-deposited data) checked before combining.
+- §3 unshrunken log fold changes and their SE; harmonized estimands.
+- §5 prediction interval only for $k \ge 3$, imprecise with few studies.
+- §9 harmonic mean p-value: asymptotically exact procedure, approximate FWER control.
+
+### SPATIAL_GUIDELINES.md [2.0.0]
+
+- §1 standard Visium vs Visium HD geometry; enrichment universe = eligible panel genes. §4 scRNA-seq defaults that
+  do not apply to panels (mitochondrial and nuclear filters, 2,000 HVGs).
+
+### SAMPLE_IDENTITY_GUIDELINES.md [2.0.0]
+
+- §7 sex mismatch with matching genotype: review; correct the annotation only with independent evidence.
+
+### CODING_GUIDELINES.md [3.0.0]
+
+- Header: MUST reserved for checkable validity conditions; SHOULD for defaults; scope of *Deviate when*.
+- §0 precedence between domain guidelines; adopted guides and versions listed in *Overrides*.
+- §7 aggregates may combine disjoint groups of decomposable statistics; §14 installed library code locates its data
+  with `importlib.resources`; §15 bit-identical results not required, random draws identical and floating-point
+  results within a stated tolerance; §21 and §26 vendoring of recipes allowed with dependencies, tests, license and
+  commit; §26 recipes MAY exist, coverage in `recipes/README.md`; FIGURE_GUIDELINES marked as planned.
+
+### STATISTICS_REFERENCES.md
+
+- Explicit bold keys (`[Author Year]`) for all 88 references, as in OMICS_REFERENCES.md.
+
+### recipes/ [0.2.0]
+
+#### Fixed
+
+- `pseudobulk`, `abundance`: covariates keep their dtype (numeric covariates are slopes); missing values rejected;
+  report lists absent and below-threshold combinations; empty results keep the schema; abundance accepts a sample
+  manifest (samples without cells flagged, not analysed).
+- `stats.permutation`: non-finite statistics rejected; SciPy two-sided convention; Clopper-Pearson bound.
+- `doublets`: co-expression measured per cell (a cluster of mixed singlets is no longer removed); enrichment against
+  capture-specific call rates; DoubletDetection ambiguous calls kept as `ambiguous`; detector parameters reported.
+- `qc`: MAD = 0 and non-finite values reported (`not_evaluated_mad_zero`, `qc_invalid`, `qc_fail`); optional
+  absolute mitochondrial limit; panels without mitochondrial genes.
+- `normalization`: size factors validated (finite, positive, one per cell); median factors no longer re-centred to
+  the mean (now equal to `normalize_total(target_sum=None)`); R script located as package data; unique run
+  directories.
+- `pc_robustness`: proposal not truncated; status `recompute_pca`.
+- `deseq2`: filter ignores unused categories; exact coefficient names; designs with interactions rejected for
+  shrinkage; count validation (`allow_non_integer` only for lengthScaledTPM).
+- `hidden_factors`: rank checks with tolerance; aligned factors; k range validated; documented as exploratory.
+- `fdr_calibration`: global-null diagnostic with exchangeability caveats, adjusted p-values validated, Monte Carlo
+  bound, distinct permutations counted.
+- `marker_annotation`: contradictory signs rejected; ties and unscored cells labelled; index alignment checked.
+- `gene_ids`: rule names validated; deterministic choice among duplicated IDs; warning for non-Ensembl IDs.
+- `_clustering`: Jaccard from the contingency table; stability reports `n_present` and `not_assessed`.
+- R scripts: `--overwrite` required to replace outputs, atomic writes, provenance file.
+
+#### Added
+
+- Packaging: setuptools build with R scripts as package data; extras `scrnaseq`, `bulk`, `dev`; line length 99 as in
+  CODING §17.
+- Test of pydeseq2 against R DESeq2 (`recipes/tests/r/deseq2_reference.R`); `recipes/README.md` coverage table.
+- `tools/check_guides.py` (citation keys, cross-references, recipe paths, versions); CI workflow with Python, R and
+  wheel-installation jobs; repository `README.md`.
+
 ## 2026-10-14 (third release of the day)
 
 ### SCRNASEQ_GUIDELINES.md [2.1.0]

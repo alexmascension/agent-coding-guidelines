@@ -4,17 +4,37 @@ Guideline: ``RNASEQ_BULK_GUIDELINES.md`` §5 (filtering and normalization) [Mand
 
 Procedure
 ---------
-* ``sample_length_slopes``: for each sample, regress the log ratio of its normalized expression to the gene-wise
-  geometric mean across samples on log gene length. A slope that differs between samples is a sample-specific length
+* ``sample_length_slopes``: for each sample, regress the log ratio of its normalized expression to
+  the gene-wise
+  geometric mean across samples on log gene length. A slope that differs between samples is a
+  sample-specific length
   bias; median-of-ratios, TMM and RPKM do not remove it.
-* ``slope_association``: whether slopes differ by condition (Mann-Whitney / Kruskal-Wallis). If they do, length bias
-  is confounded with the condition and will produce false enrichment of short-gene (ribosomal) and long-gene
+* ``slope_association``: whether slopes differ by condition (Mann-Whitney / Kruskal-Wallis). If
+  they do, length bias
+  is confounded with the condition and will produce false enrichment of short-gene (ribosomal) and
+  long-gene
   (extracellular matrix) sets.
-* ``lfc_length_trend``: Spearman correlation between log2 fold change and log gene length, with the median log2 fold
+* ``lfc_length_trend``: Spearman correlation between log2 fold change and log gene length, with the
+  median log2 fold
   change per length decile (the table behind the plot of the guide).
 
-Defaults: ``MIN_MEAN_COUNT = 10`` (genes used for slopes), ``N_LENGTH_BINS = 10``. Gene length is the effective length
-used for quantification (tximport ``length`` matrix averaged across samples, or the nf-core length table).
+Limits
+------
+These are diagnostics, not corrections (correct with cqn or EDASeq, in R). A correlation between
+fold change and
+length does not by itself prove a technical bias: long genes can be biologically affected (e.g.
+neuronal genes in
+neurodegeneration). The evidence for a technical cause is a per-sample slope that tracks a
+technical variable or the
+condition without a biological explanation. ``slope_association`` is a simple two-group or k-group
+rank test; it does
+not handle paired designs or covariates (model the slopes in a regression when the design needs
+it).
+
+Defaults: ``MIN_MEAN_COUNT = 10`` (genes used for slopes), ``N_LENGTH_BINS = 10``. Gene length is
+the effective length
+used for quantification (tximport ``length`` matrix averaged across samples, or the nf-core length
+table).
 """
 
 import numpy as np
@@ -24,6 +44,13 @@ from scipy import stats
 
 MIN_MEAN_COUNT = 10
 N_LENGTH_BINS = 10
+
+
+def _validated_length(gene_length: pd.Series) -> pd.Series:
+    values = gene_length.to_numpy(dtype=float)
+    if not np.all(np.isfinite(values)) or np.any(values <= 0):
+        raise ValueError("gene lengths must be positive and finite")
+    return gene_length.astype(float)
 
 
 def sample_length_slopes(
@@ -45,6 +72,7 @@ def sample_length_slopes(
     pl.DataFrame
         ``sample``, ``slope``, ``slope_se``, ``n_genes``.
     """
+    gene_length = _validated_length(gene_length)
     genes = normalized_counts.columns.intersection(gene_length.index)
     x = normalized_counts[genes]
     keep = (x.mean(axis=0) >= min_mean) & (x > 0).all(axis=0)
@@ -66,9 +94,15 @@ def sample_length_slopes(
     return pl.DataFrame(rows)
 
 
-def slope_association(slopes: pl.DataFrame, metadata: pd.DataFrame, condition_col: str) -> dict[str, float]:
+def slope_association(
+    slopes: pl.DataFrame, metadata: pd.DataFrame, condition_col: str
+) -> dict[str, float]:
     """Test whether per-sample length slopes differ between conditions (rank-based)."""
-    frame = slopes.to_pandas().set_index("sample").join(metadata[[condition_col]].astype(str), how="inner")
+    frame = (
+        slopes.to_pandas()
+        .set_index("sample")
+        .join(metadata[[condition_col]].astype(str), how="inner")
+    )
     groups = [g["slope"].to_numpy() for _, g in frame.groupby(condition_col)]
     if len(groups) == 2:
         result = stats.mannwhitneyu(*groups, alternative="two-sided")
@@ -80,16 +114,26 @@ def slope_association(slopes: pl.DataFrame, metadata: pd.DataFrame, condition_co
 
 
 def lfc_length_trend(
-    results: pl.DataFrame, gene_length: pd.Series, n_bins: int = N_LENGTH_BINS, lfc_col: str = "log2_fold_change"
+    results: pl.DataFrame,
+    gene_length: pd.Series,
+    n_bins: int = N_LENGTH_BINS,
+    lfc_col: str = "log2_fold_change",
 ) -> tuple[dict[str, float], pl.DataFrame]:
-    """Spearman correlation of log2 fold change with log length, and median log2 fold change per length bin."""
+    """Spearman correlation of log2 fold change with log length, and median per length bin."""
+    gene_length = _validated_length(gene_length)
     frame = results.select("gene_id", lfc_col).drop_nulls().to_pandas().set_index("gene_id")
     frame = frame.join(gene_length.rename("length"), how="inner").dropna()
     rho, p = stats.spearmanr(np.log2(frame["length"]), frame[lfc_col])
-    frame["length_bin"] = pd.qcut(np.log2(frame["length"]), q=n_bins, labels=False, duplicates="drop")
+    frame["length_bin"] = pd.qcut(
+        np.log2(frame["length"]), q=n_bins, labels=False, duplicates="drop"
+    )
     binned = (
         frame.groupby("length_bin")
-        .agg(median_length=("length", "median"), median_lfc=(lfc_col, "median"), n_genes=(lfc_col, "size"))
+        .agg(
+            median_length=("length", "median"),
+            median_lfc=(lfc_col, "median"),
+            n_genes=(lfc_col, "size"),
+        )
         .reset_index()
     )
     return {"spearman_rho": float(rho), "p_value": float(p)}, pl.from_pandas(binned)

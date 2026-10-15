@@ -6,21 +6,26 @@ Procedure
 ---------
 For each resolution in a grid:
 1. Cluster all cells (reference clustering).
-2. ``n_iter`` times: subsample ``frac`` of the cells, rebuild the neighbour graph on the subsample from the same
+2. ``n_iter`` times: subsample ``frac`` of the cells, rebuild the neighbour graph on the subsample
+   from the same
    embedding and parameters (different seed per iteration), re-cluster.
-3. For each reference cluster, Jaccard index between its subsampled cells and the best-matching subsample cluster.
-4. Summarise per cluster: median and minimum Jaccard over iterations, and status (Hennig 2007 reading):
+3. For each reference cluster, Jaccard index between its subsampled cells and the best-matching
+   subsample cluster.
+4. Summarise per cluster: median and minimum Jaccard over iterations, and status (Hennig 2007
+   reading):
    median < 0.5 ``dissolved``; < 0.75 ``doubtful``; otherwise ``stable``.
 ``choose_resolution`` returns the highest resolution at which all (selected) clusters are stable.
 
 Defaults
 --------
-* ``n_iter`` from ``default_n_iter``: 10 up to 50,000 cells, 5 up to 200,000, 1 above (indicative only).
+* ``n_iter`` from ``default_n_iter``: 10 up to 50,000 cells, 5 up to 200,000, 1 above (indicative
+  only).
 * ``frac = 0.8``.
 
 Typical use
 -----------
->>> table = clustering_stability(adata.obsm["X_pca"], n_dims=30, resolutions=[0.2, 0.4, 0.6, 0.8, 1.0])
+>>> table = clustering_stability(adata.obsm["X_pca"], n_dims=30, resolutions=[0.2, 0.4, 0.6, 0.8,
+1.0])
 >>> best = choose_resolution(table)
 """
 
@@ -36,11 +41,14 @@ logger = logging.getLogger(__name__)
 SUBSAMPLE_FRACTION = 0.8
 JACCARD_DISSOLVED = 0.5  # Hennig 2007: clusters below this are not reproduced
 JACCARD_STABLE = 0.75  # Hennig 2007: clusters at or above this are stable
-N_ITER_BY_SIZE = ((50_000, 10), (200_000, 5))  # (max cells, iterations); above the last bound: 1 iteration
+N_ITER_BY_SIZE = (
+    (50_000, 10),
+    (200_000, 5),
+)  # (max cells, iterations); above the last bound: 1 iteration
 
 
 def default_n_iter(n_cells: int) -> int:
-    """Return the number of subsampling iterations for a dataset size (project default, see module docstring)."""
+    """Return the number of subsampling iterations for a dataset size (see module docstring)."""
     for max_cells, n_iter in N_ITER_BY_SIZE:
         if n_cells <= max_cells:
             return n_iter
@@ -86,8 +94,11 @@ def clustering_stability(
     Returns
     -------
     pl.DataFrame
-        One row per resolution x reference cluster: ``resolution`` (Float64), ``cluster`` (Int64), ``n_cells``
-        (Int64), ``median_jaccard`` and ``min_jaccard`` (Float64), ``n_iter`` (Int64), ``status`` (Utf8).
+        One row per resolution x reference cluster: ``resolution`` (Float64), ``cluster`` (Int64),
+        ``n_cells``
+        (Int64), ``median_jaccard`` and ``min_jaccard`` (Float64), ``n_iter`` (Int64),
+        ``n_present`` (Int64; subsamples containing the cluster), ``status`` (Utf8:
+        ``stable``, ``doubtful``, ``dissolved`` or ``not_assessed``).
 
     Raises
     ------
@@ -108,22 +119,26 @@ def clustering_stability(
         for i in range(n_iter):
             rng = np.random.default_rng(seed + 1 + i)
             idx = np.sort(rng.choice(n_cells, size=n_sub, replace=False))
-            sub_labels = leiden_labels(embedding[idx], n_dims, resolution, n_neighbors, seed + 1 + i)
+            sub_labels = leiden_labels(
+                embedding[idx], n_dims, resolution, n_neighbors, seed + 1 + i
+            )
             for cluster, jac in best_match_jaccard(reference[idx], sub_labels).items():
                 jaccards[cluster].append(jac)
         sizes = dict(zip(*np.unique(reference, return_counts=True), strict=True))
         for cluster, values in jaccards.items():
-            # a reference cluster absent from every subsample cannot be assessed; it counts as dissolved
-            median = float(np.median(values)) if values else 0.0
+            # n_present: subsamples that contained cells of the cluster; a cluster never present
+            # cannot be assessed
+            median = float(np.median(values)) if values else float("nan")
             rows.append(
                 {
                     "resolution": float(resolution),
                     "cluster": cluster,
                     "n_cells": int(sizes[cluster]),
                     "median_jaccard": median,
-                    "min_jaccard": float(min(values)) if values else 0.0,
+                    "min_jaccard": float(min(values)) if values else float("nan"),
                     "n_iter": n_iter,
-                    "status": _status(median),
+                    "n_present": len(values),
+                    "status": _status(median) if values else "not_assessed",
                 }
             )
         logger.info(f"resolution {resolution:.2f}: {len(jaccards)} clusters")
@@ -141,7 +156,8 @@ def choose_resolution(
     table : pl.DataFrame
         Output of ``clustering_stability``.
     clusters_of_interest : dict[float, list[int]] | None
-        Optional, per resolution, the clusters that must be stable (labels differ between resolutions).
+        Optional, per resolution, the clusters that must be stable (labels differ between
+        resolutions).
 
     Returns
     -------

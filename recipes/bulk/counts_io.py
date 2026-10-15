@@ -1,10 +1,15 @@
-"""Recipe: read gene-level tables (nf-core/rnaseq or ``tximport_lengthscaled.R``) into samples x genes matrices.
+"""Recipe: read gene-level count tables into samples x genes matrices.
 
-Guideline: ``RNASEQ_BULK_GUIDELINES.md`` §4 (quantification): for pydeseq2 use the ``lengthScaledTPM`` counts
+Sources: nf-core/rnaseq tables or ``tximport_lengthscaled.R`` outputs.
+
+Guideline: ``RNASEQ_BULK_GUIDELINES.md`` §4 (quantification): for pydeseq2 use the
+``lengthScaledTPM`` counts
 (nf-core: ``salmon.merged.gene_counts_length_scaled.tsv``), never TPM.
 
-``read_gene_table`` returns samples x genes with stable Ensembl IDs (versions stripped) and, separately, the
-``gene_name`` column when present; ``to_integer_counts`` rounds length-scaled counts (non-integer by construction) as
+``read_gene_table`` returns samples x genes with stable Ensembl IDs (versions stripped) and,
+separately, the
+``gene_name`` column when present; ``to_integer_counts`` rounds length-scaled counts (non-integer
+by construction) as
 DESeq2 does with ``DESeqDataSetFromMatrix(round(...))``.
 """
 
@@ -47,5 +52,5 @@ def to_integer_counts(counts: pd.DataFrame) -> pd.DataFrame:
 
 
 def mean_gene_length(length_table: pd.DataFrame) -> pd.Series:
-    """Average effective gene length across samples (samples x genes input), for length-bias checks."""
+    """Average effective gene length across samples (samples x genes input), for length bias."""
     return length_table.mean(axis=0).rename("length")

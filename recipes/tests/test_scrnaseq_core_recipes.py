@@ -15,10 +15,16 @@ from recipes.scrnaseq.doublets import combine_calls, doublet_cluster_review, dou
 from recipes.scrnaseq.marker_annotation import annotate_clusters, marker_network, score_cells
 from recipes.scrnaseq.normalization import log_normalize, median_size_factors
 from recipes.scrnaseq.pseudobulk import aggregate_counts, pseudobulk_de
-from recipes.scrnaseq.qc import add_nuclear_fraction, flag_gene_groups, mad_outlier_flags, qc_metrics
+from recipes.scrnaseq.qc import (
+    add_nuclear_fraction,
+    flag_gene_groups,
+    mad_outlier_flags,
+    qc_metrics,
+)
 
 
-# --- gene identifiers -------------------------------------------------------------------------------------------
+# --- gene identifiers
+# -------------------------------------------------------------------------------------------
 def test_strip_version_keeps_par_suffix():
     assert strip_version("ENSG00000182378.14_PAR_Y") == "ENSG00000182378_PAR_Y"
     assert strip_version("ENSG00000141510") == "ENSG00000141510"
@@ -37,23 +43,34 @@ def test_resolve_markers_reports_every_problem(gtf_path):
     markers = {"astrocyte": ["GFAP", "Aqp4", "DUP", "NOTAGENE"]}
     resolved, report = resolve_markers(markers, table)
     status = dict(report.select("symbol", "status").iter_rows())
-    assert status == {"GFAP": "resolved", "Aqp4": "case_mismatch", "DUP": "multiple_ids", "NOTAGENE": "not_found"}
+    assert status == {
+        "GFAP": "resolved",
+        "Aqp4": "case_mismatch",
+        "DUP": "multiple_ids",
+        "NOTAGENE": "not_found",
+    }
     assert resolved["astrocyte"] == ["ENSG00000000001", "ENSG00000000005", "ENSG00000000006"]
 
 
 def test_resolve_markers_most_expressed_rule(gtf_path):
     table = annotation_table_from_gtf(gtf_path)
     expression = {"ENSG00000000005": 1.0, "ENSG00000000006": 5.0}
-    resolved, _ = resolve_markers({"x": ["DUP"]}, table, multi_id_rule="most_expressed", expression=expression)
+    resolved, _ = resolve_markers(
+        {"x": ["DUP"]}, table, multi_id_rule="most_expressed", expression=expression
+    )
     assert resolved["x"] == ["ENSG00000000006"]
 
 
 def test_symbols_for_falls_back_to_id(gtf_path):
     table = annotation_table_from_gtf(gtf_path)
-    assert symbols_for(["ENSG00000000001", "ENSG00000000007"], table) == ["GFAP", "ENSG00000000007"]
+    assert symbols_for(["ENSG00000000001", "ENSG00000000007"], table) == [
+        "GFAP",
+        "ENSG00000000007",
+    ]
 
 
-# --- QC ---------------------------------------------------------------------------------------------------------
+# --- QC
+# ---------------------------------------------------------------------------------------------------------
 def _annotation_for(adata):
     ids = [strip_version(g) for g in adata.var_names]
     chromosome = ["MT" if 30 <= i < 35 else "1" for i in range(len(ids))]
@@ -102,7 +119,8 @@ def test_nuclear_fraction_value(sim_adata):
     assert np.nanmedian(sim_adata.obs["nuclear_fraction"]) == pytest.approx(0.3, abs=0.05)
 
 
-# --- doublets ---------------------------------------------------------------------------------------------------
+# --- doublets
+# ---------------------------------------------------------------------------------------------------
 def test_combine_calls_treats_nan_as_not_called():
     consensus, union = combine_calls(np.array([1, 1, 0, np.nan]), np.array([1, 0, 0, 1]))
     assert consensus.tolist() == [True, False, False, False]
@@ -124,7 +142,9 @@ def test_doublet_cluster_review_and_mask(sim_adata):
     sim_adata.obs["doublet_any"] = any_call
     sim_adata.obs["doublet_consensus"] = any_call & (rng.random(n) < 0.5)
     lineages = {"A": list(sim_adata.var_names[0:10]), "B": list(sim_adata.var_names[10:20])}
-    review = doublet_cluster_review(sim_adata, "first_clusters", lineage_markers=lineages)
+    review = doublet_cluster_review(
+        sim_adata, "first_clusters", "capture", lineage_markers=lineages
+    )
     status = dict(review.select("cluster", "status").iter_rows())
     assert status["AB"] == "remove"
     assert status["C"] == "keep"
@@ -132,30 +152,43 @@ def test_doublet_cluster_review_and_mask(sim_adata):
     assert mask[hybrid].all()
 
 
-# --- normalization ----------------------------------------------------------------------------------------------
+# --- normalization
+# ----------------------------------------------------------------------------------------------
 def test_median_size_factors_and_log_normalize(sim_adata):
     factors = median_size_factors(sim_adata)
-    assert factors.mean() == pytest.approx(1.0)
+    totals = np.asarray(sim_adata.layers["counts"].sum(axis=1)).ravel()
+    assert np.median(factors) == pytest.approx(1.0)
+    assert factors == pytest.approx(totals / np.median(totals))
     log_normalize(sim_adata, factors)
-    expected = np.log1p(sim_adata.layers["counts"][0].toarray().ravel() / sim_adata.obs["size_factor"].iloc[0])
+    expected = np.log1p(
+        sim_adata.layers["counts"][0].toarray().ravel() / sim_adata.obs["size_factor"].iloc[0]
+    )
     assert np.allclose(sim_adata.layers["log1p_norm"][0].toarray().ravel(), expected)
 
 
-# --- marker annotation ------------------------------------------------------------------------------------------
+# --- marker annotation
+# ------------------------------------------------------------------------------------------
 def test_marker_annotation_recovers_types(sim_adata):
     log_normalize(sim_adata, median_size_factors(sim_adata))
     names = sim_adata.var_names
-    net = marker_network({"A": list(names[0:10]), "B": list(names[10:20]), "C": list(names[20:30])})
+    net = marker_network(
+        {"A": list(names[0:10]), "B": list(names[10:20]), "C": list(names[20:30])}
+    )
     scores = score_cells(sim_adata, net)
     table = annotate_clusters(scores, sim_adata.obs["cell_type"])
     assert dict(table.select("cluster", "label").iter_rows()) == {"A": "A", "B": "B", "C": "C"}
 
 
-# --- pseudobulk and abundance -----------------------------------------------------------------------------------
+# --- pseudobulk and abundance
+# -----------------------------------------------------------------------------------
 def test_pseudobulk_detects_planted_de_gene(sim_adata):
-    pseudobulk, report = aggregate_counts(sim_adata, "sample", "cell_type", covariates=["condition"])
-    assert report["kept"].all()
-    results, skipped = pseudobulk_de(pseudobulk, design="~condition", contrast=("condition", "case", "control"))
+    pseudobulk, report = aggregate_counts(
+        sim_adata, "sample", "cell_type", covariates=["condition"]
+    )
+    assert (report["status"] == "kept").all()
+    results, skipped = pseudobulk_de(
+        pseudobulk, design="~condition", contrast=("condition", "case", "control")
+    )
     top = results.filter(pl.col("cell_type") == "A").sort("p_value").row(0, named=True)
     assert top["gene_id"] == sim_adata.var_names[40]
     assert top["log2_fold_change"] > 1
@@ -174,9 +207,12 @@ def test_cell_count_table_has_explicit_zeros(sim_adata):
     obs = sim_adata.obs[~((sim_adata.obs["sample"] == "s0") & (sim_adata.obs["cell_type"] == "B"))]
     table = cell_count_table(obs, "sample", "cell_type", ["condition"])
     assert table.height == 6 * 3
+    assert set(table["sample_status"]) == {"ok"}
     zero = table.filter((pl.col("sample") == "s0") & (pl.col("cell_type") == "B"))
     assert zero["n_cells"][0] == 0
-    assert table.group_by("sample").agg(pl.col("proportion").sum())["proportion"].to_numpy() == pytest.approx(1.0)
+    assert table.group_by("sample").agg(pl.col("proportion").sum())[
+        "proportion"
+    ].to_numpy() == pytest.approx(1.0)
     assert isinstance(wide_counts(table), pd.DataFrame)
 
 
@@ -192,7 +228,10 @@ def test_detect_doublets_finds_planted_doublets():
     rng = np.random.default_rng(0)
     x = adata.layers["counts"].toarray()
     types = adata.obs["cell_type"].to_numpy()
-    a, b = rng.choice(np.flatnonzero(types == "A"), 15), rng.choice(np.flatnonzero(types == "B"), 15)
+    a, b = (
+        rng.choice(np.flatnonzero(types == "A"), 15),
+        rng.choice(np.flatnonzero(types == "B"), 15),
+    )
     doublets = x[a] + x[b]
     combined = ad.AnnData(X=sp.csr_matrix(np.vstack([x, doublets])))
     combined.layers["counts"] = combined.X.copy()
@@ -208,7 +247,9 @@ def test_detect_doublets_finds_planted_doublets():
 RSCRIPT = __import__("os").environ.get("RECIPES_RSCRIPT", "Rscript")
 
 
-@pytest.mark.skipif(__import__("shutil").which(RSCRIPT) is None, reason="Rscript with scran not available")
+@pytest.mark.skipif(
+    __import__("shutil").which(RSCRIPT) is None, reason="Rscript with scran not available"
+)
 def test_scran_size_factors_track_depth(sim_adata):
     from recipes.scrnaseq.normalization import scran_size_factors
 
@@ -261,11 +302,15 @@ def test_scranpy_refuses_huge_dense_copy(sim_adata):
         scranpy_size_factors(sim_adata, max_dense_gb=1e-6)
 
 
-@pytest.mark.skipif(__import__("shutil").which(RSCRIPT) is None, reason="Rscript with scran not available")
+@pytest.mark.skipif(
+    __import__("shutil").which(RSCRIPT) is None, reason="Rscript with scran not available"
+)
 def test_scranpy_agrees_with_r_scran():
     from recipes.scrnaseq.normalization import scran_size_factors, scranpy_size_factors
 
     adata, _ = _composition_sim(n_per=300)
     py = scranpy_size_factors(adata, cluster_key="cell_type")
-    r = scran_size_factors(adata, cluster_key="cell_type", rscript=RSCRIPT)["size_factor"].to_numpy()
+    r = scran_size_factors(adata, cluster_key="cell_type", rscript=RSCRIPT)[
+        "size_factor"
+    ].to_numpy()
     assert np.corrcoef(np.log(py), np.log(r))[0, 1] > 0.98

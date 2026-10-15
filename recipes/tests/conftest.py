@@ -33,10 +33,14 @@ def gtf_path(tmp_path):
     return path
 
 
-def simulate_counts(seed: int = 0, n_genes: int = 300, cells_per_type: int = 60, de_gene_fold: float = 4.0):
-    """Negative-binomial counts: 3 cell types x 6 samples (3 control, 3 case), with markers and one DE gene.
+def simulate_counts(
+    seed: int = 0, n_genes: int = 300, cells_per_type: int = 60, de_gene_fold: float = 4.0
+):
+    """Negative-binomial counts: 3 cell types x 6 samples (3 control, 3 case), with markers and one
+    DE gene.
 
-    Genes 0-9 mark type A, 10-19 type B, 20-29 type C; genes 30-34 are mitochondrial; gene 40 is up-regulated
+    Genes 0-9 mark type A, 10-19 type B, 20-29 type C; genes 30-34 are mitochondrial; gene 40 is
+    up-regulated
     ``de_gene_fold`` times in type A of case samples. Spliced/unspliced layers split
     each count binomially (30% unspliced).
     """
@@ -58,7 +62,12 @@ def simulate_counts(seed: int = 0, n_genes: int = 300, cells_per_type: int = 60,
             mu = sample_mean[None, :] * depth
             rows.append(rng.negative_binomial(5, 5 / (5 + mu)))
             obs += [
-                {"cell_type": cell_type, "sample": sample, "condition": condition[sample], "capture": sample}
+                {
+                    "cell_type": cell_type,
+                    "sample": sample,
+                    "condition": condition[sample],
+                    "capture": sample,
+                }
                 for _ in range(n)
             ]
     counts = np.vstack(rows).astype(np.float32)
