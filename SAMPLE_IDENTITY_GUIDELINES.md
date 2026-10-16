@@ -1,6 +1,6 @@
 # Sample identity and duplicate detection guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-17)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys point to `OMICS_REFERENCES.md`; keys with a
 > dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by ***Why***, ***Trade-off*** and
@@ -105,6 +105,26 @@
 * `ID-POOL-002` **Match demultiplexed clusters to donors** with the fingerprints of §4 (pseudobulk BAM per cluster against donor DNA
   or other samples).
 * `ID-POOL-003` Genotype demultiplexing also detects cross-donor doublets and estimates ambient RNA [Heaton 2020].
+* `ID-POOL-005` **Label clusters with the strongest available evidence, in this order, and record per library which one was used**:
+  (1) per-barcode donor labels from the data authors, checked against your own clusters (most labelled barcodes of a
+  cluster agree on one donor); (2) genotype references of the same donors from other data (bulk RNA-seq, DNA genotypes,
+  another tissue, or another pool containing the donor) matched to per-cluster fingerprints, RNA against RNA being
+  adequate on common exonic sites; (3) sex, only in pools of one XX and one XY donor; (4) otherwise keep clusters as
+  unnamed individuals of the pool.
+  * *Why:* genotype-free demultiplexing returns anonymous clusters; donor attributes (condition, age, genotype) can
+    only be attached through external evidence, and its strength differs between libraries.
+* `ID-POOL-006` **Before deleting a pooled library's BAM, MUST store one genotype fingerprint per cluster** (reads split by cell
+  barcode) together with the barcode-to-cluster assignment, so that clusters can be labelled when a reference becomes
+  available without re-mapping.
+* `ID-POOL-007` **A cluster-to-donor match MUST be one-to-one, MUST name a donor of that pool, and MUST pass stated thresholds** on
+  relatedness, on the margin to the next-best donor and on the number of shared sites; report the thresholds and the
+  full cluster-by-reference relatedness table.
+* `ID-POOL-008` **Unlabelled clusters of a pool whose donors differ in condition MUST NOT be used for condition comparisons.**
+  Unlabelled clusters of a pool whose donors share the condition MAY be used as individuals of that condition, with
+  donor-level covariates set to missing.
+* `ID-POOL-009` Genotype-free demultiplexers (vireo, souporcell, freemuxlet from popscle) are interchangeable for this purpose
+  when run on common population variants (e.g. allele frequency 0.1–0.9) in transcribed regions; the labelling
+  rules above do not depend on the demultiplexer.
 * `ID-POOL-004` Reliability varies by species and depends on genetic diversity; inbred mouse strains cannot be demultiplexed by
   genotype [Cardiello 2023].
 

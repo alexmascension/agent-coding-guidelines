@@ -1,6 +1,6 @@
 # Meta-analysis guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-17)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Borenstein 2023]` point to
 > `OMICS_REFERENCES.md`; keys marked with a dagger point to `STATISTICS_REFERENCES.md`.
@@ -159,6 +159,11 @@ Decide, in the protocol, which of these strategies is used and why [Ramasamy 200
 * `META-DATA-002` Map genes to a common identifier set and report genes missing from each study; a gene absent from a study is
   missing, not zero.
 * `META-DATA-003` Curate study-level metadata into one table with controlled vocabulary (`CODING_GUIDELINES.md` §6).
+* `META-DATA-005` **When reprocessing pooled single-cell data from another study, re-run genotype demultiplexing and compare it with the
+  authors' assignment when available** (`SAMPLE_IDENTITY_GUIDELINES.md` §6). Look for author labels in deposited
+  processed objects (h5ad, loom, RDS, browser exports such as SCope or cellxgene), not only in the raw-data archive.
+  If the authors labelled clusters with data that are not deposited (e.g. bulk RNA-seq of the donors), record that the
+  donor labels depend on those data and request them together with raw-data access.
 * `META-DATA-004` Prefer full per-gene summary statistics over published lists of significant genes: lists are already filtered by
   significance and bias the combination.
 

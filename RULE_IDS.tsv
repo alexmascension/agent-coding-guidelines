@@ -308,6 +308,11 @@ ID-POOL-001	active	SAMPLE_IDENTITY_GUIDELINES.md	Pooled designs (cells of severa
 ID-POOL-002	active	SAMPLE_IDENTITY_GUIDELINES.md	Match demultiplexed clusters to donors with the fingerprints of §4 (pseudobulk B
 ID-POOL-003	active	SAMPLE_IDENTITY_GUIDELINES.md	Genotype demultiplexing also detects cross-donor doublets and estimates ambient 
 ID-POOL-004	active	SAMPLE_IDENTITY_GUIDELINES.md	Reliability varies by species and depends on genetic diversity; inbred mouse str
+ID-POOL-005	active	SAMPLE_IDENTITY_GUIDELINES.md	Label clusters with the strongest available evidence, in this order, and record 
+ID-POOL-006	active	SAMPLE_IDENTITY_GUIDELINES.md	Before deleting a pooled library's BAM, MUST store one genotype fingerprint per 
+ID-POOL-007	active	SAMPLE_IDENTITY_GUIDELINES.md	A cluster-to-donor match MUST be one-to-one, MUST name a donor of that pool, and
+ID-POOL-008	active	SAMPLE_IDENTITY_GUIDELINES.md	Unlabelled clusters of a pool whose donors differ in condition MUST NOT be used 
+ID-POOL-009	active	SAMPLE_IDENTITY_GUIDELINES.md	Genotype-free demultiplexers (vireo, souporcell, freemuxlet from popscle) are in
 ID-REP-001	active	SAMPLE_IDENTITY_GUIDELINES.md	Per sample: duplicate group, sex call and concordance, best-matching donor by ge
 ID-REP-002	active	SAMPLE_IDENTITY_GUIDELINES.md	Per pair (for flagged pairs): relatedness, IBS0, IBS2, number of shared sites, e
 ID-REP-003	active	SAMPLE_IDENTITY_GUIDELINES.md	Figures: relatedness against IBS0 for all pairs coloured by expected relationshi
@@ -318,6 +323,7 @@ META-DATA-001	active	META_ANALYSIS_GUIDELINES.md	Reprocess raw data with one pip
 META-DATA-002	active	META_ANALYSIS_GUIDELINES.md	Map genes to a common identifier set and report genes missing from each study; a
 META-DATA-003	active	META_ANALYSIS_GUIDELINES.md	Curate study-level metadata into one table with controlled vocabulary (CODING_GU
 META-DATA-004	active	META_ANALYSIS_GUIDELINES.md	Prefer full per-gene summary statistics over published lists of significant gene
+META-DATA-005	active	META_ANALYSIS_GUIDELINES.md	When reprocessing pooled single-cell data from another study, re-run genotype de
 META-EFF-001	active	META_ANALYSIS_GUIDELINES.md	Use an effect measure that is comparable across studies:
 META-EFF-002	active	META_ANALYSIS_GUIDELINES.md	Harmonize the estimand, not only scale and direction: the same contrast, compara
 META-EFF-003	active	META_ANALYSIS_GUIDELINES.md	Ratios are combined on the log scale and back-transformed only for display.
