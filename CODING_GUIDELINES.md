@@ -14,7 +14,7 @@
 
 ## 0. How to use this document
 
-* `CODE-USE-001` This file is project-agnostic. Copy it **verbatim** into the root of every project.
+* `CODE-USE-001` This file is project-agnostic. Copy it **verbatim** into a guidelines folder in the root of every project.
 * `CODE-USE-002` Everything specific to a project (stack details, layout, vocabulary, data invariants,
   conventions, interfaces, decisions) goes into `PROJECT_CONTEXT.md` (see §2, documentation
   set).
