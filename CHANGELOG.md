@@ -5,6 +5,28 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-17 (labelling of single-cell pools)
+
+Prompted by reprocessing public pooled snRNA-seq (Masrori et al. 2025, Nat Neurosci,
+doi:10.1038/s41593-025-02075-1), where donors were assigned to freemuxlet clusters by matching to
+per-patient bulk RNA-seq, and per-cell labels were only available in a SCope loom.
+
+### SAMPLE_IDENTITY_GUIDELINES.md [2.1.0]
+
+#### Added
+
+- §6: order of evidence for labelling clusters (author labels, genotype references of the same donors from
+  other data, sex in XX+XY pools, unnamed individuals); per-cluster fingerprints MUST be stored before BAM
+  deletion; acceptance conditions for cluster-to-donor matches; unlabelled clusters of mixed-condition pools
+  MUST NOT enter condition comparisons; genotype-free demultiplexers interchangeable on common transcribed variants.
+
+### META_ANALYSIS_GUIDELINES.md [2.1.0]
+
+#### Added
+
+- §10: when reprocessing public pools, re-run demultiplexing, compare with author assignments, look for labels in
+  processed objects and browser exports, and record dependence on undeposited reference data.
+
 ## 2026-10-15 (external review integrated; rule identifiers)
 
 Changes after an external review of commit `97ae0ce`. Each code finding has a regression test in
