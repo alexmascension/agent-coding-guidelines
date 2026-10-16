@@ -7,6 +7,32 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 
 ## 2026-10-16
 
+### HPC_GUIDELINES.md [1.0.0]
+
+#### Added
+
+- New guide for shared clusters with Slurm (40 rules, prefix `HPC`): storage roles (`CODE`, `WORK`, `ARCHIVE`,
+  `NODE`) with the same path `<root>/$USER/<repo>` on every filesystem, role variables from a tracked site file,
+  repository links; staging and promotion with manifests; no-backup assumption; Apptainer images from tracked
+  definitions; job conventions (`--export=NONE`, `--no-requeue`, measured resources, arrays with throttle,
+  idempotent tasks); workflow managers; small files and node-local scratch; provenance; rules for agents on
+  login nodes and for mass submission or deletion.
+- Site profile `hpc_sites/DIPC_HYPERION.md` (checked against the DIPC documentation on 2026-10-16): filesystems and
+  quotas, general partitions and QoS (further ones can be granted per group), GPU constraints, modules.
+- Recipes `recipes/hpc/` (`setup_storage.sh`, `stage.sh`, `promote.sh`, `load_site.sh`, `job.slurm`,
+  `sites/local.env`, `sites/hyperion.env`) with tests in `recipes/tests/test_hpc_scripts.py`.
+
+### CODING_GUIDELINES.md [3.0.1]
+
+#### Changed
+
+- §26 (related guidelines) lists `HPC_GUIDELINES.md`.
+
+### Tools
+
+- `tools/rule_ids.py`: prefix `HPC` and its topics. `tools/check_guides.py`: also checks cross-references and
+  recipe paths in `hpc_sites/*.md`, and recipe paths ending in `.sh`, `.slurm`, `.env`.
+
 ### SCRNASEQ_GUIDELINES.md [3.1.0]
 
 #### Changed

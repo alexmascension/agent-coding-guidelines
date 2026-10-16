@@ -20,9 +20,11 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 | `SEX_INFERENCE_GUIDELINES.md` | Sex-chromosome complement from expression; reference routing | stable |
 | `SAMPLE_IDENTITY_GUIDELINES.md` | Duplicates, swaps, mixtures, genotype fingerprints | stable |
 | `DECONVOLUTION_GUIDELINES.md` | Cell-type composition of bulk samples | stable |
+| `HPC_GUIDELINES.md` | Shared clusters with Slurm: storage roles, staging and promotion, containers, jobs, agents on clusters | new |
+| `hpc_sites/` | Site profiles (facts of one cluster, dated): `DIPC_HYPERION.md` | — |
 | `FIGURE_GUIDELINES.md` | Figures | planned |
 | `OMICS_REFERENCES.md` / `.bib`, `STATISTICS_REFERENCES.md` / `.bib` | References with keys used in the guides | — |
-| `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.2.0 |
+| `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.3.0 |
 | `CHANGELOG.md` | Changes per guide (semantic versioning per file) | — |
 | `RULE_IDS.tsv` | Registry of rule identifiers (active and retired) | — |
 
@@ -52,6 +54,7 @@ ruff check recipes tools && ruff format --check recipes tools
 python tools/check_guides.py    # citation keys, cross-references, recipe paths, versions
 python tools/rule_ids.py check  # every rule has a unique, registered identifier
 python tools/rule_ids.py assign # after adding rules: assign identifiers, update RULE_IDS.tsv
+shellcheck -x recipes/hpc/*.sh recipes/hpc/job.slurm
 ```
 
 CI (`.github/workflows/ci.yml`) runs these checks, the tests with and without R, and an installation test from the

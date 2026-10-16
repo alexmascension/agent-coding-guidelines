@@ -245,6 +245,46 @@ DECON-VAL-001	active	DECONVOLUTION_GUIDELINES.md	Pseudobulk validation: build ps
 DECON-VAL-002	active	DECONVOLUTION_GUIDELINES.md	Orthogonal measurements where available: histology, immunostaining, snRNA-seq pr
 DECON-VAL-003	active	DECONVOLUTION_GUIDELINES.md	Sanity checks: proportions are non-negative and sum to 1 (or are explicitly unco
 DECON-VAL-004	active	DECONVOLUTION_GUIDELINES.md	Report the uncertainty: method agreement, validation error per cell type, and ce
+HPC-AGENT-001	active	HPC_GUIDELINES.md	MUST NOT run computations on login nodes. Inspect files, edit, submit, and run l
+HPC-AGENT-002	active	HPC_GUIDELINES.md	MUST ask before submitting more than a handful of jobs or any job array larger t
+HPC-AGENT-003	active	HPC_GUIDELINES.md	Cancel only own jobs, by job ID; never scancel -u $USER without confirmation.
+HPC-AGENT-004	active	HPC_GUIDELINES.md	Check quotas (size and file count) before jobs that create large outputs, and re
+HPC-AGENT-005	active	HPC_GUIDELINES.md	Report job IDs, the expected run time and how to monitor them (squeue, sacct) af
+HPC-ENV-001	active	HPC_GUIDELINES.md	Default: one Apptainer (Singularity) image per environment, built from tracked d
+HPC-ENV-002	active	HPC_GUIDELINES.md	Record the image digest (sha256sum of the .sif) with every result §7 (provenance
+HPC-ENV-003	active	HPC_GUIDELINES.md	Redirect every cache to WORK/cache/ before building or pulling: APPTAINER_CACHED
+HPC-ENV-004	active	HPC_GUIDELINES.md	GPU jobs run images with --nv; the CUDA version of the image MUST be supported b
+HPC-FLOW-001	active	HPC_GUIDELINES.md	Raw inputs live once in ARCHIVE/data/raw and are read-only (CODE-PROV-001). Jobs
+HPC-FLOW-002	active	HPC_GUIDELINES.md	Jobs write only to WORK (and NODE). Final results reach ARCHIVE through an expli
+HPC-FLOW-003	active	HPC_GUIDELINES.md	Assume nothing on the cluster is backed up unless the site profile says so. Code
+HPC-FLOW-004	active	HPC_GUIDELINES.md	WORK is not storage. Remove intermediates of finished runs (or archive them as o
+HPC-FLOW-005	active	HPC_GUIDELINES.md	Transfers use rsync (-a, checksums for verification, --dry-run before any --dele
+HPC-IO-001	active	HPC_GUIDELINES.md	Avoid many small files on parallel filesystems: keep fewer than a few thousand f
+HPC-IO-002	active	HPC_GUIDELINES.md	NODE directories are created and removed by the job (mkdir -p "$PROJECT_NODE" at
+HPC-IO-003	active	HPC_GUIDELINES.md	Read large inputs sequentially and once per job; avoid many jobs reading the sam
+HPC-JOB-001	active	HPC_GUIDELINES.md	Batch scripts are tracked in the repository (slurm/ or the workflow manager conf
+HPC-JOB-002	active	HPC_GUIDELINES.md	Resources are requested from measurements: run once with generous limits on a sm
+HPC-JOB-003	active	HPC_GUIDELINES.md	Test before production: a short run on the test QoS or a reduced input, then the
+HPC-JOB-004	active	HPC_GUIDELINES.md	Independent tasks use job arrays with a throttle (--array=1-500%50) and one task
+HPC-JOB-005	active	HPC_GUIDELINES.md	Jobs are idempotent and restartable: each task writes to a temporary name and re
+HPC-JOB-006	active	HPC_GUIDELINES.md	Preemptible partitions only for jobs that tolerate being killed at any time: che
+HPC-JOB-007	active	HPC_GUIDELINES.md	Interactive work runs in an allocation (salloc/srun --pty bash), never on login 
+HPC-PROV-001	active	HPC_GUIDELINES.md	Every run directory has a manifest written by the job or the workflow manager: c
+HPC-PROV-002	active	HPC_GUIDELINES.md	Runs are named <YYYYMMDD>_<short description>_<short commit>; the same name is u
+HPC-REP-001	active	HPC_GUIDELINES.md	Site profile used and its date; the values of the role roots; partitions and QoS
+HPC-REP-002	active	HPC_GUIDELINES.md	Image names, definition files and digests; modules used.
+HPC-REP-003	active	HPC_GUIDELINES.md	Staging and promotion rules of the project (which inputs are staged, which outpu
+HPC-REP-004	active	HPC_GUIDELINES.md	Off-cluster copies of raw data and promoted results.
+HPC-REP-005	active	HPC_GUIDELINES.md	Thresholds for agents (maximum jobs or array size without confirmation).
+HPC-STOR-001	active	HPC_GUIDELINES.md	Every project has the same relative path on every storage area: <root>/$USER/<re
+HPC-STOR-002	active	HPC_GUIDELINES.md	Fixed subdirectories inside each role root (<root>/$USER/<repo>/...): WORK: data
+HPC-STOR-003	active	HPC_GUIDELINES.md	Code finds the roles through variables, never through absolute paths (CODE-CONF-
+HPC-STOR-004	active	HPC_GUIDELINES.md	The repository exposes the roles as gitignored symbolic links created by a track
+HPC-STOR-005	active	HPC_GUIDELINES.md	Code, environments and caches never go to CODE beyond source and configuration. 
+HPC-WF-001	active	HPC_GUIDELINES.md	Nextflow, Snakemake or similar submit each step as a job; the controller process
+HPC-WF-002	active	HPC_GUIDELINES.md	Work directory, caches and outputs in WORK (-w $PROJECT_WORK/work/<pipeline>); o
+HPC-WF-003	active	HPC_GUIDELINES.md	Pin pipeline and engine versions (e.g. -r 3.27.0 for nf-core, the module version
+HPC-WF-004	active	HPC_GUIDELINES.md	Clean the work directory of completed runs (nextflow clean) once results are pro
 ID-DUP-001	active	SAMPLE_IDENTITY_GUIDELINES.md	Exact duplicates: hash the raw read files (checksum) and the count vectors; iden
 ID-DUP-002	active	SAMPLE_IDENTITY_GUIDELINES.md	Near-duplicates (same library re-sequenced or re-deposited, possibly with differ
 ID-DUP-003	active	SAMPLE_IDENTITY_GUIDELINES.md	Check metadata in parallel: identical read counts, read names, flowcell or lane 

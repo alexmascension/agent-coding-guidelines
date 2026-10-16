@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.1 (2026-10-16)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -562,6 +562,8 @@ Available in the same repository; copy the ones relevant to the project:
 * `SEX_INFERENCE_GUIDELINES.md` — sex-chromosome complement from expression; reference routing.
 * `SAMPLE_IDENTITY_GUIDELINES.md` — duplicates, swaps, mixtures and genotype fingerprints.
 * `DECONVOLUTION_GUIDELINES.md` — cell-type composition of bulk samples.
+* `HPC_GUIDELINES.md` — shared clusters with a batch scheduler: storage roles, data flow, containers, jobs; site
+  facts in `hpc_sites/`.
 * `STATISTICS_REFERENCES.md`, `OMICS_REFERENCES.md` — references cited by the guidelines above.
 
 ### Recipes (reference implementations)

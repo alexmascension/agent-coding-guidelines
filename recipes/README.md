@@ -36,6 +36,7 @@ Status: **implemented** (module and tests here), **external** (run with the cite
 | DECONVOLUTION | Held-out pseudobulk validation, NNLS baseline | planned | — | Bisque, MuSiC, BayesPrism, hspe are external |
 | META_ANALYSIS | Per-gene random effects (PM + HKSJ), prediction interval | planned | — | — |
 | SPATIAL | Per-section statistics to donor-level test, negative-control FDR | planned | — | — |
+| HPC §1–2, §4 | Role directories and links, staging, promotion with manifest; job template | implemented | `hpc/setup_storage.sh`, `hpc/stage.sh`, `hpc/promote.sh`, `hpc/job.slurm`, `hpc/sites/*.env` | Temporary directories as role roots: links, no replacement of existing directories, local site, checksummed read-only promotion, refusal to overwrite or to copy symbolic links. No scheduler in tests; `job.slurm` is only linted |
 
 ## Installation and tests
 

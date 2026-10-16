@@ -11,6 +11,7 @@ Checks
   key, and every key in ``STATISTICS_GUIDELINES.md``, is a bold key of
   ``STATISTICS_REFERENCES.md``.
 * Every ```X_GUIDELINES.md` §N`` reference points to an existing section of an existing guide.
+* Guides and site profiles (``hpc_sites/*.md``) are checked for both.
 * Every ``recipes/...`` path cited in a guide exists.
 * Every guide declares ``Version MAJOR.MINOR.PATCH`` in its header.
 """
@@ -24,7 +25,7 @@ KEY = re.compile(r"[A-ZÀ-Ž][\w'’\-À-ž &]+ \d{4}[a-z]?†?")
 GROUP = re.compile(r"\[([^\]\[]*?\d{4}[a-z]?†?[^\]\[]*?)\]")
 XREF = re.compile(r"`(\w+_GUIDELINES\.md)` §(\d+(?:\.\d+)*)")
 HEADING = re.compile(r"^#{2,4} (\d+(?:\.\d+)*)\.? ", re.M)
-RECIPE = re.compile(r"`(recipes/[\w/]+\.(?:py|R))`")
+RECIPE = re.compile(r"`(recipes/[\w/]+\.(?:py|R|sh|slurm|env))`")
 VERSION = re.compile(r"Version \d+\.\d+\.\d+")
 BOLD_KEY = re.compile(r"^- \*\*\[([^\]]+)\]\*\*", re.M)
 
@@ -41,9 +42,9 @@ def main() -> int:
     stats_keys = bold_keys(ROOT / "STATISTICS_REFERENCES.md")
     headings = {g.name: set(HEADING.findall(g.read_text())) for g in guides}
     problems = []
-    for guide in guides:
+    for guide in [*guides, *sorted(ROOT.glob("hpc_sites/*.md"))]:
         text = guide.read_text()
-        if not VERSION.search(text[:500]):
+        if guide in guides and not VERSION.search(text[:500]):
             problems.append(f"{guide.name}: no version in header")
         for group in GROUP.findall(text):
             for key in (k.strip() for k in group.split(";")):

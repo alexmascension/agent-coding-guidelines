@@ -36,6 +36,7 @@ PREFIX = {
     "SEX_INFERENCE_GUIDELINES.md": "SEX",
     "SAMPLE_IDENTITY_GUIDELINES.md": "ID",
     "DECONVOLUTION_GUIDELINES.md": "DECON",
+    "HPC_GUIDELINES.md": "HPC",
 }
 # Topic code per section number. Sections absent from a map contain no rules: scope and audience
 # notes (§0 of the
@@ -157,6 +158,17 @@ TOPIC = {
     },
     "ID": {1: "WHY", 2: "ORDER", 3: "DUP", 4: "GENO", 5: "MIX", 6: "POOL", 7: "RES", 8: "REP"},
     "DECON": {1: "EST", 2: "REFR", 3: "PREP", 4: "METH", 5: "VAL", 6: "DOWN", 7: "REP", 8: "SPAT"},
+    "HPC": {
+        1: "STOR",
+        2: "FLOW",
+        3: "ENV",
+        4: "JOB",
+        5: "WF",
+        6: "IO",
+        7: "PROV",
+        8: "AGENT",
+        9: "REP",
+    },
 }
 # Subsections with their own topic (overrides the section topic from the subsection heading on).
 SUBTOPIC = {("CODE", "Recipes (reference implementations)"): "RCP"}
