@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.1.0 (2026-10-16)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -102,10 +102,23 @@
 ## 3. Quantification
 
 * `SC-QUANT-001` **Default: STARsolo** [Kaminow 2021], gene-level counts, with these features in one run:
-  `--soloFeatures Gene GeneFull Velocyto` (add `SJ` if splice junctions are needed).
-  * `Gene` (exonic reads) is the main matrix for cells; `GeneFull` (exons and introns) is the main matrix for nuclei,
-    where most reads are unspliced; `Velocyto` gives spliced, unspliced and ambiguous counts, stored as
-    `layers["spliced"]`, `layers["unspliced"]`, `layers["ambiguous"]`.
+  `--soloFeatures Gene GeneFull_Ex50pAS Velocyto` (add `SJ` if splice junctions are needed; STAR ≥ 2.7.10a).
+  * `Gene` (exonic reads) is the main matrix for cells; `GeneFull_Ex50pAS` (exons and introns, exonic overlap
+    prioritized) is the main matrix for nuclei, where most reads are unspliced, and for cells when intronic reads are
+    counted; `Velocyto` gives spliced, unspliced and ambiguous counts, stored as `layers["spliced"]`,
+    `layers["unspliced"]`, `layers["ambiguous"]`.
+  * *Why `GeneFull_Ex50pAS` rather than `GeneFull`:* `GeneFull` assigns a read to every gene whose locus (exons or
+    introns) it overlaps, so a read from a gene nested inside an intron of another gene on the same strand is
+    ambiguous and discarded. Genes nested in long introns then lose all or most of their counts; this is frequent in
+    compact genomes (Drosophila) and in long neuronal genes of mammals. `GeneFull_Ex50pAS` assigns a read to the gene
+    in which more than 50% of it is exonic, so the nested gene keeps its exonic and 3' UTR reads; reads in exons
+    shared by both genes remain ambiguous, and reads entirely exonic in the antisense direction are not counted
+    (STARsolo documentation). It is the option the STARsolo author recommends to approach Cell Ranger with introns,
+    and the one used for single-nucleus data by the Broad/HCA Optimus pipeline.
+  * *Trade-off:* counts differ from `GeneFull` for overlapping genes; matrices from the two options are not
+    interchangeable within a project.
+  * *Deviate when:* `GeneFull` MAY be added as a further layer (e.g. `layers["counts_genefull"]`) to compare with
+    earlier analyses; it is not the input of downstream steps.
   * To match Cell Ranger 4 or later, add `--clipAdapterType CellRanger4 --outFilterScoreMin 30
     --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --soloUMIfiltering MultiGeneUMI_CR --soloUMIdedup 1MM_CR`
     (STARsolo documentation).

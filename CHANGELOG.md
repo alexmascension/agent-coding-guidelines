@@ -5,6 +5,19 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-16
+
+### SCRNASEQ_GUIDELINES.md [3.1.0]
+
+#### Changed
+
+- `SC-QUANT-001`: the main matrix for nuclei (and for cells when introns are counted) is `GeneFull_Ex50pAS`
+  instead of `GeneFull` (`--soloFeatures Gene GeneFull_Ex50pAS Velocyto`, STAR ≥ 2.7.10a). `GeneFull` treats any
+  overlap with another gene's locus as ambiguity, so genes nested in introns of other genes on the same strand lose
+  their counts; `GeneFull_Ex50pAS` assigns reads that are more than 50% exonic in one gene to that gene. `GeneFull`
+  remains an optional comparison layer. MINOR: the rule keeps its scope (full-gene counting for nuclei) and
+  refines the counting option.
+
 ## 2026-10-15 (external review integrated; rule identifiers)
 
 Changes after an external review of commit `97ae0ce`. Each code finding has a regression test in
