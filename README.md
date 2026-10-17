@@ -34,8 +34,8 @@ TCR/BCR.
 
 ## Use in a project
 
-1. Copy `CODING_GUIDELINES.md` and the domain guides the project needs, **verbatim**, into the project root, with the
-   reference files they cite.
+1. Copy `CODING_GUIDELINES.md` and the domain guides the project needs, **verbatim**, into `guidelines/` at the
+   project root, with the reference files they cite and, for clusters, the site profile (`guidelines/hpc_sites/`).
 2. Create `AGENTS.md` (entry point for agents; `CLAUDE.md` may contain `@AGENTS.md`) and `PROJECT_CONTEXT.md` with
    the structure of `CODING_GUIDELINES.md` §2. Adaptations go to *Overrides* in `PROJECT_CONTEXT.md`, never into the
    copied guides; *Overrides* starts with the list of adopted guides and their versions, and refers to rules by

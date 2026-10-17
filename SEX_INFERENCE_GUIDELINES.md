@@ -1,6 +1,6 @@
 # Sex inference guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-17)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Olney 2020]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by its
@@ -34,7 +34,9 @@
 
 ## 2. Marker genes
 
-* `SEX-MARK-001` **Female-specific signal: *XIST*** (mouse *Xist*), optionally with *TSIX*.
+* `SEX-MARK-001` **Female-specific signal: *XIST*** (mouse *Xist*).
+  * *TSIX* is not used: it is transcribed mainly during early development and is barely detected in adult tissue,
+    and its locus overlaps *XIST* on the opposite strand, so with unstranded counting it collects *XIST* reads.
   * *Why:* *XIST* is expressed from the inactive X, so in normal adult tissues it is present in XX cells and
     essentially absent in XY cells. It is nuclear-retained, which makes it especially strong in single-nucleus data.
   * *Limits:* *XIST* is also expressed with more than one X (e.g. XXY) and in some tumours of male patients (e.g.
@@ -44,13 +46,13 @@
     that escape X inactivation (*KDM5C*, *KDM6A*, *DDX3X*, *ZFX*, *EIF1AX*) are only modestly higher in XX and overlap
     between sexes [Tukiainen 2017; Oliva 2020].
 * `SEX-MARK-002` **Male-specific signal: broadly expressed male-specific region of Y (MSY) genes**, summed. Human: *RPS4Y1*,
-  *DDX3Y*, *KDM5D*, *UTY*, *EIF1AY*, *USP9Y*, *ZFY* (and *NLGN4Y* in brain). Mouse: *Ddx3y*, *Eif2s3y*, *Kdm5d*, *Uty*.
+  *DDX3Y*, *KDM5D*, *UTY*, *EIF1AY*, *USP9Y*, *ZFY* (and *NLGN4Y*, *TXLNGY* in brain). Mouse: *Ddx3y*, *Eif2s3y*, *Kdm5d*, *Uty*.
   * *Why:* a five-gene panel (*RPS4Y1*, *EIF1AY*, *DDX3Y*, *KDM5D*, *XIST*) classified sex across 24 tissue collections
     and platforms [Staedtler 2013]; X-degenerate Y genes are expressed across most tissues [Godfrey 2020]. Summing
     several genes reduces dependence on any one gene's tissue-specific expression.
   * *Deviate when:* drop genes not expressed in the tissue at hand (check on samples of known sex).
 * `SEX-MARK-003` **Within-sample ratio from X/Y homolog pairs**: for each pair, $r = Y/(X+Y)$, then the median across pairs. Human
-  pairs include *RPS4X/RPS4Y1*, *DDX3X/DDX3Y*, *KDM5C/KDM5D*, *KDM6A/UTY*, *EIF1AX/EIF1AY*, *USP9X/USP9Y*, *ZFX/ZFY*;
+  pairs include *RPS4X/RPS4Y1*, *DDX3X/DDX3Y*, *KDM5C/KDM5D*, *KDM6A/UTY*, *EIF1AX/EIF1AY*, *USP9X/USP9Y*, *ZFX/ZFY* (and *TXLNG/TXLNGY* where expressed);
   mouse: *Ddx3x/Ddx3y*, *Eif2s3x/Eif2s3y*, *Kdm5c/Kdm5d*, *Kdm6a/Uty*.
   * *Why:* the X homolog is a built-in denominator. The ratio cancels factors that scale both homologs equally
     (library size, overall depth) and separates XY ($r$ substantial) from XX ($r \approx 0$) without a cohort-level
@@ -71,13 +73,22 @@
 * `SEX-COUNT-002` **Normalize to counts per million uniquely mapped reads (or fragments)** and analyse on the $\log_{10}(1+x)$ scale.
   * *Why:* the distributions are bimodal with many values near zero; the log scale separates the modes and stabilizes
     Poisson noise.
-* `SEX-COUNT-003` **Screening depth:** for XX versus XY, about 1 million read pairs per sample is a starting value. Expected values are on the
-  order of tens to hundreds of informative reads, and observing zero MSY reads in an XY sample is then negligible.
-  Re-evaluate anomalies at full depth.
+* `SEX-COUNT-003` **Screening depth:** for XX versus XY, about 1 million read pairs per sample is a starting value. With gene-body counting of total
+  RNA, expect hundreds to thousands of informative reads at this depth (fewer with exonic counting or 3' libraries);
+  observing zero MSY reads in an XY sample is then negligible. Re-evaluate anomalies at full depth.
   * *Why:* detecting a 5–10% mixture or partial loss of Y needs the full library; a 10% male contribution to an XX
     sample adds only a few Y reads at 1 million pairs.
+  * *Deviate when:* the screening reads MAY be streamed from the archive (the first $N$ pairs, decompressed on the
+    fly) instead of downloading whole files, so that the cohort is screened and routed (§4) before the main
+    alignment. The stream MUST be validated as in `CODING_GUIDELINES.md` §13 (downloads from public archives). The
+    first reads of a file are not a random sample of the library (lane and tile order); this is acceptable for
+    `XX`/`XY` calls, which do not depend on it, and the flags of §7 are re-evaluated at full depth anyway.
 * `SEX-COUNT-004` **Minimum informative reads:** samples with fewer than a fixed number of informative reads (XIST + MSY + X homologs;
   about 30 as a starting value) are `LOW_SIGNAL` and are re-run at higher depth, not called.
+* `SEX-COUNT-005` **Marker counts MUST use the library's strandedness** (e.g. featureCounts `-s 2` for reverse-stranded libraries),
+  or unstranded counting when the strandedness is unknown or the library is unstranded.
+  * *Why:* counting an unstranded library as stranded discards about half of its reads; counting a stranded library
+    as unstranded adds reads of overlapping antisense genes (e.g. *TSIX* reads to *XIST*, and the reverse).
 
 ## 4. Reference genome
 
@@ -161,6 +172,10 @@
   * *Consequence:* `XY_lowY` in aged tissue MUST NOT be interpreted as contamination by default. Interpret it with cell
     composition (e.g. microglial fraction from deconvolution) and, when single-cell data exist, with per-cell Y
     detection.
+  * *Several samples per donor:* compare Y levels across a donor's samples. A donor-level loss lowers Y in all of
+    them (modulated by composition); one low sample among normal ones from the same donor points to sample quality
+    or composition. `XY_lowY` calls are often the lower tail of a continuous distribution; read them with their
+    distance to the threshold (`SEX-THR-005`).
 * `SEX-LOY-002` `XIST+Y+` is resolved with genotype: XXY shows X heterozygosity and a single genotype; a mixture shows excess
   heterozygosity, allele fractions inconsistent with one individual, and high relatedness to another sample.
 * `SEX-LOY-003` `XIST-Y-` with good library quality and no X heterozygosity suggests X0; with poor quality, a failed library.

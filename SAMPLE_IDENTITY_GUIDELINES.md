@@ -1,6 +1,6 @@
 # Sample identity and duplicate detection guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-17)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.0 (2026-10-17)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys point to `OMICS_REFERENCES.md`; keys with a
 > dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by ***Why***, ***Trade-off*** and
@@ -56,6 +56,13 @@
     by genotype (§4).
 * `ID-DUP-003` Check metadata in parallel: identical read counts, read names, flowcell or lane identifiers, or submission
   accessions pointing to the same run.
+* `ID-DUP-004` **Re-deposited libraries** (the same library under several accessions, e.g. in more than one SubSeries of a GEO
+  SuperSeries) are nominated by identical read counts with identical donor and tissue annotation. Process one copy
+  and record the mapping between accessions. Keep a few re-deposited pairs as **positive controls**: both copies are
+  processed in full and MUST come out as duplicates (identical counts, genotype relatedness close to 1); if they do
+  not, the identity checks are faulty.
+* `ID-DUP-005` **Compare metadata within duplicate pairs**: discordant annotations of the same library (e.g. tissue or region)
+  are flagged and resolved in the decisions log, not silently harmonized.
 
 ## 4. Genotype fingerprints
 

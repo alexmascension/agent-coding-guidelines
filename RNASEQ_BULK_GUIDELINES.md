@@ -1,6 +1,6 @@
 # Bulk RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.1.0 (2026-10-17)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Conesa 2016]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Schurch 2016†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -55,6 +55,18 @@
 * `BULK-RQC-001` FastQC per FASTQ, aggregated with MultiQC [Ewels 2016]; keep the report with the run outputs.
 * `BULK-RQC-002` Per sample: total reads, mapping rate, rRNA fraction, duplication, gene-body coverage (3' bias indicates RNA
   degradation) and **inferred strandedness**, which MUST match the library kit.
+* `BULK-RQC-004` **Strandedness MAY be inferred per sample before the main run**, from a screening alignment (e.g. the one of
+  `SEX_INFERENCE_GUIDELINES.md` §3): with STAR `--quantMode GeneCounts`, column 3 of `ReadsPerGene.out.tab` counts
+  reads whose first mate is on the gene's strand and column 4 those whose second mate is; the reverse fraction is
+  column 4 / (column 3 + column 4). Pass the result per sample to the pipeline (e.g. the `strandedness` column of the
+  nf-core samplesheet), with `auto` where it is undetermined, and check it against the kit where the kit is known.
+  * *Why:* the kit is often missing from public metadata; a per-sample value avoids one wrong setting for a whole
+    cohort.
+  * *Trade-off:* this fraction is lower than the library-type fraction of Salmon, because reads of a gene that
+    overlaps another gene on the opposite strand count against the expected strand, and it varies by tissue (in one
+    postmortem CNS cohort, unpublished: median about 0.84 in cerebellum and 0.87–0.89 in other regions, against
+    0.93 from Salmon on a test sample). Cut-offs designed for Salmon (e.g. 0.8 in nf-core/rnaseq) are not
+    transferable; set them from the cohort's distribution.
 * `BULK-RQC-003` Sex and identity checks follow `SEX_INFERENCE_GUIDELINES.md` and `SAMPLE_IDENTITY_GUIDELINES.md`; run them before
   any analysis that combines samples.
 

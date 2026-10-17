@@ -2,8 +2,8 @@
 
 > Companion of `HPC_GUIDELINES.md`. Checked against the DIPC Supercomputing Center documentation
 > (<https://scc.dipc.org/docs/systems/hyperion/>, <https://scc.dipc.org/docs/jobs/slurm/>,
-> <https://scc.dipc.org/docs/jobs/gpus/>, <https://scc.dipc.org/docs/getting-started/storage/>) on **2026-10-16**.
-> Facts, not rules: when this file and the centre's documentation disagree, the documentation wins; update the file
+> <https://scc.dipc.org/docs/jobs/gpus/>, <https://scc.dipc.org/docs/getting-started/storage/>) on **2026-10-16**; §8 adds observations
+> made by a project on the cluster (2026-10-03 to 2026-10-17). Facts, not rules: when this file and the centre's documentation disagree, the documentation wins; update the file
 > and its date. Support: `support-hpc@dipc.org`.
 
 ## 1. Access and login nodes
@@ -21,7 +21,7 @@
 | `CODE` | `/dipc/$USER/<repo>` (home) | 50 GB / 300K | Shared by login and compute nodes. Configuration, dotfiles, small data; no environments or job output. |
 | `WORK` | `/scratch/$USER/<repo>` | 2 TB / 10M | BeeGFS over InfiniBand; all job I/O; submit jobs from here. Not permanent; performance degrades for everyone above 80% occupancy. `/scratch/$USER` is created with the account. |
 | `ARCHIVE` | `/data/$USER/<repo>` | 10 TB / 20M | NFS over the 100 GbE management network; **read-only on compute nodes, writable only from login nodes**. For data not actively used by running jobs. One-day grace period up to 10.5 TB / 20.5M files, with an email alert. |
-| `NODE` | `/lscratch/$USER/$SLURM_JOB_ID` | node disk, 750 GB – 14 TB depending on the node | Node-local; not created automatically; create at job start and remove at the end. |
+| `NODE` | `/lscratch/$USER/$SLURM_JOB_ID` | node disk, 750 GB – 14 TB depending on the node | Node-local; not created automatically; create at job start and remove at the end. Absent on login nodes; check that it exists (§8). |
 
 * **No filesystem on Hyperion is backed up.** Code on the git remote and off-cluster copies of raw data and
   promoted results are the only protection (`HPC_GUIDELINES.md` §2).
@@ -98,7 +98,7 @@ QoS for `preemption-gpu`: `preemption-gpu` (default), priority 200, 8 days, GPUs
   `WORK/cache/apptainer`); the centre recommends packaging conda environments inside images (`HPC-ENV-001`).
 * Conda: `module load Miniforge3`; environments with `--prefix` under `/scratch/$USER/<repo>/conda/` (an environment under
   `/data` must be created from a login node, because `/data` is read-only on compute nodes).
-* Nextflow: `module load Nextflow/25.04.6`; `executor = 'slurm'`; `queue` sets the partition and
+* Nextflow (see also §8): `module load Nextflow/25.04.6`; `executor = 'slurm'`; `queue` sets the partition and
   `clusterOptions = '--qos=...'` the QoS; work directory `-w /scratch/$USER/<repo>/work/nf`; Apptainer loaded in the
   session and in each task, `apptainer.cacheDir` on `/scratch`; clean finished runs with `nextflow clean -f`.
 
@@ -110,3 +110,34 @@ the Apptainer, pip and conda caches to `/scratch/$USER/<repo>/cache/`. Run `reci
 Staging (`recipes/hpc/stage.sh`) and promotion (`recipes/hpc/promote.sh`) also run on a login node.
 Submitting from the clone in `/dipc` is compatible with the centre's advice to submit from `/scratch` as long as
 every output path of the job resolves to `/scratch` through the links of `HPC-STOR-004`.
+
+## 8. Observed on the cluster
+
+Observations of one project (bulk RNA-seq with nf-core/rnaseq 3.27.0), not statements of the centre. Re-check them
+before relying on them, and remove them when the documentation covers them.
+
+* **Nextflow version:** the module `Nextflow/25.04.6` was too old for nf-core/rnaseq 3.27.0 (`Plugin nf-schema with
+  version @2.7.2 does not exist`). A launcher pinned with `NXF_VER` (26.04.7, then 26.10.0) in `WORK` worked, after
+  `module load Java` (Java 17 or later; 21 available).
+* **`NXF_HOME`** under `/data` made Nextflow fail at start-up on compute nodes (read-only); keep it in
+  `WORK/cache/nextflow` (`recipes/hpc/sites/hyperion.env`).
+* **nf-core with Apptainer:** use `-profile singularity` (after `module load Apptainer`, `singularity` is provided by
+  Apptainer). With `-profile apptainer`, some modules (e.g. `DESEQ2_QC` of nf-core/rnaseq 3.27.0) fell back to
+  `docker://` images, and building them from layers on BeeGFS failed with `unpriv.link: operation not permitted`.
+* **Reading `/data` from jobs:** a 29 GB STAR index loaded in a median of 12 s from `/data` versus 13 s from `/scratch`
+  (20 tasks, alternating; one outlier of 62 s from `/data`). Reading large read-only references directly from
+  `/data` was viable for one batch at a time; concurrency was not measured (`HPC-FLOW-001`, *Deviate when*).
+* **Quota from scripts:** `beegfs-ctl --getquota --uid … --csv` returned nothing for a regular user; use
+  `getquota-scratch` or `getquota`.
+* **Network:** compute nodes reach the internet through a different address than login nodes, and an archive
+  (ENA) served broken responses for some files to compute nodes only, for at least 15–20 minutes. Test downloads
+  on a compute node (`CODING_GUIDELINES.md` §13, downloads from public archives).
+* **`/lscratch`:** absent on login nodes and not found on some compute nodes, although the documentation lists a
+  size for most nodes; on `hyperion-294` (14 TB NVMe) `/tmp` points to `/lscratch/tmp`. Scripts check that it exists
+  and fall back to `WORK` (`recipes/hpc/sites/hyperion.env`).
+* **Group partitions** can require the account and the QoS together (`sbatch -p <partition> -A <account>
+  --qos=<qos>`); `scontrol show partition <partition>` lists `AllowAccounts` and `AllowQos`. With a QoS that is not
+  allowed, `srun` printed `The requested QoS is not allowed in the used partition` and changed it. Record such
+  partitions in `PROJECT_CONTEXT.md` (`HPC-REP-001`).
+* **Home path:** `/dipc/$USER` resolves to `/home/$USER` (`readlink -f`), and Slurm records `WorkDir=/home/…` for jobs
+  submitted from the clone; it is the same clone, not a second one.

@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.1 (2026-10-16)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.1.0 (2026-10-17)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -14,7 +14,9 @@
 
 ## 0. How to use this document
 
-* `CODE-USE-001` This file is project-agnostic. Copy it **verbatim** into a guidelines folder in the root of every project.
+* `CODE-USE-001` This file is project-agnostic. Copy it **verbatim** into the folder `guidelines/` at the root of every
+  project, together with the domain guidelines, site profiles (`guidelines/hpc_sites/`) and reference files the project
+  uses. `AGENTS.md`, `PROJECT_CONTEXT.md` and `README.md` stay in the project root.
 * `CODE-USE-002` Everything specific to a project (stack details, layout, vocabulary, data invariants,
   conventions, interfaces, decisions) goes into `PROJECT_CONTEXT.md` (see §2, documentation
   set).
@@ -38,7 +40,7 @@
   * PATCH: wording or clarifications that do not change what a rule requires.
 * `CODE-USE-008` **Rule identifiers.** Every rule (top-level list item of a section with rules) carries a stable
   identifier `PREFIX-TOPIC-NNN` written as inline code after its list marker, e.g. `SC-QC-004`: the prefix names
-  the guide (`CODE`, `STAT`, `BULK`, `SC`, `SP`, `META`, `SEX`, `ID`, `DECON`), the topic names the section where the
+  the guide (`CODE`, `STAT`, `BULK`, `SC`, `SP`, `META`, `SEX`, `ID`, `DECON`, `HPC`), the topic names the section where the
   rule was created, and the number is sequential within the topic.
   * Identifiers are never renumbered or reused. A rule moved to another section keeps its identifier; a removed
     rule's identifier is marked `retired` in `RULE_IDS.tsv`; a new rule takes the next free number of its topic
@@ -63,12 +65,12 @@ Every project developed with agents MUST contain at least:
 |---|---|
 | `AGENTS.md` | Entry point read automatically by coding agents. Pointers only (template below). |
 | `PROJECT_CONTEXT.md` | Project-specific decisions and constraints for development (structure below). |
-| `CODING_GUIDELINES.md` | This file, unmodified. |
+| `guidelines/CODING_GUIDELINES.md` | This file, unmodified (with the copied domain guidelines, §0). |
 | `README.md` | What the project does, how to install it, how to run it, where outputs go. |
 
 Add further documents only when they carry information that does not fit the above, e.g.
 `PROJECT_SCOPE.md` (scientific scope and design rationale), `DECISIONS.md` (if the decisions log
-outgrows `PROJECT_CONTEXT.md`), copied domain guidelines (`STATISTICS_GUIDELINES.md`,
+outgrows `PROJECT_CONTEXT.md`), copied domain guidelines in `guidelines/` (`STATISTICS_GUIDELINES.md`,
 `FIGURE_GUIDELINES.md`, `RNASEQ_BULK_GUIDELINES.md`, …), and, for repositories that are published,
 `LICENSE`, `CITATION.cff` and `CHANGELOG.md`.
 
@@ -84,8 +86,9 @@ Before any work in this repository, read and follow, in this order:
 
 1. `PROJECT_CONTEXT.md` — project-specific decisions; its *Overrides* section takes
    precedence over the guidelines for the rules it lists.
-2. `CODING_GUIDELINES.md` — general development rules.
-3. Domain guidelines present in the root (`*_GUIDELINES.md`), when the task touches them.
+2. `guidelines/CODING_GUIDELINES.md` — general development rules.
+3. Domain guidelines in `guidelines/` (`*_GUIDELINES.md`; site profiles in `guidelines/hpc_sites/`), when the task
+   touches them.
 ```
 
 For agents that do not read `AGENTS.md` (e.g. Claude Code reads `CLAUDE.md`), add the file the
@@ -143,6 +146,12 @@ interface, a threshold or a data invariant MUST update it in the same change.
   * Use `$(…)` rather than backticks and `[[ … ]]` rather than `[ … ]`; send errors to STDERR;
     put the logic in a `main` function called at the end of the file.
   * Scripts SHOULD pass `shellcheck`.
+  * Add `set -E` and an `ERR` trap that reports the line, the command and the exit code to STDERR:
+    `trap 'echo "ERROR line ${LINENO}: ${BASH_COMMAND} (exit $?)" >&2' ERR`. Do not discard STDERR (`2>/dev/null`)
+    of a command whose failure aborts the script; tolerate expected failures explicitly (`|| true`).
+    * *Why:* under `set -e`, a failing command whose STDERR is discarded ends the script with a non-zero code and an
+      empty log. The trap does not fire in `if`/`while` conditions or `&&`/`||` lists; for a failing pipeline it
+      names the last command of the pipeline, not necessarily the one that failed.
 * `CODE-LANG-005` R code, when needed, follows the tidyverse style guide, is formatted with `styler` and linted
   with `lintr`.
 * `CODE-LANG-006` Default Python stack (a project MAY override it in `PROJECT_CONTEXT.md`): polars for tables,
@@ -379,6 +388,10 @@ interface, a threshold or a data invariant MUST update it in the same change.
   them.
 * `CODE-PROV-002` MUST NOT commit data, results or large binaries to git. Record how to obtain each input
   (URL, accession, release, checksum) in `README.md` or a download script.
+  * *Deviate when:* small derived tables (about 5 MB per file or less) needed to reproduce key results without
+    re-running expensive upstream steps (validated run tables, sample manifests, per-sample calls, batch definitions)
+    MAY be tracked. Each is listed in `PROJECT_CONTEXT.md` with the script that regenerates it, and is regenerated,
+    never edited by hand, when its inputs change. Never for raw data, controlled-access data or personal data.
 * `CODE-PROV-003` Each analysis run writes to its own directory (e.g. `results/<run>/`) containing, besides the
   outputs, a provenance file with: parameters, git commit (and whether the tree was dirty),
   package and external tool versions, input checksums or identifiers, and timestamp.
@@ -388,6 +401,38 @@ interface, a threshold or a data invariant MUST update it in the same change.
   Re-running a script with the same inputs and parameters SHOULD give the same outputs.
   * *Why:* re-running a script by mistake should never destroy hours of results; an explicit flag makes overwriting
     a deliberate act.
+
+### Downloads from public archives
+
+* `CODE-DL-001` **Verify every downloaded file against the checksum published by the archive** (e.g. ENA `fastq_md5`). A
+  successful exit code or an HTTP 200 MUST NOT be taken as evidence of a correct file.
+* `CODE-DL-002` **Retries restart the whole unit.** MUST NOT combine a client-side retry that restarts the transfer (e.g.
+  `curl --retry`) with output to a pipe (`curl … | gzip -dc | head`). Retry the whole unit (e.g. both mates of a pair)
+  from the start, and validate each attempt.
+  * *Why:* after a dropped connection the client sends the file again after the bytes already passed downstream; the
+    consumer receives a truncated record followed by the start of the file, and a line count can still look right.
+* `CODE-DL-003` **Validate streamed reads record by record**: every FASTQ record has its `@` and `+` lines and a sequence as long
+  as its quality string, the expected number of records arrived, and paired streams have matching read IDs in every
+  record, not only the first and the last.
+  * *Note:* the first $N$ reads of a file are not a random sample of the library (they follow lane and tile order);
+    state it wherever a streamed head is used as a subsample.
+* `CODE-DL-004` **Treat unexpected responses as failed attempts.** Direct file URLs of archives that serve files without
+  redirection (e.g. ENA over HTTPS) are fetched without following redirects (`curl` without `-L`,
+  `wget --max-redirect=0`); where redirects are part of the service (e.g. signed cloud-storage URLs), check the
+  content (gzip header, then checksum) before using the file.
+  * *Why:* an archive backend can intermittently answer with a redirect to an HTML listing for a file that exists;
+    following it stores HTML or feeds it to a decompressor.
+* `CODE-DL-005` **Back off over minutes, not seconds**: several attempts per file with increasing waits (e.g. 8 attempts, waiting
+  $\min(60a, 600)$ s before attempt $a$; about half an hour in total) before a batch fails.
+  * *Why:* archive-side incidents can last tens of minutes, much longer than a network interruption.
+* `CODE-DL-006` **Limit concurrent connections per archive** to a few (e.g. 3–4 per source address), and retry refused
+  connections (`wget --retry-connrefused`; wget does not retry them by default).
+* `CODE-DL-007` **Fetch and validate the run table once** (URLs, checksums, read counts per run), track it (`CODE-PROV-002`,
+  *Deviate when*), and have jobs read it instead of querying the archive API at run time.
+  * *Why:* archive APIs can return empty or error responses for a fraction of accessions at any time, and
+    downstream tools do not always detect them.
+* `CODE-DL-008` **Test downloads from the machines that will run them.** On clusters, compute nodes can reach the internet
+  through a different address than login nodes, and external services can answer differently by source.
 
 ## 14. Configuration, paths and scripts
 

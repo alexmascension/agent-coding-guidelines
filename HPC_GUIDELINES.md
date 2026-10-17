@@ -1,6 +1,6 @@
 # HPC guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.0 (2026-10-16)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-17)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -12,7 +12,7 @@
 * Audience: coding agents and people who run analyses on shared clusters with a batch scheduler (Slurm).
 * Copy with `CODING_GUIDELINES.md`. This file is site-independent: it defines **roles** of storage and
   conventions for jobs. The facts of one cluster (mount points, quotas, partitions, QoS, modules) are in a **site
-  profile**, `hpc_sites/<SITE>.md`, copied into the project and referenced from the *Stack* section of
+  profile**, `hpc_sites/<SITE>.md`, copied into the project (`guidelines/hpc_sites/`, `CODE-USE-001`) and referenced from the *Stack* section of
   `PROJECT_CONTEXT.md`. Site facts change: profiles carry the date they were checked against the centre's
   documentation, and the centre's documentation wins when they disagree.
 * Scope: batch analysis (pipelines, R/Python jobs, GPU jobs) of research projects. Not covered: MPI development,
@@ -61,6 +61,8 @@
   in `WORK/data/` when `ARCHIVE` is not designed for job I/O (e.g. an NFS filesystem, or read-only from compute
   nodes); staging is an explicit, logged `rsync` step.
   * *Trade-off:* staged copies count against the `WORK` quota; stage what the next runs need and remove it after.
+  * *Deviate when:* large read-only references (e.g. aligner indexes) MAY be read directly from `ARCHIVE` when load
+    times measured under the intended concurrency are acceptable; record the measurement.
 * `HPC-FLOW-002` **Jobs write only to `WORK` (and `NODE`).** Final results reach `ARCHIVE` through an explicit **promotion** step
   (`recipes/hpc/promote.sh`), run where `ARCHIVE` is writable (e.g. a login node), that copies one run directory
   and writes a manifest (file list with checksums, commit, job IDs, date).
@@ -72,7 +74,26 @@
 * `HPC-FLOW-004` **`WORK` is not storage.** Remove intermediates of finished runs (or archive them as one file); scratch areas
   degrade for everyone when full and may be purged by the centre.
 * `HPC-FLOW-005` **Transfers use `rsync`** (`-a`, checksums for verification, `--dry-run` before any `--delete`); large or many
-  files are archived (`tar`) before transfer.
+  files are archived (`tar`) before transfer. Downloads from public archives follow `CODING_GUIDELINES.md` §13
+  (downloads from public archives).
+
+### Datasets larger than the work area
+
+* `HPC-BATCH-001` **Process in batches sized to a space budget.** Each batch fetches or stages its inputs, runs the pipeline,
+  harvests and validates its results, and deletes its inputs and intermediates before the next batch takes the space.
+  The budget is the project's share of the `WORK` quota (shared with the user's other projects) minus a free margin;
+  a batch waits, for a bounded time, when the budget is exhausted.
+* `HPC-BATCH-002` **Calibrate the footprint on a pilot**: peak `WORK` usage divided by input size, measured on a few batches;
+  record it in `PROJECT_CONTEXT.md` and size batches from it.
+* `HPC-BATCH-003` **Stage markers make a batch restartable**: one marker file per completed stage, written after the stage's outputs
+  are complete; a relaunch skips completed stages, and workflow managers resume (`-resume`) with their work
+  directory inside the batch.
+* `HPC-BATCH-004` **MUST validate before deleting**: count and check the expected outputs of every sample of the batch (and
+  promote or harvest them) before any input or intermediate is deleted; on any mismatch, delete nothing and fail.
+* `HPC-BATCH-005` **Extract everything that needs an intermediate before deleting it** (e.g. genotype fingerprints and region BAMs
+  before BAMs are deleted; `SAMPLE_IDENTITY_GUIDELINES.md` §4, genotype fingerprints).
+* `HPC-BATCH-006` Concurrent batches MAY be capped without a controller process with `--dependency=singleton`: one job name per
+  slot, so at most one batch per name runs at a time.
 
 ## 3. Software environments
 
@@ -89,7 +110,8 @@
 * `HPC-ENV-002` **Record the image digest (`sha256sum` of the `.sif`) with every result** (see §7, provenance on the
   cluster); a tag or file name is not enough.
 * `HPC-ENV-003` **Redirect every cache to `WORK/cache/`** before building or pulling: `APPTAINER_CACHEDIR`, conda `pkgs_dirs`,
-  `PIP_CACHE_DIR`, Nextflow `NXF_APPTAINER_CACHEDIR` (or `apptainer.cacheDir`).
+  `PIP_CACHE_DIR`, Nextflow `NXF_HOME` and `NXF_APPTAINER_CACHEDIR` (or `apptainer.cacheDir`). Caches written by
+  jobs MUST be writable from compute nodes.
 * `HPC-ENV-004` GPU jobs run images with `--nv`; the CUDA version of the image MUST be supported by the node driver (check on a
   test job).
 
@@ -98,7 +120,7 @@
 * `HPC-JOB-001` **Batch scripts are tracked in the repository** (`slurm/` or the workflow manager configuration), take paths and
   parameters as arguments, and start from the template `recipes/hpc/job.slurm`:
   * `#SBATCH --export=NONE` and explicit loading of modules or images inside the script;
-  * `set -euo pipefail`;
+  * `set -Eeuo pipefail` and an `ERR` trap that reports the failing line (`CODE-LANG-004`);
   * `--output`/`--error` to `WORK/logs/` with job name and ID (`%x.%j`, arrays `%x.%A_%a`);
   * `--no-requeue` unless the job resumes from checkpoints;
   * thread counts from the allocation (`OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK`, and the tool's own thread option).
@@ -128,6 +150,15 @@
 * `HPC-WF-003` **Pin pipeline and engine versions** (`-r <release>` for nf-core pipelines, the module version of Nextflow) and keep the
   site configuration (executor, partition, QoS, container settings) in a tracked config file, separate from the
   pipeline parameters.
+* `HPC-WF-005` **Pipeline parameters go in a tracked parameters file** (`-params-file params.yaml`), not on the command line.
+  * *Why:* the file is the record of the run; and with Nextflow 26, boolean and numeric parameters given on the
+    command line reached nf-core schema validation as strings in at least one project, while a YAML file keeps
+    their types.
+* `HPC-WF-006` **With Apptainer, check that every process uses a prebuilt image.** Some nf-core modules recognise only the
+  `singularity` engine and, under `-profile apptainer`, fall back to `docker://` images that are built from layers on
+  the fly, which can fail on parallel filesystems; `-profile singularity` (Apptainer provides the `singularity`
+  command) selects the prebuilt `.sif` images. Pin individual processes to an image in the site configuration when
+  needed.
 * `HPC-WF-004` Clean the work directory of completed runs (`nextflow clean`) once results are promoted.
 
 ## 6. I/O and small files
@@ -182,7 +213,7 @@
 | Create role directories and repository links (§1) | `recipes/hpc/setup_storage.sh` |
 | Stage raw inputs from `ARCHIVE` to `WORK`, with a log (§2) | `recipes/hpc/stage.sh` |
 | Promote a run from `WORK` to `ARCHIVE` with checksums and a manifest (§2, §7) | `recipes/hpc/promote.sh` |
-| Batch job template (§4, §6) | `recipes/hpc/job.slurm` |
+| Batch job template with `ERR` trap and node-local directory (§4, §6) | `recipes/hpc/job.slurm` |
 | Site facts | `hpc_sites/<SITE>.md` (e.g. `hpc_sites/DIPC_HYPERION.md`) |
 
 Tests: `recipes/tests/test_hpc_scripts.py` (temporary directories as role roots; no scheduler needed). The job

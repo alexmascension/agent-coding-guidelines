@@ -171,7 +171,11 @@ TOPIC = {
     },
 }
 # Subsections with their own topic (overrides the section topic from the subsection heading on).
-SUBTOPIC = {("CODE", "Recipes (reference implementations)"): "RCP"}
+SUBTOPIC = {
+    ("CODE", "Recipes (reference implementations)"): "RCP",
+    ("CODE", "Downloads from public archives"): "DL",
+    ("HPC", "Datasets larger than the work area"): "BATCH",
+}
 
 
 def rule_lines(path: Path) -> list[tuple[int, str | None, str | None]]:

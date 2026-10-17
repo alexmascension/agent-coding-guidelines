@@ -13,7 +13,8 @@
 #SBATCH --export=NONE
 #SBATCH --no-requeue
 # Arrays: add "#SBATCH --array=1-N%M" and use %x.%A_%a in --output/--error.
-set -euo pipefail
+set -Eeuo pipefail
+trap 'echo "ERROR line ${LINENO}: ${BASH_COMMAND} (exit $?)" >&2' ERR
 
 # --export=NONE drops variables of the submitting shell: set the site here.
 export PROJECT_SITE="${PROJECT_SITE:-hyperion}"

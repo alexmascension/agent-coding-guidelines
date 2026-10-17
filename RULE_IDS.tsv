@@ -44,6 +44,7 @@ BULK-REP-005	active	RNASEQ_BULK_GUIDELINES.md	Enrichment and activity methods, r
 BULK-RQC-001	active	RNASEQ_BULK_GUIDELINES.md	FastQC per FASTQ, aggregated with MultiQC [Ewels 2016]; keep the report with the
 BULK-RQC-002	active	RNASEQ_BULK_GUIDELINES.md	Per sample: total reads, mapping rate, rRNA fraction, duplication, gene-body cov
 BULK-RQC-003	active	RNASEQ_BULK_GUIDELINES.md	Sex and identity checks follow SEX_INFERENCE_GUIDELINES.md and SAMPLE_IDENTITY_G
+BULK-RQC-004	active	RNASEQ_BULK_GUIDELINES.md	Strandedness MAY be inferred per sample before the main run, from a screening al
 BULK-SPEC-001	active	RNASEQ_BULK_GUIDELINES.md	Species-specific annotation; human and mouse IDs MUST NOT be mixed.
 BULK-SPEC-002	active	RNASEQ_BULK_GUIDELINES.md	Cross-species comparisons use one-to-one orthologs from a stated release; genes 
 BULK-TX-001	active	RNASEQ_BULK_GUIDELINES.md	Distinguish DGE (differential gene expression), DTE (differential transcript exp
@@ -80,6 +81,14 @@ CODE-DATA-009	active	CODING_GUIDELINES.md	Use Parquet for intermediate and outpu
 CODE-DEP-001	active	CODING_GUIDELINES.md	Prefer the standard library and existing project dependencies when they provide 
 CODE-DEP-002	active	CODING_GUIDELINES.md	Add a dependency when it substantially improves correctness, maintainability, pe
 CODE-DEP-003	active	CODING_GUIDELINES.md	Heavy or optional dependencies go into an extra in pyproject.toml; the core pack
+CODE-DL-001	active	CODING_GUIDELINES.md	Verify every downloaded file against the checksum published by the archive (e.g.
+CODE-DL-002	active	CODING_GUIDELINES.md	Retries restart the whole unit. MUST NOT combine a client-side retry that restar
+CODE-DL-003	active	CODING_GUIDELINES.md	Validate streamed reads record by record: every FASTQ record has its @ and + lin
+CODE-DL-004	active	CODING_GUIDELINES.md	Treat unexpected responses as failed attempts. Direct file URLs of archives that
+CODE-DL-005	active	CODING_GUIDELINES.md	Back off over minutes, not seconds: several attempts per file with increasing wa
+CODE-DL-006	active	CODING_GUIDELINES.md	Limit concurrent connections per archive to a few (e.g. 3–4 per source address),
+CODE-DL-007	active	CODING_GUIDELINES.md	Fetch and validate the run table once (URLs, checksums, read counts per run), tr
+CODE-DL-008	active	CODING_GUIDELINES.md	Test downloads from the machines that will run them. On clusters, compute nodes 
 CODE-DOC-001	active	CODING_GUIDELINES.md	Write repository documentation, notebook prose, code comments, docstrings, log a
 CODE-DOC-002	active	CODING_GUIDELINES.md	Write NumPy-style docstrings for public functions and non-trivial internal funct
 CODE-DOC-003	active	CODING_GUIDELINES.md	For functions that take or return tables, the docstring MUST list the required c
@@ -195,7 +204,7 @@ CODE-TEST-008	active	CODING_GUIDELINES.md	For pipelines, SHOULD include an end-t
 CODE-TYPE-001	active	CODING_GUIDELINES.md	Add type hints to public functions and non-trivial internal functions.
 CODE-TYPE-002	active	CODING_GUIDELINES.md	Use built-in generics (list[str], dict[str, int]) and X | None, not typing.List 
 CODE-TYPE-003	active	CODING_GUIDELINES.md	Do not add annotations that reduce readability or that cannot express the type m
-CODE-USE-001	active	CODING_GUIDELINES.md	This file is project-agnostic. Copy it verbatim into the root of every project.
+CODE-USE-001	active	CODING_GUIDELINES.md	This file is project-agnostic. Copy it verbatim into the folder guidelines/ at t
 CODE-USE-002	active	CODING_GUIDELINES.md	Everything specific to a project (stack details, layout, vocabulary, data invari
 CODE-USE-003	active	CODING_GUIDELINES.md	Do not edit the copy of this file to adapt it to a project. Record adaptations i
 CODE-USE-004	active	CODING_GUIDELINES.md	When this file and PROJECT_CONTEXT.md conflict, PROJECT_CONTEXT.md wins only for
@@ -250,8 +259,14 @@ HPC-AGENT-002	active	HPC_GUIDELINES.md	MUST ask before submitting more than a ha
 HPC-AGENT-003	active	HPC_GUIDELINES.md	Cancel only own jobs, by job ID; never scancel -u $USER without confirmation.
 HPC-AGENT-004	active	HPC_GUIDELINES.md	Check quotas (size and file count) before jobs that create large outputs, and re
 HPC-AGENT-005	active	HPC_GUIDELINES.md	Report job IDs, the expected run time and how to monitor them (squeue, sacct) af
+HPC-BATCH-001	active	HPC_GUIDELINES.md	Process in batches sized to a space budget. Each batch fetches or stages its inp
+HPC-BATCH-002	active	HPC_GUIDELINES.md	Calibrate the footprint on a pilot: peak WORK usage divided by input size, measu
+HPC-BATCH-003	active	HPC_GUIDELINES.md	Stage markers make a batch restartable: one marker file per completed stage, wri
+HPC-BATCH-004	active	HPC_GUIDELINES.md	MUST validate before deleting: count and check the expected outputs of every sam
+HPC-BATCH-005	active	HPC_GUIDELINES.md	Extract everything that needs an intermediate before deleting it (e.g. genotype 
+HPC-BATCH-006	active	HPC_GUIDELINES.md	Concurrent batches MAY be capped without a controller process with --dependency=
 HPC-ENV-001	active	HPC_GUIDELINES.md	Default: one Apptainer (Singularity) image per environment, built from tracked d
-HPC-ENV-002	active	HPC_GUIDELINES.md	Record the image digest (sha256sum of the .sif) with every result §7 (provenance
+HPC-ENV-002	active	HPC_GUIDELINES.md	Record the image digest (sha256sum of the .sif) with every result (see §7, prove
 HPC-ENV-003	active	HPC_GUIDELINES.md	Redirect every cache to WORK/cache/ before building or pulling: APPTAINER_CACHED
 HPC-ENV-004	active	HPC_GUIDELINES.md	GPU jobs run images with --nv; the CUDA version of the image MUST be supported b
 HPC-FLOW-001	active	HPC_GUIDELINES.md	Raw inputs live once in ARCHIVE/data/raw and are read-only (CODE-PROV-001). Jobs
@@ -283,11 +298,15 @@ HPC-STOR-004	active	HPC_GUIDELINES.md	The repository exposes the roles as gitign
 HPC-STOR-005	active	HPC_GUIDELINES.md	Code, environments and caches never go to CODE beyond source and configuration. 
 HPC-WF-001	active	HPC_GUIDELINES.md	Nextflow, Snakemake or similar submit each step as a job; the controller process
 HPC-WF-002	active	HPC_GUIDELINES.md	Work directory, caches and outputs in WORK (-w $PROJECT_WORK/work/<pipeline>); o
-HPC-WF-003	active	HPC_GUIDELINES.md	Pin pipeline and engine versions (e.g. -r 3.27.0 for nf-core, the module version
+HPC-WF-003	active	HPC_GUIDELINES.md	Pin pipeline and engine versions (-r <release> for nf-core pipelines, the module
 HPC-WF-004	active	HPC_GUIDELINES.md	Clean the work directory of completed runs (nextflow clean) once results are pro
+HPC-WF-005	active	HPC_GUIDELINES.md	Pipeline parameters go in a tracked parameters file (-params-file params.yaml), 
+HPC-WF-006	active	HPC_GUIDELINES.md	With Apptainer, check that every process uses a prebuilt image. Some nf-core mod
 ID-DUP-001	active	SAMPLE_IDENTITY_GUIDELINES.md	Exact duplicates: hash the raw read files (checksum) and the count vectors; iden
 ID-DUP-002	active	SAMPLE_IDENTITY_GUIDELINES.md	Near-duplicates (same library re-sequenced or re-deposited, possibly with differ
 ID-DUP-003	active	SAMPLE_IDENTITY_GUIDELINES.md	Check metadata in parallel: identical read counts, read names, flowcell or lane 
+ID-DUP-004	active	SAMPLE_IDENTITY_GUIDELINES.md	Re-deposited libraries (the same library under several accessions, e.g. in more 
+ID-DUP-005	active	SAMPLE_IDENTITY_GUIDELINES.md	Compare metadata within duplicate pairs: discordant annotations of the same libr
 ID-GENO-001	active	SAMPLE_IDENTITY_GUIDELINES.md	Use a fingerprinting tool on the aligned reads of every sample: somalier [Peders
 ID-GENO-002	active	SAMPLE_IDENTITY_GUIDELINES.md	Match site names to the reference: rename contigs of the sites file (chr1 versus
 ID-GENO-003	active	SAMPLE_IDENTITY_GUIDELINES.md	Metrics per pair: relatedness (about 1 for the same individual, about 0.5 for fi
@@ -450,6 +469,7 @@ SEX-COUNT-001	active	SEX_INFERENCE_GUIDELINES.md	Count marker genes over the who
 SEX-COUNT-002	active	SEX_INFERENCE_GUIDELINES.md	Normalize to counts per million uniquely mapped reads (or fragments) and analyse
 SEX-COUNT-003	active	SEX_INFERENCE_GUIDELINES.md	Screening depth: for XX versus XY, about 1 million read pairs per sample is a st
 SEX-COUNT-004	active	SEX_INFERENCE_GUIDELINES.md	Minimum informative reads: samples with fewer than a fixed number of informative
+SEX-COUNT-005	active	SEX_INFERENCE_GUIDELINES.md	Marker counts MUST use the library's strandedness (e.g. featureCounts -s 2 for r
 SEX-DEC-001	active	SEX_INFERENCE_GUIDELINES.md	Order of evidence for the karyotype used in analysis and for reference routing:
 SEX-DEC-002	active	SEX_INFERENCE_GUIDELINES.md	Genotype-based sex from the same RNA BAM: heterozygosity on non-PAR X (XX and XX
 SEX-DEC-003	active	SEX_INFERENCE_GUIDELINES.md	Expression calls are screening results, not karyotypes. Keep separate columns: r
@@ -458,7 +478,7 @@ SEX-DEC-005	active	SEX_INFERENCE_GUIDELINES.md	Discordance between samples of on
 SEX-LOY-001	active	SEX_INFERENCE_GUIDELINES.md	Mosaic loss of chromosome Y (LOY) is common and biological. About 20% of men in 
 SEX-LOY-002	active	SEX_INFERENCE_GUIDELINES.md	XIST+Y+ is resolved with genotype: XXY shows X heterozygosity and a single genot
 SEX-LOY-003	active	SEX_INFERENCE_GUIDELINES.md	XIST-Y- with good library quality and no X heterozygosity suggests X0; with poor
-SEX-MARK-001	active	SEX_INFERENCE_GUIDELINES.md	Female-specific signal: XIST (mouse Xist), optionally with TSIX.
+SEX-MARK-001	active	SEX_INFERENCE_GUIDELINES.md	Female-specific signal: XIST (mouse Xist).
 SEX-MARK-002	active	SEX_INFERENCE_GUIDELINES.md	Male-specific signal: broadly expressed male-specific region of Y (MSY) genes, s
 SEX-MARK-003	active	SEX_INFERENCE_GUIDELINES.md	Within-sample ratio from X/Y homolog pairs: for each pair, $r = Y/(X+Y)$, then t
 SEX-MOUSE-001	active	SEX_INFERENCE_GUIDELINES.md	Use Xist and the mouse MSY genes and homolog pairs of §2. Mouse Y carries few br

@@ -5,6 +5,75 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-17 (proposals from a bulk RNA-seq project on DIPC Hyperion)
+
+### CODING_GUIDELINES.md [3.1.0]
+
+#### Added
+
+- §13, new subsection *Downloads from public archives* (`CODE-DL-001`–`008`): checksum verification; whole-unit
+  retries, never client retries into a pipe; record-by-record validation of streamed reads; redirects treated as
+  failures for archives that do not redirect; back-off over minutes; few concurrent connections per archive; a
+  validated, tracked run table; testing downloads from the nodes that run them.
+- `CODE-LANG-004`: `set -E` and an `ERR` trap reporting line, command and exit code; no discarded STDERR on commands
+  whose failure aborts the script.
+- `CODE-PROV-002`: *Deviate when* for small derived tables tracked in git, with their regeneration script.
+
+#### Changed
+
+- `CODE-USE-001`, §2 (documentation set and `AGENTS.md` template): copied guidelines live in `guidelines/` at the
+  project root (harmonizes the unversioned edit of commit `3585824` with the template and `README.md`);
+  `AGENTS.md`, `PROJECT_CONTEXT.md` and `README.md` stay in the root.
+- `CODE-USE-008`: prefix list includes `HPC`.
+
+### HPC_GUIDELINES.md [1.1.0]
+
+#### Added
+
+- §2, subsection *Datasets larger than the work area* (`HPC-BATCH-001`–`006`): batches sized to a space budget,
+  footprint calibrated on a pilot, stage markers, validation before deletion (MUST), extraction of what needs an
+  intermediate before deleting it, `--dependency=singleton`.
+- `HPC-WF-005` parameters in a tracked `-params-file`; `HPC-WF-006` prebuilt images with Apptainer
+  (`-profile singularity` for nf-core).
+- `HPC-FLOW-001`: *Deviate when* for large read-only references read from `ARCHIVE`, after measurement.
+
+#### Changed
+
+- `HPC-ENV-003`: `NXF_HOME` among the caches; caches written by jobs must be writable from compute nodes.
+- `HPC-JOB-001`: `set -Eeuo pipefail` and `ERR` trap. `recipes/hpc/job.slurm` updated; `recipes/hpc/sites/hyperion.env`
+  falls back to `WORK` when `/lscratch` is absent and sets `NXF_HOME`.
+- `hpc_sites/DIPC_HYPERION.md`: §8, observations on the cluster (Nextflow version and Java, `NXF_HOME`, nf-core
+  profile, `/data` read times, quota commands, network address of compute nodes, `/lscratch`, group partitions,
+  `/dipc` → `/home`).
+
+### SEX_INFERENCE_GUIDELINES.md [2.1.0]
+
+- `SEX-MARK-001`: *TSIX* no longer an optional marker (barely detected in adult tissue; antisense to *XIST*).
+- `SEX-MARK-002`, `SEX-MARK-003`: *TXLNGY* among brain MSY genes; *TXLNG/TXLNGY* among homolog pairs.
+- `SEX-COUNT-003`: expected informative reads with gene-body counting (hundreds to thousands); screening reads
+  MAY be streamed, with validation and the caveat that the first reads are not a random sample.
+- `SEX-COUNT-005` (new): marker counting MUST use the library's strandedness.
+- `SEX-LOY-001`: comparison across a donor's samples.
+
+### RNASEQ_BULK_GUIDELINES.md [3.1.0]
+
+- `BULK-RQC-004` (new): per-sample strandedness from a screening alignment (STAR `GeneCounts`), with the caveat that
+  its fraction is lower than Salmon's and tissue-dependent, so Salmon cut-offs are not transferable.
+
+### SAMPLE_IDENTITY_GUIDELINES.md [2.2.0]
+
+- `ID-DUP-004` (new): re-deposited libraries, processed once, with a few pairs kept as positive controls.
+- `ID-DUP-005` (new): metadata discordance within duplicate pairs is flagged and resolved in the decisions log.
+
+### Not adopted
+
+- Reference ranges of sex markers from a single cohort (one depth, tissue and protocol) as guide content: thresholds
+  stay data-driven (`SEX-THR-001`); the values can serve as an example in the future `recipes/sex/` documentation.
+- "MUST NOT follow redirects" for every download: adopted only for archives that serve files without redirection,
+  because several services (signed cloud-storage URLs, data repositories) redirect by design.
+- `SAMPLE_IDENTITY`: re-deposits as duplicates "by default" without confirmation; adopted as nomination plus
+  positive controls.
+
 ## 2026-10-16
 
 ### HPC_GUIDELINES.md [1.0.0]
