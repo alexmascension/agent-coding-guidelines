@@ -1,6 +1,6 @@
 # Sample identity and duplicate detection guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.0 (2026-10-17)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.1 (2026-10-18)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys point to `OMICS_REFERENCES.md`; keys with a
 > dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by ***Why***, ***Trade-off*** and
@@ -72,7 +72,8 @@
     once per sample, compares all pairs in seconds, does not need joint variant calling, and was validated on GTEx
     WGS against RNA-seq [Pedersen 2020]. NGSCheckMate works across data types at depths above 0.5X [Lee 2017];
     Crosscheck uses linkage disequilibrium and remains effective on sparse data [Javed 2020].
-  * *Trade-off:* fingerprints need the BAM; extract them before BAMs are deleted, and keep them.
+  * *Trade-off:* fingerprints need the aligned reads; extract them before BAMs are deleted (or later from the archived CRAM,
+    `HPC_GUIDELINES.md` §2, `HPC-FLOW-006`), and keep them.
 * `ID-GENO-002` **Match site names to the reference**: rename contigs of the sites file (`chr1` versus `1`) to match the BAMs.
 * `ID-GENO-003` **Metrics per pair**: relatedness (about 1 for the same individual, about 0.5 for first-degree relatives, about 0
   for unrelated), IBS0 (proportion of sites where two samples share no allele; near 0 for the same individual and for parent–child), IBS2 (proportion of sites where two samples share both alleles), and the number of informative sites

@@ -1,6 +1,6 @@
 # HPC guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-17)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.2.0 (2026-10-18)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -76,6 +76,23 @@
 * `HPC-FLOW-005` **Transfers use `rsync`** (`-a`, checksums for verification, `--dry-run` before any `--delete`); large or many
   files are archived (`tar`) before transfer. Downloads from public archives follow `CODING_GUIDELINES.md` §13
   (downloads from public archives).
+* `HPC-FLOW-006` **Alignments that later questions may need SHOULD be archived as CRAM, not deleted.** Convert the
+  coordinate-sorted BAM to CRAM 3.0 against the exact FASTA used for mapping, check that the record count matches,
+  then delete the BAM (`HPC-BATCH-004`). Record format, CRAM version, reference path and checksum, and removed tags in
+  provenance. Region BAMs for a list of regions are extracted from the CRAMs (`samtools view -T <fasta> -M -L <bed>`)
+  whenever the list changes, without re-mapping. Which tags to keep: `SCRNASEQ_GUIDELINES.md` §3 (`SC-QUANT-005`),
+  `RNASEQ_BULK_GUIDELINES.md` §4 (`BULK-QUANT-005`).
+  * *Why:* re-mapping means downloading and aligning again (STARsolo: about 1 h per 150 M reads on 4 CPUs, plus the
+    transfer), while the regions, junctions or variants worth reading are often known only after the first results.
+    CRAM keeps every read in a fraction of the space (snRNA-seq library of 135 M reads: BAM 6.96 GB; CRAM 3.0
+    3.63 GB; without raw-barcode tags 1.99 GB).
+  * *Trade-off:* decoding needs the identical reference: archive it with its checksum (`HPC-FLOW-003`) and pass it to
+    every reader (`-T`/`--reference`, or `REF_PATH`/`REF_CACHE`); otherwise htslib tries to fetch the sequences from
+    the EBI reference registry, which fails or stalls on compute nodes. CRAM 3.1 is 5-10 % smaller, but older
+    htsjdk-based tools (Picard, GATK) may not read it; check the readers in use. Tools that read only BAM need a
+    temporary conversion.
+  * *Deviate when:* the archive cannot hold the CRAMs (then keep region BAMs, junction tables and fingerprints,
+    `HPC-BATCH-005`), or the alignment is cheap to reproduce from inputs kept on the cluster.
 
 ### Datasets larger than the work area
 
@@ -91,7 +108,8 @@
 * `HPC-BATCH-004` **MUST validate before deleting**: count and check the expected outputs of every sample of the batch (and
   promote or harvest them) before any input or intermediate is deleted; on any mismatch, delete nothing and fail.
 * `HPC-BATCH-005` **Extract everything that needs an intermediate before deleting it** (e.g. genotype fingerprints and region BAMs
-  before BAMs are deleted; `SAMPLE_IDENTITY_GUIDELINES.md` §4, genotype fingerprints).
+  before a BAM is deleted or converted, `HPC-FLOW-006`; `SAMPLE_IDENTITY_GUIDELINES.md` §4, genotype fingerprints).
+  With archived CRAMs they can also be re-extracted later.
 * `HPC-BATCH-006` Concurrent batches MAY be capped without a controller process with `--dependency=singleton`: one job name per
   slot, so at most one batch per name runs at a time.
 

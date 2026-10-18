@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.1.0 (2026-10-16)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.2.0 (2026-10-18)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -145,6 +145,16 @@
 * `SC-QUANT-003` Record STAR version, all `--solo*` parameters, chemistry and whitelist, reference genome and annotation release.
 * `SC-QUANT-004` Default references can miss reads from genes with incomplete 3' annotation; optimized references recover them
   [Pool 2023]. Check the annotation of a gene of interest before concluding it is not expressed.
+* `SC-QUANT-005` **Archived droplet alignments (`HPC_GUIDELINES.md` §2, `HPC-FLOW-006`) SHOULD keep the corrected barcodes and MAY drop
+  the raw ones.** Keep `CB`, `UB`, `GX`, `GN`, `NH`, `HI`, `nM`, `AS` and `sM`. The raw barcode-read sequence and
+  qualities (`sS`, `sQ`) and the uncorrected cell barcode and UMI (`CR`, `UR`) MAY be removed (`samtools view -x`) when
+  the FASTQs stay retrievable from a public or archived source.
+  * *Why:* matrices, pool demultiplexing (cellsnp-lite and vireo, per-cluster fingerprints) and per-cell reads in
+    regions use the corrected `CB`/`UB`; the four raw tags take about 45 % of the CRAM (snRNA-seq library of 135 M
+    reads: 3.63 → 1.99 GB).
+  * *Trade-off:* barcode and UMI correction cannot be redone from the CRAM (another whitelist or correction mode needs
+    the FASTQs).
+  * *Deviate when:* the FASTQs will not remain available: keep the raw tags.
 
 ## 4. Quality control
 

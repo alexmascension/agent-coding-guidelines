@@ -32,6 +32,7 @@ BULK-QUANT-001	active	RNASEQ_BULK_GUIDELINES.md	Default: nf-core/rnaseq with --a
 BULK-QUANT-002	active	RNASEQ_BULK_GUIDELINES.md	Salmon options: --seqBias --gcBias always; --numGibbsSamples 20 (or bootstraps) 
 BULK-QUANT-003	active	RNASEQ_BULK_GUIDELINES.md	Transcript to gene: aggregate with tximport [Soneson 2016a].
 BULK-QUANT-004	active	RNASEQ_BULK_GUIDELINES.md	DE tools take counts, never TPM (transcripts per million), FPKM (fragments per k
+BULK-QUANT-005	active	RNASEQ_BULK_GUIDELINES.md	Archived genome alignments (HPC_GUIDELINES.md §2, HPC-FLOW-006) SHOULD keep the 
 BULK-REF-001	active	RNASEQ_BULK_GUIDELINES.md	One genome build and one annotation release for all samples, recorded in PROJECT
 BULK-REF-002	active	RNASEQ_BULK_GUIDELINES.md	Sex-matched references (Y masked for XX; Y PAR: pseudoautosomal region, masked f
 BULK-REF-003	active	RNASEQ_BULK_GUIDELINES.md	Full annotation, filtered at analysis time: quantify against the complete transc
@@ -274,6 +275,7 @@ HPC-FLOW-002	active	HPC_GUIDELINES.md	Jobs write only to WORK (and NODE). Final 
 HPC-FLOW-003	active	HPC_GUIDELINES.md	Assume nothing on the cluster is backed up unless the site profile says so. Code
 HPC-FLOW-004	active	HPC_GUIDELINES.md	WORK is not storage. Remove intermediates of finished runs (or archive them as o
 HPC-FLOW-005	active	HPC_GUIDELINES.md	Transfers use rsync (-a, checksums for verification, --dry-run before any --dele
+HPC-FLOW-006	active	HPC_GUIDELINES.md	Alignments that later questions may need SHOULD be archived as CRAM, not deleted
 HPC-IO-001	active	HPC_GUIDELINES.md	Avoid many small files on parallel filesystems: keep fewer than a few thousand f
 HPC-IO-002	active	HPC_GUIDELINES.md	NODE directories are created and removed by the job (mkdir -p "$PROJECT_NODE" at
 HPC-IO-003	active	HPC_GUIDELINES.md	Read large inputs sequentially and once per job; avoid many jobs reading the sam
@@ -452,6 +454,7 @@ SC-QUANT-001	active	SCRNASEQ_GUIDELINES.md	Default: STARsolo [Kaminow 2021], gen
 SC-QUANT-002	active	SCRNASEQ_GUIDELINES.md	Isoform-level questions need full-length (e.g. Smart-seq) or long-read protocols
 SC-QUANT-003	active	SCRNASEQ_GUIDELINES.md	Record STAR version, all --solo parameters, chemistry and whitelist, reference g
 SC-QUANT-004	active	SCRNASEQ_GUIDELINES.md	Default references can miss reads from genes with incomplete 3' annotation; opti
+SC-QUANT-005	active	SCRNASEQ_GUIDELINES.md	Archived droplet alignments (HPC_GUIDELINES.md §2, HPC-FLOW-006) SHOULD keep the
 SC-REP-001	active	SCRNASEQ_GUIDELINES.md	Tissue handling: dissociation or nuclei protocol, chemistry, multiplexing.
 SC-REP-002	active	SCRNASEQ_GUIDELINES.md	STAR version and --solo parameters (or the alternative tool), reference and anno
 SC-REP-003	active	SCRNASEQ_GUIDELINES.md	Per capture: barcodes, cells after each QC step (cell calling, ambient, nuclear 

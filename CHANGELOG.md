@@ -5,6 +5,40 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-18 (proposals from the snRNA-seq project on DIPC Hyperion)
+
+### HPC_GUIDELINES.md [1.2.0]
+
+#### Added
+
+- `HPC-FLOW-006`: alignments that later questions may need are archived as CRAM 3.0 against the exact mapping
+  reference (record count checked, reference and removed tags in provenance) instead of being deleted; region BAMs
+  are re-extracted from the CRAMs when the list of regions changes.
+
+#### Changed
+
+- `HPC-BATCH-005`: "before BAMs are deleted" now covers conversion to CRAM (`HPC-FLOW-006`).
+
+### SCRNASEQ_GUIDELINES.md [3.2.0]
+
+#### Added
+
+- `SC-QUANT-005`: archived droplet alignments keep `CB`/`UB` and the gene and mapping tags; the raw barcode tags
+  (`sS`, `sQ`, `CR`, `UR`) MAY be dropped when the FASTQs stay retrievable (pilot: 3.63 → 1.99 GB per library).
+
+### RNASEQ_BULK_GUIDELINES.md [3.2.0]
+
+#### Added
+
+- `BULK-QUANT-005`: archived genome alignments keep the tags downstream steps read (`NH`, `HI`, `AS`, `nM`, `XS`,
+  `RG`; `RX`/`MI` with UMIs) and MAY drop raw UMI tags (`OX`, `QX`); the transcriptome-projected BAM is not archived.
+
+### SAMPLE_IDENTITY_GUIDELINES.md [2.2.1]
+
+#### Changed
+
+- `ID-GENO-001` *Trade-off*: fingerprints can also be extracted later from archived CRAMs (`HPC-FLOW-006`).
+
 ## 2026-10-17 (proposals from a bulk RNA-seq project on DIPC Hyperion)
 
 ### CODING_GUIDELINES.md [3.1.0]

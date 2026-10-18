@@ -1,6 +1,6 @@
 # Bulk RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.1.0 (2026-10-17)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.2.0 (2026-10-18)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Conesa 2016]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Schurch 2016†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -102,6 +102,18 @@
     runs outside nf-core).
 * `BULK-QUANT-004` **DE tools take counts, never TPM (transcripts per million), FPKM (fragments per kilobase per million mapped fragments) or normalized values**; TPM and RPKM (reads per kilobase per million mapped reads) are within-sample measures and MUST NOT
   be used to compare samples or protocols [Zhao 2020].
+
+* `BULK-QUANT-005` **Archived genome alignments (`HPC_GUIDELINES.md` §2, `HPC-FLOW-006`) SHOULD keep the tags that downstream steps read
+  and MAY drop raw read-level tags whose content stays retrievable from the FASTQs.** Keep `NH`, `HI`, `AS`, `nM`, `XS`
+  when written (strand of spliced reads in unstranded libraries) and the read group (`RG`, used by fingerprinting
+  tools). With UMIs, keep the UMI used for deduplication (`RX`, and `MI` when molecules were grouped) and MAY drop the
+  raw UMI and its qualities (`OX`, `QX`). The transcriptome-projected BAM is not archived once `quant.sf` is
+  validated: only Salmon reads it, and it is reproducible from the FASTQs.
+  * *Why:* same reasoning as `SCRNASEQ_GUIDELINES.md` §3 (`SC-QUANT-005`): junctions, variants, sex and identity
+    checks and regions of interest need the genome alignment, and re-mapping costs a download and an alignment.
+  * *Trade-off:* UMI correction or deduplication cannot be redone with another method from the CRAM; that needs the
+    FASTQs.
+  * *Deviate when:* the FASTQs will not remain available: keep the raw UMI tags.
 
 ## 5. Filtering and normalization
 
