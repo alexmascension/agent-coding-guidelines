@@ -33,6 +33,13 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 - `BULK-QUANT-005`: archived genome alignments keep the tags downstream steps read (`NH`, `HI`, `AS`, `nM`, `XS`,
   `RG`; `RX`/`MI` with UMIs) and MAY drop raw UMI tags (`OX`, `QX`); the transcriptome-projected BAM is not archived.
 
+### SAMPLE_IDENTITY_GUIDELINES.md [2.2.2]
+
+#### Fixed
+
+- `ID-GENO-003`: IBS0 and IBS2 are numbers of sites (somalier `ibs0`, `ibs2`, out of `n`), not proportions; divide by
+  `n` to compare pairs.
+
 ### SAMPLE_IDENTITY_GUIDELINES.md [2.2.1]
 
 #### Changed
