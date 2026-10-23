@@ -2,7 +2,7 @@
 
 > Companion to the omics guidelines (`RNASEQ_BULK_GUIDELINES.md`, `SCRNASEQ_GUIDELINES.md`, `SPATIAL_GUIDELINES.md`,
 > `META_ANALYSIS_GUIDELINES.md`, `SEX_INFERENCE_GUIDELINES.md`, `SAMPLE_IDENTITY_GUIDELINES.md`,
-> `DECONVOLUTION_GUIDELINES.md`) in <https://github.com/alexmascension/agent-coding-guidelines>.
+> `DECONVOLUTION_GUIDELINES.md`, `HPC_GUIDELINES.md`) in <https://github.com/alexmascension/agent-coding-guidelines>.
 > Compiled 2026-10-14. DOIs and bibliographic data verified against Crossref; notes derived from the abstracts
 > (Europe PMC) or, where no abstract was available, from the article. BibTeX in `OMICS_REFERENCES.bib`.
 > Statistical references (pseudoreplication, batch, FDR, enrichment) are in `STATISTICS_REFERENCES.md`.
@@ -17,6 +17,11 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
   MultiQC aggregates quality-control metrics from multiple bioinformatics tools across many samples into a single report, enabling rapid detection of batch effects and outlier samples.
 - **[Ewels 2020]** Ewels et al. (2020). The nf-core framework for community-curated bioinformatics pipelines. *Nature Biotechnology*. [doi:10.1038/s41587-020-0439-x](https://doi.org/10.1038/s41587-020-0439-x)  
   nf-core: community-curated Nextflow pipelines with shared standards, continuous testing and versioned releases; run a pinned release, not the development branch.
+
+### File formats
+
+- **[Bonfield 2022]** Bonfield (2022). CRAM 3.1: advances in the CRAM file format. *Bioinformatics*. [doi:10.1093/bioinformatics/btac010](https://doi.org/10.1093/bioinformatics/btac010)  
+  CRAM 3.1 adds codecs (rANS Nx16, adaptive arithmetic coder, fqzcomp quality model, name tokeniser) to CRAM 3.0 and is 7–16 % smaller at an equivalent profile, with similar speed except decoding of the `small` and `archive` profiles; the `archive` profile trades CPU and memory for size.
 
 ## Bulk RNA-seq (`RNASEQ_BULK_GUIDELINES.md`)
 

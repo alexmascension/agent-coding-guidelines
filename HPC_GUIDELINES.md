@@ -1,6 +1,6 @@
 # HPC guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.2.0 (2026-10-18)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.3.0 (2026-10-23)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -77,19 +77,33 @@
   files are archived (`tar`) before transfer. Downloads from public archives follow `CODING_GUIDELINES.md` §13
   (downloads from public archives).
 * `HPC-FLOW-006` **Alignments that later questions may need SHOULD be archived as CRAM, not deleted.** Convert the
-  coordinate-sorted BAM to CRAM 3.0 against the exact FASTA used for mapping, check that the record count matches,
-  then delete the BAM (`HPC-BATCH-004`). Record format, CRAM version, reference path and checksum, and removed tags in
-  provenance. Region BAMs for a list of regions are extracted from the CRAMs (`samtools view -T <fasta> -M -L <bed>`)
-  whenever the list changes, without re-mapping. Which tags to keep: `SCRNASEQ_GUIDELINES.md` §3 (`SC-QUANT-005`),
-  `RNASEQ_BULK_GUIDELINES.md` §4 (`BULK-QUANT-005`).
+  coordinate-sorted BAM to CRAM against the exact FASTA used for mapping, check that the record count matches,
+  then delete the BAM (`HPC-BATCH-004`). Set the CRAM version and profile explicitly, chosen by the project's priority
+  (recorded in `PROJECT_CONTEXT.md`):
+  * **Compatibility with older readers:** CRAM 3.0 (`samtools view -O cram,version=3.0`). Required when any reader
+    in use lacks CRAM 3.1 support, e.g. tools built on htsjdk older than 4.3.0 (GATK before 4.7.0.0).
+  * **Balance of size and speed** (default once every reader in use is known to read CRAM 3.1): CRAM 3.1 with the
+    `normal` profile (`-O cram,version=3.1`).
+  * **Minimal volume:** CRAM 3.1 with the `archive` profile (`-O cram,version=3.1,archive`), when encoding and
+    decoding time matter less than space; measure the extraction time of region BAMs on a pilot first.
+
+  Read a converted file once with the oldest reader in use. Record format, CRAM version and profile, writing tool and
+  version, reference path and checksum, and removed tags in provenance. Region BAMs for a list of regions are
+  extracted from the CRAMs (`samtools view -T <fasta> -M -L <bed>`) whenever the list changes, without re-mapping.
+  Which tags to keep: `SCRNASEQ_GUIDELINES.md` §3 (`SC-QUANT-005`), `RNASEQ_BULK_GUIDELINES.md` §4
+  (`BULK-QUANT-005`).
   * *Why:* re-mapping means downloading and aligning again (STARsolo: about 1 h per 150 M reads on 4 CPUs, plus the
     transfer), while the regions, junctions or variants worth reading are often known only after the first results.
     CRAM keeps every read in a fraction of the space (snRNA-seq library of 135 M reads: BAM 6.96 GB; CRAM 3.0
-    3.63 GB; without raw-barcode tags 1.99 GB).
+    3.63 GB; without raw-barcode tags 1.99 GB). CRAM 3.1 is about 7–16 % smaller than CRAM 3.0 at the same profile
+    [Bonfield 2022]; the `archive` profile adds slower codecs (arithmetic coder, bzip2) and larger containers, which
+    slow encoding and decoding and make random access coarser. The version is set explicitly because the default
+    depends on the writer: samtools and htslib write CRAM 3.1 by default from 1.22, CRAM 3.0 before; htsjdk writes
+    CRAM 3.1 by default from 5.0.0.
   * *Trade-off:* decoding needs the identical reference: archive it with its checksum (`HPC-FLOW-003`) and pass it to
     every reader (`-T`/`--reference`, or `REF_PATH`/`REF_CACHE`); otherwise htslib tries to fetch the sequences from
-    the EBI reference registry, which fails or stalls on compute nodes. CRAM 3.1 is 5-10 % smaller, but older
-    htsjdk-based tools (Picard, GATK) may not read it; check the readers in use. Tools that read only BAM need a
+    the EBI reference registry, which fails or stalls on compute nodes. A CRAM 3.1 archive limits later readers to
+    tools that support it; converting back to CRAM 3.0 costs a full decode and encode. Tools that read only BAM need a
     temporary conversion.
   * *Deviate when:* the archive cannot hold the CRAMs (then keep region BAMs, junction tables and fingerprints,
     `HPC-BATCH-005`), or the alignment is cheap to reproduce from inputs kept on the cluster.

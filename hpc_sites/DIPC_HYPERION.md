@@ -3,7 +3,7 @@
 > Companion of `HPC_GUIDELINES.md`. Checked against the DIPC Supercomputing Center documentation
 > (<https://scc.dipc.org/docs/systems/hyperion/>, <https://scc.dipc.org/docs/jobs/slurm/>,
 > <https://scc.dipc.org/docs/jobs/gpus/>, <https://scc.dipc.org/docs/getting-started/storage/>) on **2026-10-16**; §8 adds observations
-> made by a project on the cluster (2026-10-03 to 2026-10-17). Facts, not rules: when this file and the centre's documentation disagree, the documentation wins; update the file
+> made by projects on the cluster (2026-10-03 to 2026-10-23). Facts, not rules: when this file and the centre's documentation disagree, the documentation wins; update the file
 > and its date. Support: `support-hpc@dipc.org`.
 
 ## 1. Access and login nodes
@@ -113,7 +113,8 @@ every output path of the job resolves to `/scratch` through the links of `HPC-ST
 
 ## 8. Observed on the cluster
 
-Observations of one project (bulk RNA-seq with nf-core/rnaseq 3.27.0), not statements of the centre. Re-check them
+Observations of projects on the cluster (bulk RNA-seq with nf-core/rnaseq 3.27.0; snRNA-seq reprocessing), not
+statements of the centre. Re-check them
 before relying on them, and remove them when the documentation covers them.
 
 * **Nextflow version:** the module `Nextflow/25.04.6` was too old for nf-core/rnaseq 3.27.0 (`Plugin nf-schema with
@@ -132,6 +133,14 @@ before relying on them, and remove them when the documentation covers them.
 * **Network:** compute nodes reach the internet through a different address than login nodes, and an archive
   (ENA) served broken responses for some files to compute nodes only, for at least 15–20 minutes. Test downloads
   on a compute node (`CODING_GUIDELINES.md` §13, downloads from public archives).
+* **Download throughput from compute nodes** (2026-10-22/23; 3 libraries of about 19 GB, 2 FASTQ files each; methods
+  run concurrently in a Latin square over 3 rounds): ENA with `aria2c`, 4 connections per file and 2 files in parallel,
+  took 18, 19 and 33 min (17.5, 16.9 and 9.8 MB/s); ENA with `wget`, 2 files in parallel, 66 and 98 min (4.9 and
+  3.3 MB/s), and one round failed on a server error after 88 min; SRA `prefetch` took 29–135 min for the transfer
+  (10.6–2.3 MB/s) plus about 5 min of `fasterq-dump` and 57 min of compression, 94–201 min in total. One of 6 files
+  written by `aria2c` had the published size and a wrong MD5 (`CODING_GUIDELINES.md` §13, `CODE-DL-001` and
+  `CODE-DL-010`). In one batch, 33 download jobs timed out, most while waiting for a slot inside the job
+  (`CODE-DL-009`).
 * **`/lscratch`:** absent on login nodes and not found on some compute nodes, although the documentation lists a
   size for most nodes; on `hyperion-294` (14 TB NVMe) `/tmp` points to `/lscratch/tmp`. Scripts check that it exists
   and fall back to `WORK` (`recipes/hpc/sites/hyperion.env`).

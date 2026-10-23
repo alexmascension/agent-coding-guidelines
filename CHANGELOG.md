@@ -5,6 +5,47 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-23 (proposals from the snRNA-seq reprocessing project on DIPC Hyperion)
+
+### CODING_GUIDELINES.md [3.2.0]
+
+#### Added
+
+- `CODE-DL-009`: waits inside download jobs are bounded and counted in the time request; the transfer time is sized
+  from throughput measured on the nodes that run the jobs, plus the back-off of `CODE-DL-005`, and grows with the
+  attempt number.
+- `CODE-DL-010`: order of transfer methods per repository (ENA, SRA-only runs, Synapse, EGA, other HTTPS sources) and
+  how each is verified.
+
+#### Changed
+
+- `CODE-DL-001`: now an explicit MUST that covers every code path yielding a file (resume, retry, multi-connection
+  transfer, file already present); the pipeline compares checksums itself and records observed and expected values
+  and the method; a file without a published checksum fails unless a container integrity check (SRA) is run or the
+  acceptance is recorded with its reason; URL and checksum tables are matched one to one.
+- `CODE-DL-006`: the connection budget counts files in parallel times connections per file, per archive and source
+  address (3–4 by default, up to about 8 with measured low per-connection throughput); *Why* added.
+
+### HPC_GUIDELINES.md [1.3.0]
+
+#### Changed
+
+- `HPC-FLOW-006`: CRAM version and profile are set explicitly and chosen by the project's priority: CRAM 3.0 for
+  compatibility with readers without CRAM 3.1 support (htsjdk before 4.3.0, GATK before 4.7.0.0); CRAM 3.1 `normal`
+  as the default once every reader is known to read 3.1; CRAM 3.1 `archive` to minimise volume, after measuring
+  region extraction. A converted file is read once with the oldest reader in use; profile and writing tool are
+  recorded in provenance. *Why* notes that the default output version depends on the writer (samtools/htslib 1.22,
+  htsjdk 5.0.0) and cites [Bonfield 2022].
+
+### OMICS_REFERENCES.md
+
+- [Bonfield 2022] (CRAM 3.1), new subsection *File formats*; `HPC_GUIDELINES.md` listed among the guides it serves.
+
+### hpc_sites/DIPC_HYPERION.md
+
+- §8: download throughput from compute nodes (ENA with `aria2c` and `wget`, SRA `prefetch`), one size-correct file
+  with a wrong MD5, and download jobs timing out while waiting inside the job.
+
 ## 2026-10-18 (proposals from the snRNA-seq project on DIPC Hyperion)
 
 ### HPC_GUIDELINES.md [1.2.0]

@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.1.0 (2026-10-17)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.2.0 (2026-10-23)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -404,8 +404,23 @@ interface, a threshold or a data invariant MUST update it in the same change.
 
 ### Downloads from public archives
 
-* `CODE-DL-001` **Verify every downloaded file against the checksum published by the archive** (e.g. ENA `fastq_md5`). A
-  successful exit code or an HTTP 200 MUST NOT be taken as evidence of a correct file.
+* `CODE-DL-001` **Every downloaded file MUST be verified against the checksum published by the archive** (e.g. ENA
+  `fastq_md5` or `submitted_md5`, Synapse `contentMd5`, the `.md5` files of EGA) before it is used. This holds for
+  every code path that yields a file: first download, resumed partial file, retry, parallel or multi-connection
+  transfer, and a file found already present from an earlier run. A successful exit code, an HTTP 200, the expected
+  size or a check performed internally by the client MUST NOT be taken as evidence of a correct file: the pipeline
+  compares the checksums itself and records, per file, the observed and expected values and the verification method
+  in the provenance file (`CODE-PROV-003`, run provenance).
+  * If the archive publishes no checksum for a file, the download MUST fail, unless (a) the archive provides an
+    integrity check for its container format, which is run and recorded instead (SRA: `prefetch --verify yes`
+    followed by `vdb-validate`), or (b) the decision to accept the file without a checksum is recorded, with its
+    reason, next to the source of the file (`CODE-PROV-002`, how to obtain inputs). Files derived after verification
+    (e.g. `fasterq-dump` output, recompressed) record the checksum of the produced file.
+  * Tables of URLs and checksums MUST be matched one to one (e.g. `zip(..., strict=True)` in Python); a list of
+    checksums shorter or longer than the list of files is an error.
+  * *Why:* a multi-connection client can write a file with exactly the published size and a wrong MD5; a `zip` over
+    URL and checksum lists of different length drops files silently; client-side checks are skipped in some code
+    paths (resume, reuse of an existing file).
 * `CODE-DL-002` **Retries restart the whole unit.** MUST NOT combine a client-side retry that restarts the transfer (e.g.
   `curl --retry`) with output to a pipe (`curl … | gzip -dc | head`). Retry the whole unit (e.g. both mates of a pair)
   from the start, and validate each attempt.
@@ -425,14 +440,43 @@ interface, a threshold or a data invariant MUST update it in the same change.
 * `CODE-DL-005` **Back off over minutes, not seconds**: several attempts per file with increasing waits (e.g. 8 attempts, waiting
   $\min(60a, 600)$ s before attempt $a$; about half an hour in total) before a batch fails.
   * *Why:* archive-side incidents can last tens of minutes, much longer than a network interruption.
-* `CODE-DL-006` **Limit concurrent connections per archive** to a few (e.g. 3–4 per source address), and retry refused
-  connections (`wget --retry-connrefused`; wget does not retry them by default).
+* `CODE-DL-006` **Limit concurrent connections per archive and count all of them** (files in parallel times
+  connections per file) against one budget per archive and source address: 3–4 by default, up to about 8 when the
+  measured throughput per connection is low and the archive's terms allow it; record the budget and the measurement.
+  Retry refused connections (`wget --retry-connrefused`; wget does not retry them by default).
+  * *Why:* archives limit or refuse connections per source address, not per file; a multi-connection client
+    multiplies the number of connections a budget counted in files suggests.
 * `CODE-DL-007` **Fetch and validate the run table once** (URLs, checksums, read counts per run), track it (`CODE-PROV-002`,
   *Deviate when*), and have jobs read it instead of querying the archive API at run time.
   * *Why:* archive APIs can return empty or error responses for a fraction of accessions at any time, and
     downstream tools do not always detect them.
 * `CODE-DL-008` **Test downloads from the machines that will run them.** On clusters, compute nodes can reach the internet
   through a different address than login nodes, and external services can answer differently by source.
+* `CODE-DL-009` **Bound waits inside download jobs and size their time limit from measured throughput.** A job that
+  waits (for a download slot, disk space or a download-ahead limit) spends its time limit while waiting: bound the
+  wait, then start or fail explicitly, and add the bound to the time request. Size the transfer part from throughput
+  measured on the machines that run the jobs (`CODE-DL-008`, testing from those machines;
+  `HPC-JOB-002` in `HPC_GUIDELINES.md` §4, resources from measurements), add the back-off of `CODE-DL-005` (retry waits), and increase
+  the time limit with the attempt number when a timed-out job is resubmitted.
+  * *Why:* jobs that wait inside their allocation time out without an error of their own, some before transferring a
+    byte, and the timeout looks like a slow transfer.
+* `CODE-DL-010` **Choose the transfer method per repository in this order**, falling back to the next one when the
+  previous is unavailable or fails repeatedly. Every method is subject to the other rules of this subsection.
+
+  | Repository / case | Order of preference | Verification |
+  |---|---|---|
+  | ENA, run with FASTQ (or submitted FASTQ) and MD5 | 1. HTTPS with a multi-connection client (e.g. `aria2c -x 4 -s 4`), files of a unit in parallel within the budget of `CODE-DL-006`, whole-file retry on MD5 mismatch. 2. HTTPS with `wget` or `curl` and resume (`-c`), files in parallel. 3. FTP, as in 2 (only if HTTPS is blocked). | MD5 from the tracked run table (`CODE-DL-007`), per file |
+  | SRA-only run (no FASTQ in ENA) | 1. `prefetch --verify yes` and `vdb-validate`, then `fasterq-dump --split-files --include-technical` and parallel compression. 2. The same from the cloud mirror of SRA, if reachable (test it first, `CODE-DL-008`). | `vdb-validate` on the container; checksum of the produced FASTQ recorded |
+  | Synapse | 1. `synapseclient`, one client and one staging directory per file, files in parallel within the budget of `CODE-DL-006` (e.g. 3). | `contentMd5` from the tracked file table, compared by the pipeline |
+  | EGA | 1. `pyega3` (or the EGA client in use), resumable. | MD5 published by EGA, from a tracked table |
+  | Other HTTPS sources (GEO supplementary files, institutional servers) | 1. `wget` or `curl` with resume; a multi-connection client only if the server supports range requests. | Published checksum; if none is published, `CODE-DL-001` (a) or (b) |
+
+  * *Why:* for large FASTQ files from ENA, multi-connection HTTPS was about 2–5 times faster than single-connection
+    `wget` in a pilot (about 20–30 min versus 65–100 min per 19 GB library), and SRA adds conversion and recompression to the
+    transfer. Site profiles record such measurements (e.g. `hpc_sites/DIPC_HYPERION.md`, §8).
+  * *Deviate when:* the archive's terms limit connections (use the single-connection method), or measurements from
+    the machines that run the jobs (`CODE-DL-008`) show another order to be faster or more reliable.
+
 
 ## 14. Configuration, paths and scripts
 

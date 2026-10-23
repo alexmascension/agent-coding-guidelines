@@ -82,14 +82,16 @@ CODE-DATA-009	active	CODING_GUIDELINES.md	Use Parquet for intermediate and outpu
 CODE-DEP-001	active	CODING_GUIDELINES.md	Prefer the standard library and existing project dependencies when they provide 
 CODE-DEP-002	active	CODING_GUIDELINES.md	Add a dependency when it substantially improves correctness, maintainability, pe
 CODE-DEP-003	active	CODING_GUIDELINES.md	Heavy or optional dependencies go into an extra in pyproject.toml; the core pack
-CODE-DL-001	active	CODING_GUIDELINES.md	Verify every downloaded file against the checksum published by the archive (e.g.
+CODE-DL-001	active	CODING_GUIDELINES.md	Every downloaded file MUST be verified against the checksum published by the arc
 CODE-DL-002	active	CODING_GUIDELINES.md	Retries restart the whole unit. MUST NOT combine a client-side retry that restar
 CODE-DL-003	active	CODING_GUIDELINES.md	Validate streamed reads record by record: every FASTQ record has its @ and + lin
 CODE-DL-004	active	CODING_GUIDELINES.md	Treat unexpected responses as failed attempts. Direct file URLs of archives that
 CODE-DL-005	active	CODING_GUIDELINES.md	Back off over minutes, not seconds: several attempts per file with increasing wa
-CODE-DL-006	active	CODING_GUIDELINES.md	Limit concurrent connections per archive to a few (e.g. 3–4 per source address),
+CODE-DL-006	active	CODING_GUIDELINES.md	Limit concurrent connections per archive and count all of them (files in paralle
 CODE-DL-007	active	CODING_GUIDELINES.md	Fetch and validate the run table once (URLs, checksums, read counts per run), tr
 CODE-DL-008	active	CODING_GUIDELINES.md	Test downloads from the machines that will run them. On clusters, compute nodes 
+CODE-DL-009	active	CODING_GUIDELINES.md	Bound waits inside download jobs and size their time limit from measured through
+CODE-DL-010	active	CODING_GUIDELINES.md	Choose the transfer method per repository in this order, falling back to the nex
 CODE-DOC-001	active	CODING_GUIDELINES.md	Write repository documentation, notebook prose, code comments, docstrings, log a
 CODE-DOC-002	active	CODING_GUIDELINES.md	Write NumPy-style docstrings for public functions and non-trivial internal funct
 CODE-DOC-003	active	CODING_GUIDELINES.md	For functions that take or return tables, the docstring MUST list the required c
