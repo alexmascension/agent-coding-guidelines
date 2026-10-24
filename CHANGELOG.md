@@ -5,6 +5,31 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-24 (repository layout)
+
+### CODING_GUIDELINES.md [3.4.0]
+
+#### Changed
+
+- `CODE-USE-001`: in a project, the reference files the guides cite go to `guidelines/references/` (previously next
+  to the guides in `guidelines/`); upstream, guides and site profiles are under `guidelines/` and reference files
+  under `references/`. §2 (documentation set) and §26 (related guidelines) updated accordingly.
+
+#### Fixed
+
+- `CODE-DL-010` *Why*: line wrapping.
+
+### Repository
+
+#### Changed
+
+- Guides moved to `guidelines/`, site profiles to `guidelines/hpc_sites/`, reference files (`.md`, `.bib`) to
+  `references/`; contents unchanged, so their versions do not change. `README.md`, `CHANGELOG.md`,
+  `RULE_IDS.tsv`, `tools/` and `recipes/` stay at the root; `RULE_IDS.tsv` still names guides by file name.
+- `tools/rule_ids.py`, `tools/check_guides.py`, `tools/check_versions.py` read the new folders;
+  `tools/check_versions.py` treats a guide moved without changes as unchanged.
+- `README.md`: contents table and *Use in a project* (with a copy example) follow the new layout.
+
 ## 2026-10-24 (continuous integration; agent working process)
 
 ### CODING_GUIDELINES.md [3.3.0]

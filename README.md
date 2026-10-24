@@ -11,20 +11,20 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 
 | File | Scope | Status |
 |---|---|---|
-| `CODING_GUIDELINES.md` | Code, data, provenance, reproducibility, testing, project documentation (`AGENTS.md`, `PROJECT_CONTEXT.md`) | stable |
-| `STATISTICS_GUIDELINES.md` | Design, test choice, multiple testing, resampling, reporting | stable |
-| `RNASEQ_BULK_GUIDELINES.md` | Bulk RNA-seq from reads to differential expression and enrichment | stable |
-| `SCRNASEQ_GUIDELINES.md` | Single-cell and single-nucleus RNA-seq (10x, STARsolo, scverse) | stable |
-| `SPATIAL_GUIDELINES.md` | Visium, Xenium, MERFISH | stable |
-| `META_ANALYSIS_GUIDELINES.md` | Combining studies, general and omics | stable |
-| `SEX_INFERENCE_GUIDELINES.md` | Sex-chromosome complement from expression; reference routing | stable |
-| `SAMPLE_IDENTITY_GUIDELINES.md` | Duplicates, swaps, mixtures, genotype fingerprints | stable |
-| `DECONVOLUTION_GUIDELINES.md` | Cell-type composition of bulk samples | stable |
-| `HPC_GUIDELINES.md` | Shared clusters with Slurm: storage roles, staging and promotion, containers, jobs, agents on clusters | new |
-| `hpc_sites/` | Site profiles (facts of one cluster, dated): `DIPC_HYPERION.md` | — |
-| `FIGURE_GUIDELINES.md` | Figures | planned |
-| `OMICS_REFERENCES.md` / `.bib`, `STATISTICS_REFERENCES.md` / `.bib` | References with keys used in the guides | — |
-| `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.3.0 |
+| `guidelines/CODING_GUIDELINES.md` | Code, data, provenance, reproducibility, testing, project documentation (`AGENTS.md`, `PROJECT_CONTEXT.md`) | stable |
+| `guidelines/STATISTICS_GUIDELINES.md` | Design, test choice, multiple testing, resampling, reporting | stable |
+| `guidelines/RNASEQ_BULK_GUIDELINES.md` | Bulk RNA-seq from reads to differential expression and enrichment | stable |
+| `guidelines/SCRNASEQ_GUIDELINES.md` | Single-cell and single-nucleus RNA-seq (10x, STARsolo, scverse) | stable |
+| `guidelines/SPATIAL_GUIDELINES.md` | Visium, Xenium, MERFISH | stable |
+| `guidelines/META_ANALYSIS_GUIDELINES.md` | Combining studies, general and omics | stable |
+| `guidelines/SEX_INFERENCE_GUIDELINES.md` | Sex-chromosome complement from expression; reference routing | stable |
+| `guidelines/SAMPLE_IDENTITY_GUIDELINES.md` | Duplicates, swaps, mixtures, genotype fingerprints | stable |
+| `guidelines/DECONVOLUTION_GUIDELINES.md` | Cell-type composition of bulk samples | stable |
+| `guidelines/HPC_GUIDELINES.md` | Shared clusters with Slurm: storage roles, staging and promotion, containers, jobs, agents on clusters | new |
+| `guidelines/hpc_sites/` | Site profiles (facts of one cluster, dated): `DIPC_HYPERION.md` | — |
+| `guidelines/FIGURE_GUIDELINES.md` | Figures | planned |
+| `references/` | `OMICS_REFERENCES.md` / `.bib`, `STATISTICS_REFERENCES.md` / `.bib`: references with keys used in the guides | — |
+| `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.3.1 |
 | `CHANGELOG.md` | Changes per guide (semantic versioning per file) | — |
 | `RULE_IDS.tsv` | Registry of rule identifiers (active and retired) | — |
 
@@ -34,8 +34,17 @@ TCR/BCR.
 
 ## Use in a project
 
-1. Copy `CODING_GUIDELINES.md` and the domain guides the project needs, **verbatim**, into `guidelines/` at the
-   project root, with the reference files they cite and, for clusters, the site profile (`guidelines/hpc_sites/`).
+1. Copy `guidelines/CODING_GUIDELINES.md` and the domain guides the project needs, **verbatim**, into `guidelines/`
+   at the project root; for clusters, the site profile into `guidelines/hpc_sites/`; the reference files from
+   `references/` into `guidelines/references/` (`CODING_GUIDELINES.md` §0, `CODE-USE-001`):
+
+   ```bash
+   UPSTREAM=/path/to/agent-coding-guidelines   # a clone at a pinned commit
+   mkdir -p guidelines/references
+   cp "$UPSTREAM"/guidelines/{CODING,STATISTICS,SCRNASEQ}_GUIDELINES.md guidelines/
+   cp "$UPSTREAM"/references/* guidelines/references/
+   mkdir -p guidelines/hpc_sites && cp "$UPSTREAM"/guidelines/hpc_sites/DIPC_HYPERION.md guidelines/hpc_sites/  # clusters only
+   ```
 2. Create `AGENTS.md` (entry point for agents; `CLAUDE.md` may contain `@AGENTS.md`) and `PROJECT_CONTEXT.md` with
    the structure of `CODING_GUIDELINES.md` §2. Adaptations go to *Overrides* in `PROJECT_CONTEXT.md`, never into the
    copied guides; *Overrides* starts with the list of adopted guides and their versions, and refers to rules by

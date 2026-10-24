@@ -11,7 +11,8 @@ Checks
   key, and every key in ``STATISTICS_GUIDELINES.md``, is a bold key of
   ``STATISTICS_REFERENCES.md``.
 * Every ```X_GUIDELINES.md` §N`` reference points to an existing section of an existing guide.
-* Guides and site profiles (``hpc_sites/*.md``) are checked for both.
+* Guides (``guidelines/*_GUIDELINES.md``) and site profiles (``guidelines/hpc_sites/*.md``) are
+  checked for both; reference files are in ``references/``.
 * Every ``recipes/...`` path cited in a guide exists.
 * Every guide declares ``Version MAJOR.MINOR.PATCH`` in its header.
 """
@@ -37,12 +38,12 @@ def bold_keys(path: Path) -> set[str]:
 
 def main() -> int:
     """Run all checks and print the problems found."""
-    guides = sorted(ROOT.glob("*_GUIDELINES.md"))
-    omics_keys = bold_keys(ROOT / "OMICS_REFERENCES.md")
-    stats_keys = bold_keys(ROOT / "STATISTICS_REFERENCES.md")
+    guides = sorted((ROOT / "guidelines").glob("*_GUIDELINES.md"))
+    omics_keys = bold_keys(ROOT / "references" / "OMICS_REFERENCES.md")
+    stats_keys = bold_keys(ROOT / "references" / "STATISTICS_REFERENCES.md")
     headings = {g.name: set(HEADING.findall(g.read_text(encoding="utf-8"))) for g in guides}
     problems = []
-    for guide in [*guides, *sorted(ROOT.glob("hpc_sites/*.md"))]:
+    for guide in [*guides, *sorted((ROOT / "guidelines" / "hpc_sites").glob("*.md"))]:
         text = guide.read_text(encoding="utf-8")
         if guide in guides and not VERSION.search(text[:500]):
             problems.append(f"{guide.name}: no version in header")

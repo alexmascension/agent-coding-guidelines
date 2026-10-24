@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.3.0 (2026-10-24)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.4.0 (2026-10-24)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -15,8 +15,10 @@
 ## 0. How to use this document
 
 * `CODE-USE-001` This file is project-agnostic. Copy it **verbatim** into the folder `guidelines/` at the root of every
-  project, together with the domain guidelines, site profiles (`guidelines/hpc_sites/`) and reference files the project
-  uses. `AGENTS.md`, `PROJECT_CONTEXT.md` and `README.md` stay in the project root.
+  project, together with the domain guidelines and, for clusters, the site profile (`guidelines/hpc_sites/`); the
+  reference files the guides cite go to `guidelines/references/`. In the upstream repository, guides and site profiles
+  are under `guidelines/` and reference files under `references/`. `AGENTS.md`, `PROJECT_CONTEXT.md` and `README.md`
+  stay in the project root.
 * `CODE-USE-002` Everything specific to a project (stack details, layout, vocabulary, data invariants,
   conventions, interfaces, decisions) goes into `PROJECT_CONTEXT.md` (see §2, documentation
   set).
@@ -65,7 +67,7 @@ Every project developed with agents MUST contain at least:
 |---|---|
 | `AGENTS.md` | Entry point read automatically by coding agents. Pointers only (template below). |
 | `PROJECT_CONTEXT.md` | Project-specific decisions and constraints for development (structure below). |
-| `guidelines/CODING_GUIDELINES.md` | This file, unmodified (with the copied domain guidelines, §0). |
+| `guidelines/CODING_GUIDELINES.md` | This file, unmodified (with the copied domain guidelines and references, §0). |
 | `README.md` | What the project does, how to install it, how to run it, where outputs go. |
 
 Add further documents only when they carry information that does not fit the above, e.g.
@@ -472,8 +474,8 @@ interface, a threshold or a data invariant MUST update it in the same change.
   | Other HTTPS sources (GEO supplementary files, institutional servers) | 1. `wget` or `curl` with resume; a multi-connection client only if the server supports range requests. | Published checksum; if none is published, `CODE-DL-001` (a) or (b) |
 
   * *Why:* for large FASTQ files from ENA, multi-connection HTTPS was about 2–5 times faster than single-connection
-    `wget` in a pilot (about 20–30 min versus 65–100 min per 19 GB library), and SRA adds conversion and recompression to the
-    transfer. Site profiles record such measurements (e.g. `hpc_sites/DIPC_HYPERION.md`, §8).
+    `wget` in a pilot (about 20–30 min versus 65–100 min per 19 GB library), and SRA adds conversion and
+    recompression to the transfer. Site profiles record such measurements (e.g. `hpc_sites/DIPC_HYPERION.md`, §8).
   * *Deviate when:* the archive's terms limit connections (use the single-connection method), or measurements from
     the machines that run the jobs (`CODE-DL-008`) show another order to be faster or more reliable.
 
@@ -668,7 +670,8 @@ Available in the same repository; copy the ones relevant to the project:
 * `DECONVOLUTION_GUIDELINES.md` — cell-type composition of bulk samples.
 * `HPC_GUIDELINES.md` — shared clusters with a batch scheduler: storage roles, data flow, containers, jobs; site
   facts in `hpc_sites/`.
-* `STATISTICS_REFERENCES.md`, `OMICS_REFERENCES.md` — references cited by the guidelines above.
+* `STATISTICS_REFERENCES.md`, `OMICS_REFERENCES.md` — references cited by the guidelines above (`references/` upstream,
+  `guidelines/references/` in a project).
 
 ### Recipes (reference implementations)
 
