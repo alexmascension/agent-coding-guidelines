@@ -48,17 +48,29 @@ TCR/BCR.
 ## Development
 
 ```bash
-pip install -e ".[scrnaseq,bulk,dev]"
-pytest                          # R tests run if RECIPES_RSCRIPT points to Rscript with the R packages
-ruff check recipes tools && ruff format --check recipes tools
-python tools/check_guides.py    # citation keys, cross-references, recipe paths, versions
-python tools/rule_ids.py check  # every rule has a unique, registered identifier
-python tools/rule_ids.py assign # after adding rules: assign identifiers, update RULE_IDS.tsv
-shellcheck -x recipes/hpc/*.sh recipes/hpc/job.slurm
+pip install -e ".[scrnaseq,bulk,dev]" pre-commit
+pre-commit install              # once per clone: the checks below run on every commit
+pre-commit run --all-files      # line endings, YAML/TOML, large files, ruff, shellcheck, rule IDs, guides, versions
+pytest -m "not r"               # Python recipe tests
+pytest -m r                     # R-backed tests: need RECIPES_RSCRIPT (or Rscript on PATH) with the R packages
 ```
 
-CI (`.github/workflows/ci.yml`) runs these checks, the tests with and without R, and an installation test from the
-built wheel.
+The pre-commit hooks run `tools/rule_ids.py assign` and `check` (identifiers and `RULE_IDS.tsv`),
+`tools/check_guides.py` (citation keys, cross-references, recipe paths, versions) and `tools/check_versions.py`
+(a changed guide bumps its version and has a `CHANGELOG.md` entry, `CODE-USE-007`).
+
+CI (`.github/workflows/ci.yml`) runs on pushes to `main`, pull requests, weekly and on demand:
+
+| Job | Runs when | What |
+|---|---|---|
+| Guides and lint | always | the pre-commit hooks on all files; version and changelog check against the previous commit |
+| Recipes (Python 3.11, 3.12) | a file under `recipes/`, `pyproject.toml` or the CI changed | `pytest -m "not r"` |
+| Install from the built wheel | as above | install in a clean environment; import and package data (R scripts) |
+| Recipes backed by R | an `*.R` file changed, or a file that depends on R (`tools/ci_scope.py`) | R with scran, tximport, DESeq2; `pytest -m r`, where a skip is a failure |
+
+`tools/ci_scope.py` decides the last two: a file depends on R when it calls R or names an R script, when a test
+marked `r` uses it, or when such a file imports it; it checks the files before and after the change, so adding or
+removing a call to R also triggers the R job. Scheduled and manual runs run every job.
 
 ## License
 

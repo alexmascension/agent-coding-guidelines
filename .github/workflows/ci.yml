@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 5 * * 1"  # weekly: catches breakage from new releases of dependencies
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+jobs:
+  guides:
+    name: Guides and lint (pre-commit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - run: pip install pre-commit
+      - run: pre-commit run --all-files --show-diff-on-failure
+      - name: Version bump and changelog entry for changed guides
+        run: python tools/check_versions.py --base "$BASE"
+
+  scope:
+    name: Select test suites
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.scope.outputs.python }}
+      r: ${{ steps.scope.outputs.r }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - id: scope
+        run: python tools/ci_scope.py --base "$BASE" --github
+
+  python:
+    name: Recipes (Python ${{ matrix.python }})
+    needs: scope
+    if: needs.scope.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - run: pip install -e ".[bulk,scrnaseq,dev]"
+      - run: pytest -m "not r" -rs
+
+  wheel:
+    name: Install from the built wheel
+    needs: scope
+    if: needs.scope.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      - run: pip install build && python -m build --wheel
+      - name: Import and package data from a clean environment, outside the source tree
+        run: |
+          python -m venv /tmp/wheel-env
+          /tmp/wheel-env/bin/pip install dist/*.whl
+          cd /tmp
+          /tmp/wheel-env/bin/python -c "
+          from recipes.common.resources import package_script
+          for package, script in [('recipes.scrnaseq', 'scran_size_factors.R'), ('recipes.bulk', 'tximport_lengthscaled.R')]:
+              assert package_script(package, script).is_file(), (package, script)
+          import recipes.bulk.counts_io, recipes.stats.permutation
+          print('wheel ok')
+          "
+
+  r:
+    name: Recipes backed by R
+    needs: scope
+    if: needs.scope.outputs.r == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          packages: |
+            any::optparse
+            any::Matrix
+            bioc::scran
+            bioc::tximport
+            bioc::DESeq2
+      - run: pip install -e ".[bulk,scrnaseq,dev]"
+      - name: R-backed tests (a skip is a failure here)
+        run: pytest -m r -rs
+        env:
+          RECIPES_REQUIRE_R: "1"

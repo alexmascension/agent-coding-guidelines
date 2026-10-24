@@ -1,0 +1,53 @@
+# Checks run before each commit (install once per clone: `pip install pre-commit && pre-commit install`).
+# CI runs the same hooks on every push (.github/workflows/ci.yml), so a commit that skips them still fails there.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=5120]  # CODE-PROV-002: no data in git, small derived tables only
+      - id: detect-private-key
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.2
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+        args: [--check]
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [-x]
+        types: [text]
+        files: ^recipes/hpc/(.*\.sh|job\.slurm)$
+  - repo: local
+    hooks:
+      - id: rule-ids-assign
+        name: rule identifiers (assign; regenerates RULE_IDS.tsv)
+        entry: python tools/rule_ids.py assign
+        language: python
+        pass_filenames: false
+        files: (_GUIDELINES\.md|RULE_IDS\.tsv|tools/rule_ids\.py)$
+      - id: rule-ids-check
+        name: rule identifiers (check)
+        entry: python tools/rule_ids.py check
+        language: python
+        pass_filenames: false
+        files: (_GUIDELINES\.md|RULE_IDS\.tsv|tools/rule_ids\.py)$
+      - id: check-guides
+        name: citations, cross-references, recipe paths, versions
+        entry: python tools/check_guides.py
+        language: python
+        pass_filenames: false
+        files: (\.md|\.bib|tools/check_guides\.py)$|^recipes/
+      - id: check-versions
+        name: version bump and changelog entry for changed guides
+        entry: python tools/check_versions.py
+        language: python
+        pass_filenames: false
+        files: (_GUIDELINES\.md|CHANGELOG\.md|tools/check_versions\.py)$

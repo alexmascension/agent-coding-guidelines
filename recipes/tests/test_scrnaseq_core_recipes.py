@@ -247,6 +247,7 @@ def test_detect_doublets_finds_planted_doublets():
 RSCRIPT = __import__("os").environ.get("RECIPES_RSCRIPT", "Rscript")
 
 
+@pytest.mark.r
 @pytest.mark.skipif(
     __import__("shutil").which(RSCRIPT) is None, reason="Rscript with scran not available"
 )
@@ -302,6 +303,7 @@ def test_scranpy_refuses_huge_dense_copy(sim_adata):
         scranpy_size_factors(sim_adata, max_dense_gb=1e-6)
 
 
+@pytest.mark.r
 @pytest.mark.skipif(
     __import__("shutil").which(RSCRIPT) is None, reason="Rscript with scran not available"
 )

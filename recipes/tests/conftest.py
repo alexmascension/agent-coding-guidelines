@@ -1,5 +1,7 @@
 """Synthetic data shared by the recipe tests (no real data, no network)."""
 
+import os
+
 import anndata as ad
 import numpy as np
 import pandas as pd
@@ -85,3 +87,17 @@ def simulate_counts(
 def sim_adata():
     """Simulated count data (see ``simulate_counts``)."""
     return simulate_counts()
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    """With ``RECIPES_REQUIRE_R=1`` (the R job in CI), a skipped R-backed test fails instead."""
+    outcome = yield
+    report = outcome.get_result()
+    if (
+        os.environ.get("RECIPES_REQUIRE_R") == "1"
+        and report.skipped
+        and item.get_closest_marker("r")
+    ):
+        report.outcome = "failed"
+        report.longrepr = f"R-backed test skipped while RECIPES_REQUIRE_R=1: {report.longrepr}"

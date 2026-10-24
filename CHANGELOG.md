@@ -5,6 +5,30 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-24 (continuous integration)
+
+### Repository
+
+#### Added
+
+- CI (`.github/workflows/ci.yml`): pre-commit hooks and version check on every push and pull request; Python recipe
+  tests (3.11, 3.12), installation from the built wheel and R-backed tests, each only when the change needs it
+  (`tools/ci_scope.py`); every job weekly and on demand.
+- `.pre-commit-config.yaml`: line endings, YAML/TOML, large files (`CODE-PROV-002`), private keys, ruff, shellcheck,
+  rule identifiers, guide checks and `tools/check_versions.py`.
+- `tools/check_versions.py`: a changed guide MUST bump its version and have a `### <file> [<version>]` entry here
+  (`CODE-USE-007`). `tools/ci_scope.py`: selects the test suites a change needs.
+- `.gitattributes`: LF line endings on every platform.
+- Pytest marker `r` for R-backed tests; with `RECIPES_REQUIRE_R=1` a skipped R-backed test fails.
+
+#### Fixed
+
+- `tools/rule_ids.py`, `tools/check_guides.py`: read and write UTF-8 with LF line endings on every platform (on
+  Windows they wrote CRLF and depended on the locale encoding).
+- Recipes 0.3.1: `pyarrow` is a dependency (`polars.DataFrame.to_pandas()` needs it; two bulk tests failed in a clean
+  environment).
+- `README.md`, *Development*: describes the CI and pre-commit that now exist.
+
 ## 2026-10-23 (proposals from the snRNA-seq reprocessing project on DIPC Hyperion)
 
 ### CODING_GUIDELINES.md [3.2.0]

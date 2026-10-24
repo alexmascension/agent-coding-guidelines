@@ -184,7 +184,7 @@ def rule_lines(path: Path) -> list[tuple[int, str | None, str | None]]:
     topic = None
     in_code = False
     result = []
-    for i, line in enumerate(path.read_text().split("\n")):
+    for i, line in enumerate(path.read_text(encoding="utf-8").split("\n")):
         if line.startswith("```"):
             in_code = not in_code
             continue
@@ -213,7 +213,7 @@ def read_registry() -> dict[str, tuple[str, str, str]]:
     if not REGISTRY.exists():
         return {}
     rows = {}
-    for line in REGISTRY.read_text().splitlines()[1:]:
+    for line in REGISTRY.read_text(encoding="utf-8").splitlines()[1:]:
         rule_id, status, guide, summary = line.split("\t", 3)
         rows[rule_id] = (status, guide, summary)
     return rows
@@ -233,7 +233,7 @@ def assign() -> None:
     rows = {k: v for k, v in registry.items() if v[0] == "retired"}
     for guide in PREFIX:
         path = ROOT / guide
-        lines = path.read_text().split("\n")
+        lines = path.read_text(encoding="utf-8").split("\n")
         for i, topic, existing in rule_lines(path):
             if existing is None:
                 stem = f"{PREFIX[guide]}-{topic}-"
@@ -243,13 +243,15 @@ def assign() -> None:
                 marker = ITEM.match(lines[i]).group(1)
                 lines[i] = f"{marker}`{existing}` {lines[i][len(marker) :]}"
             rows[existing] = ("active", guide, summary_of(lines[i]))
-        path.write_text("\n".join(lines))
+        path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     # identifiers in the old registry that are no longer in any guide become retired
     for rule_id, (_status, guide, summary) in registry.items():
         if rule_id not in rows:
             rows[rule_id] = ("retired", guide, summary)
     body = "\n".join(f"{k}\t{s}\t{g}\t{m}" for k, (s, g, m) in sorted(rows.items()))
-    REGISTRY.write_text("id\tstatus\tguide\tsummary\n" + body + "\n")
+    REGISTRY.write_text(
+        "id\tstatus\tguide\tsummary\n" + body + "\n", encoding="utf-8", newline="\n"
+    )
 
 
 def check() -> list[str]:

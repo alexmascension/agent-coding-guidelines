@@ -4,11 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-coding-guidelines-recipes"
-version = "0.3.0"
+version = "0.3.1"
 description = "Reference implementations (recipes) for the agent coding guidelines"
 requires-python = ">=3.11"
 license = {text = "MIT"}
-dependencies = ["numpy", "pandas", "scipy", "polars", "statsmodels", "anndata"]
+dependencies = [
+    "numpy", "pandas", "scipy", "polars", "statsmodels", "anndata",
+    "pyarrow",  # polars DataFrame.to_pandas()
+]
 
 [project.optional-dependencies]
 scrnaseq = [
@@ -33,6 +36,9 @@ include = ["recipes*"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["recipes/tests"]
+markers = [
+    "r: calls R through Rscript (run by the R job in CI; RECIPES_REQUIRE_R=1 turns skips into failures)",
+]
 
 [tool.ruff]
 line-length = 99

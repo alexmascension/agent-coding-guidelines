@@ -32,7 +32,7 @@ BOLD_KEY = re.compile(r"^- \*\*\[([^\]]+)\]\*\*", re.M)
 
 def bold_keys(path: Path) -> set[str]:
     """Return the bold keys defined in a references file."""
-    return set(BOLD_KEY.findall(path.read_text())) if path.exists() else set()
+    return set(BOLD_KEY.findall(path.read_text(encoding="utf-8"))) if path.exists() else set()
 
 
 def main() -> int:
@@ -40,10 +40,10 @@ def main() -> int:
     guides = sorted(ROOT.glob("*_GUIDELINES.md"))
     omics_keys = bold_keys(ROOT / "OMICS_REFERENCES.md")
     stats_keys = bold_keys(ROOT / "STATISTICS_REFERENCES.md")
-    headings = {g.name: set(HEADING.findall(g.read_text())) for g in guides}
+    headings = {g.name: set(HEADING.findall(g.read_text(encoding="utf-8"))) for g in guides}
     problems = []
     for guide in [*guides, *sorted(ROOT.glob("hpc_sites/*.md"))]:
-        text = guide.read_text()
+        text = guide.read_text(encoding="utf-8")
         if guide in guides and not VERSION.search(text[:500]):
             problems.append(f"{guide.name}: no version in header")
         for group in GROUP.findall(text):

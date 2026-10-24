@@ -196,6 +196,7 @@ def test_read_gene_table_strips_versions(tmp_path):
     assert mean_gene_length(counts)["ENSG01"] == pytest.approx(7.0)
 
 
+@pytest.mark.r
 @pytest.mark.skipif(shutil.which(RSCRIPT) is None, reason="Rscript with tximport not available")
 def test_tximport_lengthscaled_preserves_library_size(tmp_path):
     rows = []
@@ -248,6 +249,7 @@ def _r_has(package):
     return check.returncode == 0
 
 
+@pytest.mark.r
 @pytest.mark.skipif(not _r_has("DESeq2"), reason="Rscript with DESeq2 not available")
 def test_pydeseq2_agrees_with_r_deseq2(tmp_path):
     counts, meta, _, _ = simulate_bulk(seed=21)
