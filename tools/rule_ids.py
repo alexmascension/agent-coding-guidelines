@@ -21,6 +21,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "RULE_IDS.tsv"
+GUIDES = ROOT / "guidelines"
 ID_PATTERN = re.compile(r"`([A-Z]+-[A-Z]+-\d{3})`")
 ITEM = re.compile(r"^(\* |\d+\. )(`[A-Z]+-[A-Z]+-\d{3}` )?")
 SECTION = re.compile(r"^## (\d+)\. ")
@@ -232,7 +233,7 @@ def assign() -> None:
     used = set(registry)
     rows = {k: v for k, v in registry.items() if v[0] == "retired"}
     for guide in PREFIX:
-        path = ROOT / guide
+        path = GUIDES / guide
         lines = path.read_text(encoding="utf-8").split("\n")
         for i, topic, existing in rule_lines(path):
             if existing is None:
@@ -259,7 +260,7 @@ def check() -> list[str]:
     registry = read_registry()
     problems, seen = [], {}
     for guide in PREFIX:
-        path = ROOT / guide
+        path = GUIDES / guide
         for i, _topic, existing in rule_lines(path):
             where = f"{guide}:{i + 1}"
             if existing is None:
