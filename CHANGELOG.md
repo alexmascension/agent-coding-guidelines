@@ -5,7 +5,18 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
-## 2026-10-24 (continuous integration)
+## 2026-10-24 (continuous integration; agent working process)
+
+### CODING_GUIDELINES.md [3.3.0]
+
+#### Changed
+
+- `CODE-AGENT-001`: what counts as an ambiguous request (vague instruction, a term naming more than one thing,
+  unstated scope); resolve first what the project answers; one focused question per decision, with options and a
+  recommendation; a clear assumption is stated in the reply next to the result it affects, and in the decisions log
+  if it outlives the task; no irreversible work under an unconfirmed assumption; *Why*, *Trade-off* and *Deviate
+  when* (unattended runs) added.
+- `CODE-AGENT-002`: refers to `CODE-AGENT-001`.
 
 ### Repository
 

@@ -50,7 +50,7 @@ BULK-SPEC-001	active	RNASEQ_BULK_GUIDELINES.md	Species-specific annotation; huma
 BULK-SPEC-002	active	RNASEQ_BULK_GUIDELINES.md	Cross-species comparisons use one-to-one orthologs from a stated release; genes 
 BULK-TX-001	active	RNASEQ_BULK_GUIDELINES.md	Distinguish DGE (differential gene expression), DTE (differential transcript exp
 BULK-TX-002	active	RNASEQ_BULK_GUIDELINES.md	DTE and DTU use inferential replicates (§4): swish [Zhu 2019] or edgeR/limma wit
-CODE-AGENT-001	active	CODING_GUIDELINES.md	If ambiguity materially affects correctness, interfaces, data or expected behavi
+CODE-AGENT-001	active	CODING_GUIDELINES.md	Ask before assuming when a request admits more than one reading that changes the
 CODE-AGENT-002	active	CODING_GUIDELINES.md	State important assumptions explicitly rather than silently choosing defaults, e
 CODE-AGENT-003	active	CODING_GUIDELINES.md	MUST NOT fabricate results, numbers, citations, accessions or tool outputs. Repo
 CODE-AGENT-004	active	CODING_GUIDELINES.md	MUST NOT delete or overwrite data, results or user files without explicit confir

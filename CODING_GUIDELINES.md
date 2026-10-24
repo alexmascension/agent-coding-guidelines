@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.2.0 (2026-10-23)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.3.0 (2026-10-24)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -622,11 +622,26 @@ interface, a threshold or a data invariant MUST update it in the same change.
 
 ## 25. Working process (agents)
 
-* `CODE-AGENT-001` If ambiguity materially affects correctness, interfaces, data or expected behaviour, ask
-  before implementing. For minor ambiguities, choose the simplest reasonable interpretation and
-  state the assumption.
+* `CODE-AGENT-001` **Ask before assuming when a request admits more than one reading that changes the result**: a
+  vague instruction, a term that can name more than one thing (two files, samples, rules or versions with the same
+  name), or an unstated scope. First resolve what the project answers (code, `PROJECT_CONTEXT.md`, the decisions
+  log, the data); ask about what remains before doing the work that depends on it.
+  * Ask one focused question per decision, with the concrete readings as options and the recommended one first;
+    group independent questions in one message.
+  * When one reading is clearly the most plausible, or the readings lead to the same result, proceed and state the
+    assumption explicitly in the reply, next to the result it affects, not only in code or logs. Assumptions that
+    outlive the task go to the decisions log.
+  * Work that cannot be undone (`CODE-AGENT-004`, deletion and overwriting; `CODE-AGENT-005`, long or expensive
+    jobs; pushes to shared branches) is never done under an unconfirmed assumption.
+  * *Why:* an agent that silently picks one reading delivers a coherent answer to a different question, and the
+    error surfaces only when someone checks the premise; a stated assumption costs one sentence and can be corrected
+    at once.
+  * *Trade-off:* questions interrupt the user; asking what the project already answers, or about choices that do not
+    change the result, moves the agent's work to the user.
+  * *Deviate when:* no one can answer in time (unattended runs): choose the most plausible reversible reading, record
+    it as an assumption in the output, and flag it for review.
 * `CODE-AGENT-002` State important assumptions explicitly rather than silently choosing defaults, especially
-  analysis parameters, thresholds and reference versions.
+  analysis parameters, thresholds and reference versions (`CODE-AGENT-001`, stating assumptions).
 * `CODE-AGENT-003` MUST NOT fabricate results, numbers, citations, accessions or tool outputs. Report only what
   was computed or read, and say where it came from.
 * `CODE-AGENT-004` MUST NOT delete or overwrite data, results or user files without explicit confirmation.
