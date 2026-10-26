@@ -6,6 +6,27 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-10-26 (upstream sources: registry and monthly check)
+
+### Repository
+
+#### Added
+
+- `references/SOURCE_REPOS.toml`: registry of the upstream repositories the guides adapt (Co-Scientist toolkit at
+  `d1d35f5`, superpowers at `2ce8aa1`), with the commit last reviewed and the files followed in each, by status
+  (`integrated`, `deferred`, `watch`, `not-integrated`) and destination.
+- `tools/check_sources.py`: compares each repository with its reviewed commit through the GitHub compare API and
+  reports the followed files that changed; `mark-reviewed` records the commit a review covered. Tests in
+  `tools/tests/test_check_sources.py` (offline, with compare responses written by hand).
+- `.github/workflows/sources.yml`: runs the check on the first day of each month (and on demand) and opens, or
+  comments on, an issue labelled `source-review` when a followed file with status `integrated`, `deferred` or
+  `watch` changed.
+
+#### Changed
+
+- `README.md`: *Maintenance: upstream sources*; the copy example copies only the reference files
+  (`references/*_REFERENCES.*`).
+
 ## 2026-10-26 (doublets and ambient RNA correction: [Meier 2026], [Neavin 2024])
 
 ### SCRNASEQ_GUIDELINES.md [4.0.0]

@@ -1,0 +1,39 @@
+name: Upstream sources
+
+on:
+  schedule:
+    - cron: "0 6 1 * *"  # monthly: changes in the repositories the guides adapt (references/SOURCE_REPOS.toml)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: Changes since the reviewed commits
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - id: sources
+        run: python tools/check_sources.py --output source-report.md --github-output
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Open or update the review issue
+        if: steps.sources.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh label create source-review --color 0E8A16 \
+            --description "Changes in upstream sources to review" --force
+          issue=$(gh issue list --label source-review --state open --json number --jq '.[0].number // empty')
+          if [[ -n "$issue" ]]; then
+            gh issue comment "$issue" --body-file source-report.md
+          else
+            gh issue create --title "Upstream source review: $(date -u +%Y-%m)" \
+              --label source-review --body-file source-report.md
+          fi
