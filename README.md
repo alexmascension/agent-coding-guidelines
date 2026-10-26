@@ -29,6 +29,7 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 | `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.4.0 |
 | `CHANGELOG.md` | Changes per guide (semantic versioning per file) | — |
 | `RULE_IDS.tsv` | Registry of rule identifiers (active and retired) | — |
+| `references/SOURCE_REPOS.toml` | Upstream repositories the guides adapt: commit last reviewed, files followed and where each was adapted (maintenance only; not copied into projects) | — |
 
 Scope: human and mouse; bulk RNA-seq, sc/snRNA-seq, spatial transcriptomics. Python first (scverse); R through
 scripts with a file interface when no validated Python implementation exists. Not covered: CITE-seq, multiome,
@@ -44,7 +45,7 @@ TCR/BCR.
    UPSTREAM=/path/to/agent-coding-guidelines   # a clone at a pinned commit
    mkdir -p guidelines/references
    cp "$UPSTREAM"/guidelines/{CODING,AGENTIC,STATISTICS,SCRNASEQ}_GUIDELINES.md guidelines/
-   cp "$UPSTREAM"/references/* guidelines/references/
+   cp "$UPSTREAM"/references/*_REFERENCES.* guidelines/references/
    mkdir -p guidelines/hpc_sites && cp "$UPSTREAM"/guidelines/hpc_sites/DIPC_HYPERION.md guidelines/hpc_sites/  # clusters only
    ```
 2. Create `AGENTS.md` (entry point for agents; `CLAUDE.md` may contain `@AGENTS.md`) and `PROJECT_CONTEXT.md` with
@@ -83,6 +84,22 @@ CI (`.github/workflows/ci.yml`) runs on pushes to `main`, pull requests, weekly 
 marked `r` uses it, or when such a file imports it; it checks the files before and after the change, so adding or
 removing a call to R also triggers the R job. Scheduled and manual runs run every job.
 
+## Maintenance: upstream sources
+
+Some guides adapt the content of other repositories (§0 of each guide lists its sources). `references/SOURCE_REPOS.toml`
+records, for each such repository, the commit last reviewed and the files followed in it, each with a status
+(`integrated`, `deferred`, `watch`, `not-integrated`) and where it was adapted.
+
+- On the first day of each month, `.github/workflows/sources.yml` runs `tools/check_sources.py`, which compares each
+  repository with its reviewed commit through the GitHub API. When a followed file with status `integrated`,
+  `deferred` or `watch` changed, it opens an issue labelled `source-review` with the list (or comments on the open
+  one). Run it by hand from the Actions tab (*Run workflow*), or locally with `python tools/check_sources.py`.
+- The review adapts what is worth adapting in a pull request that also records the commit it covered:
+  `python tools/check_sources.py mark-reviewed <name> <commit>`. A review that adapts nothing still records the
+  commit, and says why in the pull request. A scheduled agent drafts that pull request from the issue; it never merges
+  it.
+- To follow a new repository, add its `[[repo]]` block with the commit reviewed and the globs of the files adapted.
+
 ## License
 
 MIT (`LICENSE`), for the guidelines, references and code.
@@ -107,3 +124,9 @@ The rules added to `guidelines/CODING_GUIDELINES.md` in 3.7.0 (`CODE-LANG-004` s
 
 `STAT-DES-010` to `STAT-DES-012` in `guidelines/STATISTICS_GUIDELINES.md` 2.1.0 adapt the forking-paths guard, the
 append-only deviations and the pilot decision rule of the toolkit's `pre-register` skill (CC BY 4.0).
+
+`guidelines/AGENTIC_GUIDELINES.md` 1.1.0 also adapts text from superpowers by Jesse Vincent and Prime Radiant
+(<https://github.com/obra/superpowers>, MIT licence, Copyright (c) 2025 Jesse Vincent): the skills `brainstorming`,
+`writing-plans`, `executing-plans`, `requesting-code-review`, `receiving-code-review`,
+`verification-before-completion`, `subagent-driven-development`, `dispatching-parallel-agents`,
+`systematic-debugging` and `writing-skills`, and two of its design notes. §0 of the guide lists the sources.

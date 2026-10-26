@@ -5,6 +5,9 @@ AGT-BATCH-003	active	AGENTIC_GUIDELINES.md	Run a long batch in stages whose stat
 AGT-BATCH-004	active	AGENTIC_GUIDELINES.md	The closing report states what was attempted, passed, failed and remains uncerta
 AGT-BATCH-005	active	AGENTIC_GUIDELINES.md	An unattended or scheduled agent has no one to approve its commands. Before sche
 AGT-BATCH-006	active	AGENTIC_GUIDELINES.md	MUST NOT rephrase, split or wrap a command to get past an approval prompt or a s
+AGT-BATCH-007	active	AGENTIC_GUIDELINES.md	Within an authorised batch, settle ambiguities of implementation and record each
+AGT-BATCH-008	active	AGENTIC_GUIDELINES.md	Within an authorised batch, do not stop to ask whether to continue. Progress goe
+AGT-BATCH-009	active	AGENTIC_GUIDELINES.md	The ledger is written as the work happens and outranks memory. One line per comp
 AGT-CHAL-001	active	AGENTIC_GUIDELINES.md	Before committing to a plan or reporting a finding, make one honest attempt to r
 AGT-CHAL-002	active	AGENTIC_GUIDELINES.md	For results others will build on, use a reviewer with a fresh context (a subagen
 AGT-CHAL-003	active	AGENTIC_GUIDELINES.md	Treat adversarial or delegated output as raw material. Report "the reviewer argu
@@ -16,23 +19,54 @@ AGT-CLAIM-004	active	AGENTIC_GUIDELINES.md	State which kind of evidence a result
 AGT-CLAIM-005	active	AGENTIC_GUIDELINES.md	Label exploratory results as exploratory. A criterion chosen after seeing the ou
 AGT-CLAIM-006	active	AGENTIC_GUIDELINES.md	A report leads with the outcome, in words the user could repeat to someone outsi
 AGT-CLAIM-007	active	AGENTIC_GUIDELINES.md	Use the reader's words, not the session's. Replace labels coined during the work
+AGT-CLAIM-008	active	AGENTIC_GUIDELINES.md	Report every failure observed during the work, including failures the agent did 
 AGT-DEL-001	active	AGENTIC_GUIDELINES.md	Delegate by kind of work. Mechanical, well-specified work (searching, extracting
 AGT-DEL-002	active	AGENTIC_GUIDELINES.md	A delegation brief carries its own authority: the question, the sources, what th
 AGT-DEL-003	active	AGENTIC_GUIDELINES.md	A subagent does not see the project's instructions unless it is given them. The 
 AGT-DEL-004	active	AGENTIC_GUIDELINES.md	Judge a subagent by what it produced, not by its report that it finished. Check 
 AGT-DEL-005	active	AGENTIC_GUIDELINES.md	Check long lists of independent items one item per fresh context: claims against
 AGT-DEL-006	active	AGENTIC_GUIDELINES.md	Use a subagent for substantial reading that would otherwise fill the main contex
+AGT-DEL-007	active	AGENTIC_GUIDELINES.md	Construct the subagent's context; never pass the session's history. The dispatch
+AGT-DEL-008	active	AGENTIC_GUIDELINES.md	Workers report to a contract. The full report goes to the named file; the reply 
+AGT-DEL-009	active	AGENTIC_GUIDELINES.md	Workers do not dispatch further agents, neither helpers nor reviewers, unless th
+AGT-DEL-010	active	AGENTIC_GUIDELINES.md	Run agents in parallel only on independent problems: no shared files, outputs or
+AGT-DEL-011	active	AGENTIC_GUIDELINES.md	Choose models by the number of turns, not by the price per token (refines AGT-DE
 AGT-EVID-001	active	AGENTIC_GUIDELINES.md	MUST NOT argue from memory about an artefact that can be read. Read the file, ta
 AGT-EVID-002	active	AGENTIC_GUIDELINES.md	Check that a file or resource named in a request exists and matches its descript
 AGT-EVID-003	active	AGENTIC_GUIDELINES.md	Look up any tool, version, method, model or paper that cannot be placed with con
 AGT-EVID-004	active	AGENTIC_GUIDELINES.md	Prefer primary sources, and trace derived material to them. Summaries, notes, ha
 AGT-EVID-005	active	AGENTIC_GUIDELINES.md	A status file, meeting note or handoff is a dated snapshot, not evidence of the 
 AGT-EVID-006	active	AGENTIC_GUIDELINES.md	Read papers and long documents as text converted on the machine (the LaTeX sourc
+AGT-EVID-007	active	AGENTIC_GUIDELINES.md	Read the current text of an instruction before applying it: the guideline sectio
+AGT-INSTR-001	active	AGENTIC_GUIDELINES.md	Write an instruction to correct an observed failure. First observe what the agen
+AGT-INSTR-002	active	AGENTIC_GUIDELINES.md	Match the form of the instruction to the failure.
+AGT-INSTR-003	active	AGENTIC_GUIDELINES.md	Keep a working instruction short and unqualified. Do not append nuance clauses (
+AGT-INSTR-004	active	AGENTIC_GUIDELINES.md	Test the wording against behaviour before relying on it. Use fresh-context sampl
+AGT-INSTR-005	active	AGENTIC_GUIDELINES.md	A description used to decide whether to read an instruction says when it applies
+AGT-INSTR-006	active	AGENTIC_GUIDELINES.md	Automate what can be checked mechanically. A constraint that a script can verify
+AGT-INSTR-007	active	AGENTIC_GUIDELINES.md	Use persuasive framing only where it serves the user. Firm language and commitme
+AGT-INSTR-008	active	AGENTIC_GUIDELINES.md	A proposed change to shared instructions states the case that motivated it and w
+AGT-INTENT-001	active	AGENTIC_GUIDELINES.md	Start with a private check: what do I know about what the user wants, and why? I
+AGT-INTENT-002	active	AGENTIC_GUIDELINES.md	Look before you ask. Read what the user referred to (files, a plan, earlier conv
+AGT-INTENT-003	active	AGENTIC_GUIDELINES.md	Make the first message move the work forward. When the user has described what t
+AGT-INTENT-004	active	AGENTIC_GUIDELINES.md	Ask one question per message, open before closed. Ask open questions first and o
+AGT-INTENT-005	active	AGENTIC_GUIDELINES.md	Play back what you understood, in parts. As soon as one part is understood (its 
+AGT-INTENT-006	active	AGENTIC_GUIDELINES.md	Lay out the approaches before writing anything up. Generate several real ways of
+AGT-INTENT-007	active	AGENTIC_GUIDELINES.md	Size the work and write it down. Say how big the work is, in plain words; the us
+AGT-INTENT-008	active	AGENTIC_GUIDELINES.md	Check a project's design with a fresh reader before handing it over. A reviewer 
+AGT-INTENT-009	active	AGENTIC_GUIDELINES.md	MUST NOT build a project before the user has approved its written design. Buildi
+AGT-INTENT-010	active	AGENTIC_GUIDELINES.md	Offer a throwaway spike when building is the cheapest way to learn. A quick prot
 AGT-LOOP-001	active	AGENTIC_GUIDELINES.md	When stuck, change the question, not the effort. Re-running a failing approach h
 AGT-LOOP-002	active	AGENTIC_GUIDELINES.md	After two or three rounds of revision, check whether the loop converges (rounds 
 AGT-LOOP-003	active	AGENTIC_GUIDELINES.md	Check for drift from the original motivation: complete the sentence "this versio
 AGT-LOOP-004	active	AGENTIC_GUIDELINES.md	Triage an idea before investing substantial compute or time in it. Write down th
 AGT-LOOP-005	active	AGENTIC_GUIDELINES.md	Fix predictions before the pilot: the predicted direction and rough size of the 
+AGT-LOOP-006	active	AGENTIC_GUIDELINES.md	After three failed attempts at the same problem, stop and question the approach.
+AGT-PLAN-001	active	AGENTIC_GUIDELINES.md	A plan records the decisions the implementer cannot make alone: which files are 
+AGT-PLAN-002	active	AGENTIC_GUIDELINES.md	Tasks are the smallest units that carry their own check and are worth reviewing 
+AGT-PLAN-003	active	AGENTIC_GUIDELINES.md	A specification's silence is not permission. List the inputs and conditions the 
+AGT-PLAN-004	active	AGENTIC_GUIDELINES.md	Review the plan against its specification before handing it over: every requirem
+AGT-PLAN-005	active	AGENTIC_GUIDELINES.md	Execute from the plan, not from memory. Read each task's text before doing it
 AGT-PRIV-001	active	AGENTIC_GUIDELINES.md	Whatever an agent reads is sent to its model provider. Before reading, uploading
 AGT-PRIV-002	active	AGENTIC_GUIDELINES.md	MUST NOT read individual-level controlled-access or personal data into the agent
 AGT-PRIV-003	active	AGENTIC_GUIDELINES.md	MUST NOT send a manuscript, grant application or report received for confidentia
@@ -43,6 +77,13 @@ AGT-REP-001	active	AGENTIC_GUIDELINES.md	The handoff files in use (§11, session
 AGT-REP-002	active	AGENTIC_GUIDELINES.md	Standing authorisations for batches (§8, unattended and batch work), with their 
 AGT-REP-003	active	AGENTIC_GUIDELINES.md	Material the agent must not read and why (§10, confidential and licensed materia
 AGT-REP-004	active	AGENTIC_GUIDELINES.md	The models or model tiers used for delegation, if the project fixes them (§9, de
+AGT-REP-005	active	AGENTIC_GUIDELINES.md	Where design documents (§13), plans (§14) and the ledgers of batches (§8) are ke
+AGT-REV-001	active	AGENTIC_GUIDELINES.md	Review delegated work, and any result before it is integrated, with a fresh-cont
+AGT-REV-002	active	AGENTIC_GUIDELINES.md	A review states its findings so they can be acted on. Strengths first, briefly; 
+AGT-REV-003	active	AGENTIC_GUIDELINES.md	MUST NOT pre-judge findings in a reviewer's brief. A brief that contains "do not
+AGT-REV-004	active	AGENTIC_GUIDELINES.md	Receive feedback by checking it. Read all of it; restate each requirement; check
+AGT-REV-005	active	AGENTIC_GUIDELINES.md	Reply with the fix or the objection, not with agreement or thanks ("You're absol
+AGT-REV-006	active	AGENTIC_GUIDELINES.md	Check external suggestions before adopting them. Is it correct for this project 
 AGT-SCOPE-001	active	AGENTIC_GUIDELINES.md	Before substantive work, state the goal in one sentence and what "done" will loo
 AGT-SCOPE-002	active	AGENTIC_GUIDELINES.md	List the main risks, not only the steps: the assumptions being made, the two or 
 AGT-SCOPE-003	active	AGENTIC_GUIDELINES.md	Before an expensive run, decide what it must keep for its result to be checked a
@@ -63,6 +104,9 @@ AGT-VER-003	active	AGENTIC_GUIDELINES.md	MUST NOT loosen an acceptance criterion
 AGT-VER-004	active	AGENTIC_GUIDELINES.md	Before fixing a discrepancy, read the underlying material to choose the referenc
 AGT-VER-005	active	AGENTIC_GUIDELINES.md	Test that the workflow refuses bad input, with negative controls, known cases or
 AGT-VER-006	active	AGENTIC_GUIDELINES.md	Every claim of progress or completion maps to an observation made in this sessio
+AGT-VER-007	active	AGENTIC_GUIDELINES.md	Run the check that proves a statement about the work before making it. Name the 
+AGT-VER-008	active	AGENTIC_GUIDELINES.md	Check completion against the request, item by item. Re-read the request, plan or
+AGT-VER-009	active	AGENTIC_GUIDELINES.md	A check proves the state it ran on. Run the checks on what is delivered or integ
 BULK-DE-001	active	RNASEQ_BULK_GUIDELINES.md	Default in Python: pydeseq2 [Muzellec 2023]; R options: DESeq2 [Love 2014†; Love
 BULK-DE-002	active	RNASEQ_BULK_GUIDELINES.md	Wald test for a two-level contrast; likelihood-ratio test for factors with sever
 BULK-DE-003	active	RNASEQ_BULK_GUIDELINES.md	Shrunken log fold changes for ranking and plots [Zhu 2018†]; keep unshrunken est

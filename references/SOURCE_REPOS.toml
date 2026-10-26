@@ -1,0 +1,261 @@
+# Upstream repositories whose content was adapted into the guidelines.
+#
+# Each [[repo]] records the commit that was last reviewed; each [[repo.path]] is a glob of files followed in that
+# repository, matched in order (the first matching glob wins) by `tools/check_sources.py`, which runs monthly in
+# `.github/workflows/sources.yml`. Statuses:
+#   integrated      adapted into the guides named in `into`
+#   deferred        relevant, not yet adapted (named round in `into`)
+#   watch           area of interest with nothing adapted yet (e.g. new skills)
+#   not-integrated  reviewed and not adapted; changes are listed but do not open a review issue
+# After a review, `python tools/check_sources.py mark-reviewed <name> <commit>` records the commit reviewed.
+
+[[repo]]
+name = "co-scientist-toolkit"
+url = "https://github.com/shocklab/co-scientist-toolkit"
+branch = "main"
+licence = "MIT (code), CC BY 4.0 (text)"
+reviewed_commit = "d1d35f5e9e3ec25f418e79be244e34d9c0c5ebf7"
+reviewed_on = "2026-10-26"
+
+[[repo.path]]
+glob = "guidance/CLAUDE-starter.md"
+status = "integrated"
+into = "AGENTIC §2-§12; CODING 3.7.0 (CODE-LANG-004, CODE-DOC-005, CODE-NUM-013, CODE-TEST-009/010, CODE-VAL-004); MANUSCRIPT §7"
+
+[[repo.path]]
+glob = "guidance/paper-CLAUDE.md"
+status = "integrated"
+into = "MANUSCRIPT §1-§3; CODE-PROV-006"
+
+[[repo.path]]
+glob = "guidance/handoff-CURRENT.md"
+status = "integrated"
+into = "AGENTIC §11"
+
+[[repo.path]]
+glob = "guidance/*"
+status = "not-integrated"
+into = "git-for-research.md, facts-registry.md: not adapted"
+
+[[repo.path]]
+glob = "plugins/research/skills/fable-mode/*"
+status = "integrated"
+into = "AGENTIC §1-§6"
+
+[[repo.path]]
+glob = "plugins/research/skills/pre-register/*"
+status = "integrated"
+into = "AGENTIC §12 (AGT-LOOP-004/005); STAT-DES-010 to STAT-DES-012"
+
+[[repo.path]]
+glob = "plugins/research/skills/convergence-check/*"
+status = "integrated"
+into = "AGENTIC §12 (AGT-LOOP-002/003); MS-RESP-004"
+
+[[repo.path]]
+glob = "plugins/research/skills/decision-page/SKILL.md"
+status = "integrated"
+into = "AGT-USER-003"
+
+[[repo.path]]
+glob = "plugins/papers/skills/paper-review/*"
+status = "integrated"
+into = "MANUSCRIPT §5"
+
+[[repo.path]]
+glob = "plugins/papers/skills/claim-fact-checker/*"
+status = "integrated"
+into = "MANUSCRIPT §4 (MS-CITE-003); AGT-DEL-005"
+
+[[repo.path]]
+glob = "plugins/papers/skills/reference-verifier/*"
+status = "integrated"
+into = "MS-CITE-002; BibTeX checks of tools/check_guides.py"
+
+[[repo.path]]
+glob = "plugins/papers/skills/academic-pdf-to-mkd/SKILL.md"
+status = "integrated"
+into = "AGT-EVID-006"
+
+[[repo.path]]
+glob = "plugins/papers/tools/license-check/README.md"
+status = "integrated"
+into = "AGENTIC §10"
+
+[[repo.path]]
+glob = "plugins/*/skills/*/SKILL.md"
+status = "watch"
+into = "new or changed skills of the research, papers and documents plugins"
+
+[[repo]]
+name = "superpowers"
+url = "https://github.com/obra/superpowers"
+branch = "main"
+licence = "MIT"
+reviewed_commit = "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b"
+reviewed_on = "2026-10-26"
+
+[[repo.path]]
+glob = "skills/brainstorming/SKILL.md"
+status = "integrated"
+into = "AGENTIC §13 (AGT-INTENT)"
+
+[[repo.path]]
+glob = "skills/brainstorming/builder-check-prompt.md"
+status = "integrated"
+into = "AGT-INTENT-008"
+
+[[repo.path]]
+glob = "skills/brainstorming/*"
+status = "not-integrated"
+into = "visual companion and its server: a tool, not rules"
+
+[[repo.path]]
+glob = "skills/writing-plans/SKILL.md"
+status = "integrated"
+into = "AGENTIC §14 (AGT-PLAN)"
+
+[[repo.path]]
+glob = "skills/executing-plans/SKILL.md"
+status = "integrated"
+into = "AGT-PLAN-005, AGT-EVID-007, AGT-BATCH-007 to AGT-BATCH-009"
+
+[[repo.path]]
+glob = "skills/requesting-code-review/*"
+status = "integrated"
+into = "AGENTIC §15 (AGT-REV-001 to AGT-REV-003)"
+
+[[repo.path]]
+glob = "skills/receiving-code-review/SKILL.md"
+status = "integrated"
+into = "AGENTIC §15 (AGT-REV-004 to AGT-REV-006)"
+
+[[repo.path]]
+glob = "skills/subagent-driven-development/task-reviewer-prompt.md"
+status = "integrated"
+into = "AGENTIC §15"
+
+[[repo.path]]
+glob = "skills/subagent-driven-development/scripts/*"
+status = "not-integrated"
+into = "helper scripts of the skill"
+
+[[repo.path]]
+glob = "skills/subagent-driven-development/re-review-prompt.md"
+status = "watch"
+into = "not read in the 2026-10-26 review"
+
+[[repo.path]]
+glob = "skills/subagent-driven-development/*"
+status = "integrated"
+into = "AGENTIC §8 (AGT-BATCH-007 to AGT-BATCH-009), §9 (AGT-DEL-007 to AGT-DEL-011)"
+
+[[repo.path]]
+glob = "skills/dispatching-parallel-agents/SKILL.md"
+status = "integrated"
+into = "AGT-DEL-007, AGT-DEL-010"
+
+[[repo.path]]
+glob = "skills/verification-before-completion/SKILL.md"
+status = "integrated"
+into = "AGT-VER-007 to AGT-VER-009"
+
+[[repo.path]]
+glob = "skills/writing-skills/SKILL.md"
+status = "integrated"
+into = "AGENTIC §16 (AGT-INSTR)"
+
+[[repo.path]]
+glob = "skills/writing-skills/references/bulletproofing.md"
+status = "integrated"
+into = "AGT-INSTR-002"
+
+[[repo.path]]
+glob = "skills/writing-skills/references/persuasion-principles.md"
+status = "integrated"
+into = "AGT-INSTR-007"
+
+[[repo.path]]
+glob = "skills/writing-skills/references/testing-skills-with-subagents.md"
+status = "integrated"
+into = "AGT-INSTR-004"
+
+[[repo.path]]
+glob = "skills/writing-skills/references/CLAUDE_MD_TESTING.md"
+status = "integrated"
+into = "AGT-INSTR-004"
+
+[[repo.path]]
+glob = "skills/writing-skills/references/discovery.md"
+status = "integrated"
+into = "AGT-INSTR-005"
+
+[[repo.path]]
+glob = "skills/writing-skills/*"
+status = "not-integrated"
+into = "platform skill format, flowcharts, rendering"
+
+[[repo.path]]
+glob = "skills/systematic-debugging/*"
+status = "deferred"
+into = "AGT-LOOP-006 adapted; the rest deferred to a CODING round (debugging)"
+
+[[repo.path]]
+glob = "skills/test-driven-development/*"
+status = "deferred"
+into = "AGT-CLAIM-008 adapted; the rest deferred to a CODING round (tests)"
+
+[[repo.path]]
+glob = "skills/using-superpowers/SKILL.md"
+status = "integrated"
+into = "AGT-EVID-007"
+
+[[repo.path]]
+glob = "skills/using-superpowers/*"
+status = "not-integrated"
+into = "harness-specific tool references"
+
+[[repo.path]]
+glob = "skills/using-git-worktrees/*"
+status = "not-integrated"
+into = "git workflow; safety points already in CODE-VCS-004/006, CODE-AGENT-004"
+
+[[repo.path]]
+glob = "skills/finishing-a-development-branch/*"
+status = "not-integrated"
+into = "git workflow; safety points already in CODE-VCS-004/006, CODE-AGENT-004"
+
+[[repo.path]]
+glob = "skills/diagnosing-superpowers/*"
+status = "not-integrated"
+into = "diagnoses superpowers sessions"
+
+[[repo.path]]
+glob = "docs/superpowers/specs/2026-06-10-positive-instruction-redesign-design.md"
+status = "integrated"
+into = "AGT-INSTR-002, AGT-INSTR-003"
+
+[[repo.path]]
+glob = "docs/superpowers/specs/2026-10-05-brainstorming-rebuild-design.md"
+status = "integrated"
+into = "AGENTIC §13"
+
+[[repo.path]]
+glob = "docs/superpowers/specs/*"
+status = "watch"
+into = "design notes: changes in the project's approach"
+
+[[repo.path]]
+glob = "AGENTS.md"
+status = "integrated"
+into = "AGT-INSTR-008"
+
+[[repo.path]]
+glob = "README.md"
+status = "integrated"
+into = "AGENTIC §0 (sources)"
+
+[[repo.path]]
+glob = "skills/*/SKILL.md"
+status = "watch"
+into = "new skills"
