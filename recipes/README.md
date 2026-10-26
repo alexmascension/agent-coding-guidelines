@@ -15,7 +15,7 @@ Status: **implemented** (module and tests here), **external** (run with the cite
 | SCRNASEQ §3 | STARsolo mapping and counting | external | — | — |
 | SCRNASEQ §4.1 | CellBender, EmptyDrops_CR | external | — | — |
 | SCRNASEQ §4.1–4.2 | Mito by chromosome, nuclear fraction, per-capture MAD flags | implemented | `scrnaseq/qc.py` | MAD = 0, non-finite values, absolute mito limit, panels without mito genes |
-| SCRNASEQ §4.3 | Two doublet detectors, consensus/union, cluster review | implemented | `scrnaseq/doublets.py` | Planted doublets; mixed singlets vs true doublets; capture-adjusted rates. The AND/OR combination is a project default without benchmark |
+| SCRNASEQ §4.3 | Scrublet, scDblFinder (R) and optional DoubletDetection; consensus/union; Scrublet thresholds; cluster review; genotype doublets | implemented | `scrnaseq/doublets.py`, `scrnaseq/scdblfinder.R` | Planted doublets; mixed singlets vs true doublets; capture-adjusted rates; input layer refused when SoupX- or decontX-corrected, warning when such a layer exists before the review; failed automatic Scrublet threshold raised or marked not evaluated; manual thresholds; scDblFinder test skipped without R. The AND/OR combination is a project default |
 | SCRNASEQ §5 | Pooled size factors (scranPY; R scran), median factors, log1p | implemented | `scrnaseq/normalization.py`, `scrnaseq/scran_size_factors.R` | Agreement scranPY–R scran on simulated composition differences; equivalence with `normalize_total(target_sum=None)`; invalid factors |
 | SCRNASEQ §6 | Number of PCs and robustness to p ± 5 | implemented | `scrnaseq/pc_robustness.py` | Separated clusters vs pure noise; no truncation of the proposal |
 | SCRNASEQ §7 | Harmony, scVI/scANVI | external | — | — |

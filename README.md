@@ -25,7 +25,7 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 | `guidelines/hpc_sites/` | Site profiles (facts of one cluster, dated): `DIPC_HYPERION.md` | — |
 | `guidelines/FIGURE_GUIDELINES.md` | Figures | planned |
 | `references/` | `OMICS_REFERENCES.md` / `.bib`, `STATISTICS_REFERENCES.md` / `.bib`: references with keys used in the guides | — |
-| `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.3.1 |
+| `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.4.0 |
 | `CHANGELOG.md` | Changes per guide (semantic versioning per file) | — |
 | `RULE_IDS.tsv` | Registry of rule identifiers (active and retired) | — |
 
@@ -76,7 +76,7 @@ CI (`.github/workflows/ci.yml`) runs on pushes to `main`, pull requests, weekly 
 | Guides and lint | always | the pre-commit hooks on all files; version and changelog check against the previous commit |
 | Recipes (Python 3.11, 3.12) | a file under `recipes/`, `pyproject.toml` or the CI changed | `pytest -m "not r"` |
 | Install from the built wheel | as above | install in a clean environment; import and package data (R scripts) |
-| Recipes backed by R | an `*.R` file changed, or a file that depends on R (`tools/ci_scope.py`) | R with scran, tximport, DESeq2; `pytest -m r`, where a skip is a failure |
+| Recipes backed by R | an `*.R` file changed, or a file that depends on R (`tools/ci_scope.py`) | R with scran, scDblFinder, tximport, DESeq2; `pytest -m r`, where a skip is a failure |
 
 `tools/ci_scope.py` decides the last two: a file depends on R when it calls R or names an R script, when a test
 marked `r` uses it, or when such a file imports it; it checks the files before and after the change, so adding or
