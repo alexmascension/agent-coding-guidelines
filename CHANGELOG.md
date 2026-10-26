@@ -6,6 +6,16 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-10-26 (SCRNASEQ citation fixes)
+
+### SCRNASEQ_GUIDELINES.md [4.0.1]
+
+#### Fixed
+
+- `SC-QC-009`: DoubletDetection cites [Gayoso 2025], the key of the DoubletDetection entry since the BibTeX fixes of
+  the same day (the rule cited the former key [Gayoso 2020]); Solo cites [Bernstein 2020] (Solo, *Cell Systems*
+  2020), not [Bernstein 2025], which is in neither reference file.
+
 ## 2026-10-26 (agent behaviour from superpowers)
 
 ### AGENTIC_GUIDELINES.md [1.1.0]
