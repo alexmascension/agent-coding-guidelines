@@ -5,6 +5,36 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-26 (pre-registration)
+
+### STATISTICS_GUIDELINES.md [2.1.0]
+
+#### Added
+
+- `STAT-DES-009`: the analysis plan of a confirmatory claim (hypotheses with direction and rough size, primary
+  outcome, model, inclusion and QC rules, multiple-testing family, decision rule) is fixed, dated and committed
+  before the analyses that produce the outcome run; with existing data, state what had already been seen.
+- `STAT-DES-010`: forking-paths audit of the choices that could be tuned on the outcome; choices made afterwards are
+  justified independently or analysed under each alternative.
+- `STAT-DES-011`: departures from the plan are appended with date and reason, never edited in; no hypothesis formed
+  after the results presented as stated in advance.
+- `STAT-DES-012`: pilots decide feasibility under a rule written beforehand; sample size is not based on the
+  pilot's effect size.
+- `STAT-REP-008`: report whether each analysis was planned or exploratory, the date of the plan and its departures.
+- `STAT-DES-010` to `STAT-DES-012` adapt the `pre-register` skill of the Co-Scientist toolkit (Shocklab, University of
+  Cape Town, <https://github.com/shocklab/co-scientist-toolkit>, CC BY 4.0).
+
+### STATISTICS_REFERENCES.md
+
+- [Nosek 2018], [Gelman & Loken 2014], [Kerr 1998] and [Albers 2018], section B; metadata checked against Crossref,
+  content against the abstracts (Gelman & Loken 2014 against the authors' copy of the article).
+
+### Repository
+
+#### Changed
+
+- `README.md`: licence note lists the `STATISTICS_GUIDELINES.md` rules adapted from the Co-Scientist toolkit.
+
 ## 2026-10-26 (verification, tests and shell rules)
 
 ### CODING_GUIDELINES.md [3.7.0]

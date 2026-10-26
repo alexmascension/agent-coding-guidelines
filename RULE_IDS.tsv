@@ -676,6 +676,10 @@ STAT-DES-005	active	STATISTICS_GUIDELINES.md	Justify the sample size and state h
 STAT-DES-006	active	STATISTICS_GUIDELINES.md	MUST NOT report post-hoc ("observed") power. It is a transformation of the p-val
 STAT-DES-007	active	STATISTICS_GUIDELINES.md	Plan positive and negative controls (a gene or condition with a known effect, an
 STAT-DES-008	active	STATISTICS_GUIDELINES.md	Low power has two consequences beyond missed effects: for a given significance l
+STAT-DES-009	active	STATISTICS_GUIDELINES.md	Fix the analysis plan before running the analyses that produce the outcome, for 
+STAT-DES-010	active	STATISTICS_GUIDELINES.md	Audit the forking paths. List the choices that could be tuned on the outcome (th
+STAT-DES-011	active	STATISTICS_GUIDELINES.md	Departures from the plan are appended, never edited in. Record each one, dated: 
+STAT-DES-012	active	STATISTICS_GUIDELINES.md	Pilot data decide feasibility, not the effect size of the power calculation. Use
 STAT-EFF-001	active	STATISTICS_GUIDELINES.md	Every result reports an estimate with its uncertainty: the effect size (differen
 STAT-EFF-002	active	STATISTICS_GUIDELINES.md	p-values are graded evidence, not a verdict. A p-value measures how incompatible
 STAT-EFF-003	active	STATISTICS_GUIDELINES.md	MUST NOT conclude "no effect" from $p > 0.05$. Report the confidence interval; i
@@ -727,6 +731,7 @@ STAT-REP-004	active	STATISTICS_GUIDELINES.md	One- or two-sided, and the multiple
 STAT-REP-005	active	STATISTICS_GUIDELINES.md	The estimate, its confidence interval and the exact p-value (or adjusted p); not
 STAT-REP-006	active	STATISTICS_GUIDELINES.md	The universe of the result, as required by CODING_GUIDELINES.md §11 (numerical c
 STAT-REP-007	active	STATISTICS_GUIDELINES.md	For figures: what each point, bar and error bar represents (FIGURE_GUIDELINES.md
+STAT-REP-008	active	STATISTICS_GUIDELINES.md	Whether the analysis was planned (confirmatory) or exploratory, the date of the 
 STAT-RES-001	active	STATISTICS_GUIDELINES.md	Permutation tests MUST permute what is exchangeable under the null: the conditio
 STAT-RES-002	active	STATISTICS_GUIDELINES.md	Exchangeability is a property of the design, not of the procedure. Permuting wit
 STAT-RES-003	active	STATISTICS_GUIDELINES.md	Permutation p-values are $p = (b + 1)/(m + 1)$, where $b$ is the number of permu

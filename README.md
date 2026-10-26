@@ -104,3 +104,6 @@ The rules added to `guidelines/CODING_GUIDELINES.md` in 3.7.0 (`CODE-LANG-004` s
 `CODE-NUM-013`, `CODE-PROV-006`, `CODE-TEST-009`, `CODE-TEST-010`, `CODE-VAL-004`) adapt the *Shell commands*,
 *Verifying work* and *Writing* sections of `guidance/CLAUDE-starter.md` and the results archive of
 `guidance/paper-CLAUDE.md` from the same toolkit (CC BY 4.0).
+
+`STAT-DES-010` to `STAT-DES-012` in `guidelines/STATISTICS_GUIDELINES.md` 2.1.0 adapt the forking-paths guard, the
+append-only deviations and the pilot decision rule of the toolkit's `pre-register` skill (CC BY 4.0).

@@ -64,6 +64,14 @@ general sources come first.
   48-replicate yeast RNA-seq: at least 6 biological replicates per condition, 12 to detect most DE genes; tool choice depends on replicate number.
 - **[Gierliński 2015]** Gierliński et al. (2015). Statistical models for RNA-seq data derived from a two-condition 48-replicate experiment. *Bioinformatics*. [doi:10.1093/bioinformatics/btv425](https://doi.org/10.1093/bioinformatics/btv425)  
   Same 48-replicate experiment: gene counts are broadly consistent with negative binomial (and log-normal) models, but a few bad replicates distort results and must be identified.
+- **[Nosek 2018]** Nosek et al. (2018). The preregistration revolution. *Proceedings of the National Academy of Sciences*. [doi:10.1073/pnas.1708274114](https://doi.org/10.1073/pnas.1708274114)  
+  Defining the questions and analysis plan before observing the outcomes separates prediction from postdiction; practical strategies when the ideal is not possible, including preexisting data.
+- **[Gelman & Loken 2014]** Gelman & Loken (2014). The Statistical Crisis in Science. *American Scientist*. [doi:10.1511/2014.111.460](https://doi.org/10.1511/2014.111.460)  
+  The 'garden of forking paths': an analysis whose details depend on the data has many potential comparisons, invalidating its p-values, even without deliberate fishing and with a single test computed.
+- **[Kerr 1998]** Kerr (1998). HARKing: Hypothesizing After the Results are Known. *Personality and Social Psychology Review*. [doi:10.1207/s15327957pspr0203_4](https://doi.org/10.1207/s15327957pspr0203_4)  
+  Presenting a hypothesis based on the results as if it had been stated in advance; widely practised and widely seen as inappropriate.
+- **[Albers 2018]** Albers & Lakens (2018). When power analyses based on pilot data are biased: Inaccurate effect size estimators and follow-up bias. *Journal of Experimental Social Psychology*. [doi:10.1016/j.jesp.2017.09.004](https://doi.org/10.1016/j.jesp.2017.09.004)  
+  Effect sizes from small pilots are inaccurate, and following up only pilots that make the main study look feasible (follow-up bias) leaves main studies underpowered; do not base sample size on pilot effect sizes.
 - **[Percie du Sert 2020]** Percie du Sert et al. (2020). The ARRIVE guidelines 2.0: Updated guidelines for reporting animal research. *PLOS Biology*. [doi:10.1371/journal.pbio.3000410](https://doi.org/10.1371/journal.pbio.3000410)  
   ARRIVE 2.0 'essential 10': design, sample size, inclusion/exclusion, randomisation, blinding, outcome measures, statistical methods.
 
