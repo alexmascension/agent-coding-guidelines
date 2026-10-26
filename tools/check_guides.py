@@ -1,4 +1,4 @@
-r"""Check the guideline set: citation keys, cross-references, recipe paths and versions.
+r"""Check the guideline set: citation keys, cross-references, recipe paths, versions, BibTeX files.
 
 Run from the repository root: ``python tools/check_guides.py``. Exits with status 1 and a list of
 problems if any
@@ -15,6 +15,9 @@ Checks
   checked for both; reference files are in ``references/``.
 * Every ``recipes/...`` path cited in a guide exists.
 * Every guide declares ``Version MAJOR.MINOR.PATCH`` in its header.
+* Every ``references/*_REFERENCES.bib`` has unique keys, no empty author names (Crossref exports a
+  group author as an empty name) and months written as BibTeX macros (``sep``, not ``Sept``); it
+  holds the same DOIs as its Markdown list, one entry per DOI on each side.
 """
 
 import re
@@ -29,11 +32,48 @@ HEADING = re.compile(r"^#{2,4} (\d+(?:\.\d+)*)\.? ", re.M)
 RECIPE = re.compile(r"`(recipes/[\w/]+\.(?:py|R|sh|slurm|env))`")
 VERSION = re.compile(r"Version \d+\.\d+\.\d+")
 BOLD_KEY = re.compile(r"^- \*\*\[([^\]]+)\]\*\*", re.M)
+BIB_KEY = re.compile(r"^@\w+\{([^,\s]+),", re.M)
+BIB_DOI = re.compile(r"\bDOI=\{([^}]+)\}", re.I)
+MD_DOI = re.compile(r"^- \*\*\[[^\]]+\]\*\*.*?\[doi:([^\]]+)\]", re.M)
+EMPTY_AUTHOR = re.compile(r"\bauthor=\{\s*and\s|\sand\s+and\s|\sand\s*\}")
+BIB_MONTH = re.compile(r"\bmonth=([A-Za-z]+)\b")
+MONTH_MACROS = {"jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"}
 
 
 def bold_keys(path: Path) -> set[str]:
     """Return the bold keys defined in a references file."""
     return set(BOLD_KEY.findall(path.read_text(encoding="utf-8"))) if path.exists() else set()
+
+
+def repeated(items: list[str]) -> list[str]:
+    """Return the items that occur more than once, each once, in order of first repetition."""
+    seen, found = set(), []
+    for item in items:
+        if item in seen and item not in found:
+            found.append(item)
+        seen.add(item)
+    return found
+
+
+def bib_problems(name: str, bib: str, md: str) -> list[str]:
+    """Return the problems of a BibTeX file and of its agreement with its Markdown list."""
+    keys = BIB_KEY.findall(bib)
+    problems = [f"{name}.bib: key {key} used more than once" for key in repeated(keys)]
+    bib_dois = [doi.lower() for doi in BIB_DOI.findall(bib)]
+    md_dois = [doi.lower() for doi in MD_DOI.findall(md)]
+    problems += [f"{name}.bib: DOI {doi} in more than one entry" for doi in repeated(bib_dois)]
+    problems += [f"{name}.md: DOI {doi} in more than one entry" for doi in repeated(md_dois)]
+    for doi in sorted(set(md_dois) - set(bib_dois)):
+        problems.append(f"{name}.md: DOI {doi} has no entry in {name}.bib")
+    for doi in sorted(set(bib_dois) - set(md_dois)):
+        problems.append(f"{name}.bib: DOI {doi} has no entry in {name}.md")
+    for number, line in enumerate(bib.splitlines(), start=1):
+        if EMPTY_AUTHOR.search(line):
+            problems.append(f"{name}.bib:{number}: empty author name")
+        for month in BIB_MONTH.findall(line):
+            if month.lower() not in MONTH_MACROS:
+                problems.append(f"{name}.bib:{number}: month={month} is not a BibTeX month macro")
+    return problems
 
 
 def main() -> int:
@@ -64,6 +104,10 @@ def main() -> int:
         for path in RECIPE.findall(text):
             if not (ROOT / path).exists():
                 problems.append(f"{guide.name}: recipe {path} does not exist")
+    for bib_path in sorted((ROOT / "references").glob("*_REFERENCES.bib")):
+        md_path = bib_path.with_suffix(".md")
+        md = md_path.read_text(encoding="utf-8") if md_path.exists() else ""
+        problems += bib_problems(bib_path.stem, bib_path.read_text(encoding="utf-8"), md)
     for problem in problems:
         print(problem)
     return 1 if problems else 0

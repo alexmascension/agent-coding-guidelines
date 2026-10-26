@@ -1,6 +1,6 @@
 # Statistics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-26)
 >
 > Key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** follow RFC 2119, as in
 > `CODING_GUIDELINES.md`. Bracketed keys such as `[Squair 2021]` point to entries in
@@ -63,6 +63,43 @@
   effects among the hypotheses tested, significant results are more likely to be false, and their effect sizes are
   exaggerated (type M error) or even have the wrong sign
   (type S error) [Button 2013; Gelman & Carlin 2014].
+* `STAT-DES-009` **Fix the analysis plan before running the analyses that produce the outcome**, for every claim
+  presented as confirmatory: the hypotheses with the predicted direction and rough size, the primary outcome, the
+  model or test with its covariates, the inclusion, exclusion and QC rules, the multiple-testing family, and the
+  decision rule (which result supports the hypothesis and which counts against it). Record the plan, dated, in
+  `PROJECT_SCOPE.md` or the decisions log, and commit it before the analysis runs [Nosek 2018].
+  * *Why:* hypotheses generated from the data and hypotheses tested on them look the same in a report, and
+    hindsight makes it hard for the analyst to tell them apart afterwards; a dated plan is what separates a
+    prediction from a postdiction [Nosek 2018].
+  * *Trade-off:* writing the plan takes time and fixes choices that the data might have improved; improvements
+    found later are kept, as departures (`STAT-DES-011`).
+  * *Deviate when:* the analysis is exploratory; label it as such (`STAT-DES-001`). With existing or public data,
+    common in omics, fix the plan before running the analyses that bear on the hypothesis, and state which parts of
+    the data and which results had already been seen.
+* `STAT-DES-010` **Audit the forking paths.** List the choices that could be tuned on the outcome (thresholds,
+  filters, covariates, normalization, subsets of samples or cell types, clustering resolution, gene sets, the
+  comparison reported) and, for each, whether it was fixed before the outcome was seen. A choice made afterwards is
+  either justified independently of the outcome and reported as made afterwards, or analysed under each plausible
+  alternative, with every result reported.
+  * *Why:* when the details of an analysis depend on the data, there are many potential comparisons even if only
+    one test is run and no one searches through the data deliberately, and the reported p-values are invalid
+    [Gelman & Loken 2014; Simmons 2011].
+  * *Example:* the clustering resolution at which the condition separates best, or the fold-change cutoff that gives
+    the cleanest enrichment, selected after seeing the result.
+* `STAT-DES-011` **Departures from the plan are appended, never edited in.** Record each one, dated: what changed,
+  why, and whether it was decided before or after the relevant results were seen; the original plan stays as
+  written. Report the planned analysis next to the changed one when both can be run, and treat the results of a
+  change decided after seeing results as exploratory. MUST NOT present a hypothesis formed after seeing the results
+  as if it had been stated in advance [Kerr 1998].
+  * *Why:* a plan edited to match what was done looks like a confirmatory test; the appended record is the only
+    evidence of which analyses were predictions.
+* `STAT-DES-012` **Pilot data decide feasibility, not the effect size of the power calculation.** Use a pilot to
+  check that the procedure works, that measurements fall in the expected range and that the decisive experiment is
+  affordable, with a rule for continuing or stopping written before the pilot runs. Base the sample size on the
+  smallest effect of interest or on external estimates (`STAT-DES-005`, sample size), not on the pilot's estimate.
+  * *Why:* effect sizes from small pilots are imprecise, and following up only the pilots whose estimate makes the
+    main study look feasible selects overestimates, so main studies planned from pilot effect sizes are
+    underpowered [Albers 2018].
 
 ## 2. Exploration and quality control
 
@@ -363,6 +400,8 @@ recoverable, in the result itself or in a linked methods note [Lang 2015; Percie
 6. `STAT-REP-006` The universe of the result, as required by `CODING_GUIDELINES.md` §11 (numerical code): input
    set, filters and parameters.
 7. `STAT-REP-007` For figures: what each point, bar and error bar represents (`FIGURE_GUIDELINES.md`).
+8. `STAT-REP-008` Whether the analysis was planned (confirmatory) or exploratory, the date of the plan, and every
+   departure from it (`STAT-DES-009`, `STAT-DES-011`).
 
 ## 13. Implementation in Python
 

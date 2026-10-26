@@ -5,6 +5,178 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-26 (reference files: verification and BibTeX fixes)
+
+Every entry of both `.bib` files was checked against Crossref, OpenAlex, Semantic Scholar and arXiv with the
+`reference-verifier` skill of the Co-Scientist toolkit (Shocklab, University of Cape Town,
+<https://github.com/shocklab/co-scientist-toolkit>), and Zenodo DOIs against DataCite: all 347 references exist and
+match their titles and DOIs. Years differ from the databases' print dates in 39 entries only because the files
+use the year of first publication; this is now stated in both headers.
+
+### SCRNASEQ_GUIDELINES.md [3.2.1]
+
+#### Changed
+
+- `SC-QC-009` (doublets): cites [Gayoso 2025] (DoubletDetection 4.3.0.post1, the 4.x defaults the recipes use)
+  instead of [Gayoso 2020].
+
+### STATISTICS_REFERENCES.md
+
+#### Fixed
+
+- `.bib`: six Krzywinski & Altman columns shared two keys; they now use the keys of the Markdown list
+  (`Krzywinski_2013a` to `Krzywinski_2014c`).
+- `.bib`: month values `Sept`, `June` and `July`, which are not BibTeX month macros and stop some parsers, replaced
+  by `sep`, `jun` and `jul`.
+- Header: years are those of first publication, online or in print (Crossref's *issued* date).
+
+### OMICS_REFERENCES.md
+
+#### Fixed
+
+- `.bib`: duplicated keys `Love_2016`, `Soneson_2016`, `Palla_2022` and `Zhao_2021` split into the `a`/`b` keys of the
+  Markdown list; keys `2019` (two entries), `2024` and `2017` renamed `Lun_2019`, `Thompson_2019`, `CZI_2024` and `Tukiainen_2017`.
+- `.bib`: four entries had an empty first author where Crossref lists a group author; the group is kept as first
+  author for `CZI_2024` (cited as such in the Markdown list) and dropped from the author lists of `Lun_2019`,
+  `Thompson_2019` and `Tukiainen_2017`.
+- `.bib`: month values `Sept`, `June` and `July` replaced by `sep`, `jun` and `jul`.
+- [Gayoso 2020] replaced by [Gayoso 2025]: the entry cited version 3.0 with five authors under the concept DOI of
+  all releases, which resolves to the latest one; it now cites version 4.3.0.post1 (the 4.x defaults the recipes
+  use) with its version DOI and the two authors of its DataCite record.
+- [Fortmann 2023]: "version 0.1" is the package version; the entry now gives the commit the recipes pin (62292a0,
+  five commits after release v1.1) and states that the DOI is the concept DOI.
+- Header: software DOIs are checked against DataCite; years are those of first publication, online or in print.
+
+### Repository
+
+#### Added
+
+- `tools/check_guides.py`: checks of the `.bib` files: unique keys, no empty author names, months as BibTeX macros,
+  and the same DOIs as the Markdown list, one entry per DOI on each side. Run on the files before the fixes above,
+  it reports every problem fixed here.
+- `tools/tests/test_check_guides.py`: tests of these checks (`CODE-TEST-009`); `tools/tests` added to the pytest
+  paths.
+
+#### Changed
+
+- `tools/ci_scope.py`: a change under `tools/` also runs the Python test job, which now includes the tool tests;
+  `README.md` CI table updated.
+
+## 2026-10-26 (pre-registration)
+
+### STATISTICS_GUIDELINES.md [2.1.0]
+
+#### Added
+
+- `STAT-DES-009`: the analysis plan of a confirmatory claim (hypotheses with direction and rough size, primary
+  outcome, model, inclusion and QC rules, multiple-testing family, decision rule) is fixed, dated and committed
+  before the analyses that produce the outcome run; with existing data, state what had already been seen.
+- `STAT-DES-010`: forking-paths audit of the choices that could be tuned on the outcome; choices made afterwards are
+  justified independently or analysed under each alternative.
+- `STAT-DES-011`: departures from the plan are appended with date and reason, never edited in; no hypothesis formed
+  after the results presented as stated in advance.
+- `STAT-DES-012`: pilots decide feasibility under a rule written beforehand; sample size is not based on the
+  pilot's effect size.
+- `STAT-REP-008`: report whether each analysis was planned or exploratory, the date of the plan and its departures.
+- `STAT-DES-010` to `STAT-DES-012` adapt the `pre-register` skill of the Co-Scientist toolkit (Shocklab, University of
+  Cape Town, <https://github.com/shocklab/co-scientist-toolkit>, CC BY 4.0).
+
+### STATISTICS_REFERENCES.md
+
+- [Nosek 2018], [Gelman & Loken 2014], [Kerr 1998] and [Albers 2018], section B; metadata checked against Crossref,
+  content against the abstracts (Gelman & Loken 2014 against the authors' copy of the article).
+
+### Repository
+
+#### Changed
+
+- `README.md`: licence note lists the `STATISTICS_GUIDELINES.md` rules adapted from the Co-Scientist toolkit.
+
+## 2026-10-26 (verification, tests and shell rules)
+
+### CODING_GUIDELINES.md [3.7.0]
+
+#### Added
+
+- `CODE-NUM-013`: round only when presenting; computations, bounds and stored tables use full precision, and rounded
+  values are never read back as inputs.
+- `CODE-PROV-006`: broken or superseded runs go to `results/_superseded/<run>/` with a `DO_NOT_USE.md`; loaders
+  raise when given one, unless an explicit, logged argument allows it.
+- `CODE-TEST-009`: every input validation has a test that triggers it; a pipeline's end-to-end test has a negative
+  counterpart on a corrupted fixture.
+- `CODE-TEST-010`: expected values are established independently of the code under test; a failing test's
+  expectation is not changed to the observed value until it is established which is right; snapshot tests are
+  marked as such.
+- `CODE-VAL-004`: run the changed entry point and inspect its output where the next step reads it, not only the
+  tests.
+
+#### Changed
+
+- `CODE-LANG-004`: quoted heredocs; waiting on background jobs by PID, not `pgrep -f`; `timeout` checked to exist
+  (`timeout=120 command` is an environment assignment); background processes stopped on exit.
+- `CODE-DOC-005`: labels coined during development are replaced by what they name.
+- Adapted in part from `guidance/CLAUDE-starter.md` (*Shell commands*, *Verifying work*, *Writing*) and
+  `guidance/paper-CLAUDE.md` of the Co-Scientist toolkit (Shocklab, University of Cape Town,
+  <https://github.com/shocklab/co-scientist-toolkit>, CC BY 4.0).
+
+### MANUSCRIPT_GUIDELINES.md [1.1.0]
+
+#### Changed
+
+- `MS-TRACE-003`: superseded runs go to `results/_superseded/<run>/` as `CODE-PROV-006` requires (previously
+  `results/_ARCHIVE/`, a name easily confused with the `ARCHIVE` storage role of `HPC_GUIDELINES.md`, which holds
+  promoted results).
+
+### Repository
+
+#### Changed
+
+- `README.md`: licence note lists the `CODING_GUIDELINES.md` rules adapted from the Co-Scientist toolkit.
+
+## 2026-10-26 (manuscript guidelines)
+
+### MANUSCRIPT_GUIDELINES.md [1.0.0]
+
+#### Added
+
+- New guide (prefix `MS`) for manuscripts built on the project's analyses. Layout and inputs: manuscript in `paper/`
+  in a text format, cited papers as read-only inputs with their converted text, one vocabulary for text, figures
+  and code (§1); traceability: figures and tables from scripts with a sidecar naming run and commit, numbers in the
+  text from a generated values file, superseded runs archived and refused by figure scripts, regeneration and tag
+  before each submission, availability statements (§2); claims: a claims table tying load-bearing claims to
+  results, scope matching the design, exploratory analyses labelled, limitations, reporting standards (§3);
+  citations: no reference without its record, automated bibliography check, support of each load-bearing citation
+  checked in the cited text, primary sources, reading limits of `AGENTIC_GUIDELINES.md` §10 (§4); pre-submission
+  review along independent dimensions, findings with location and severity, venue criteria looked up, changes only
+  with the author's approval and verified afterwards (§5); revisions and response letters (§6); writing (§7); what
+  to record in `PROJECT_CONTEXT.md` (§8).
+- Adapted in part from the Co-Scientist toolkit (Shocklab, University of Cape Town,
+  <https://github.com/shocklab/co-scientist-toolkit>, CC BY 4.0): `guidance/paper-CLAUDE.md` (adapted there from
+  Dominik Lukeš's agents-for-reproducibility course), `guidance/CLAUDE-starter.md` (*Writing*, *Research papers*)
+  and the skills `paper-review` (templates adapted from Dominik Lukeš's paper-reviewer skill, MIT),
+  `claim-fact-checker` (adapted from Dominik Lukeš's agent skills, MIT), `reference-verifier` and
+  `convergence-check`.
+
+### CODING_GUIDELINES.md [3.6.0]
+
+#### Changed
+
+- `CODE-USE-008`: prefix `MS` added to the list of guide prefixes.
+- §2 (documentation set): the manuscript and its claims table in `paper/` added to the optional documents.
+- §26 (related guidelines): lists `MANUSCRIPT_GUIDELINES.md`.
+
+### STATISTICS_REFERENCES.md
+
+- [Jergas 2015] (quotation accuracy) and [Walters 2023] (fabricated references generated by ChatGPT), section L;
+  metadata checked against Crossref. Cited by `MANUSCRIPT_GUIDELINES.md` §4.
+
+### Repository
+
+#### Changed
+
+- `tools/rule_ids.py`: prefix `MS` and its topics.
+- `README.md`: contents table and licence note with the attribution of the adapted text.
+
 ## 2026-10-26 (agentic guidelines)
 
 ### AGENTIC_GUIDELINES.md [1.0.0]

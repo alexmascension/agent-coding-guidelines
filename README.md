@@ -13,6 +13,7 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 |---|---|---|
 | `guidelines/CODING_GUIDELINES.md` | Code, data, provenance, reproducibility, testing, project documentation (`AGENTS.md`, `PROJECT_CONTEXT.md`) | stable |
 | `guidelines/AGENTIC_GUIDELINES.md` | Agent working discipline: scope, evidence, verification, claims, decisions, unattended batches, delegation, confidential material, handoffs, iteration | new |
+| `guidelines/MANUSCRIPT_GUIDELINES.md` | Manuscripts built on the analyses: traceability of figures, tables and numbers, claims, citations, pre-submission review, revisions, writing | new |
 | `guidelines/STATISTICS_GUIDELINES.md` | Design, test choice, multiple testing, resampling, reporting | stable |
 | `guidelines/RNASEQ_BULK_GUIDELINES.md` | Bulk RNA-seq from reads to differential expression and enrichment | stable |
 | `guidelines/SCRNASEQ_GUIDELINES.md` | Single-cell and single-nucleus RNA-seq (10x, STARsolo, scverse) | stable |
@@ -74,7 +75,7 @@ CI (`.github/workflows/ci.yml`) runs on pushes to `main`, pull requests, weekly 
 | Job | Runs when | What |
 |---|---|---|
 | Guides and lint | always | the pre-commit hooks on all files; version and changelog check against the previous commit |
-| Recipes (Python 3.11, 3.12) | a file under `recipes/`, `pyproject.toml` or the CI changed | `pytest -m "not r"` |
+| Recipes (Python 3.11, 3.12) | a file under `recipes/` or `tools/`, `pyproject.toml` or the CI changed | `pytest -m "not r"` (recipe and tool tests) |
 | Install from the built wheel | as above | install in a clean environment; import and package data (R scripts) |
 | Recipes backed by R | an `*.R` file changed, or a file that depends on R (`tools/ci_scope.py`) | R with scran, tximport, DESeq2; `pytest -m r`, where a skip is a failure |
 
@@ -92,3 +93,17 @@ Town (<https://github.com/shocklab/co-scientist-toolkit>), licensed under
 `guidance/paper-CLAUDE.md`, `guidance/handoff-CURRENT.md`) and the skills `fable-mode`, `pre-register`,
 `convergence-check`, `decision-page` and `claim-fact-checker`. The text was rewritten as rules, generalised and
 extended; §0 of the guide lists the sources.
+
+`guidelines/MANUSCRIPT_GUIDELINES.md` adapts text from the same toolkit (CC BY 4.0): `guidance/paper-CLAUDE.md`
+(itself adapted from Dominik Lukeš's agents-for-reproducibility course), the *Writing* and *Research papers*
+sections of `guidance/CLAUDE-starter.md`, and the skills `paper-review` (review templates adapted from Dominik
+Lukeš's paper-reviewer skill, MIT), `claim-fact-checker` (adapted from Dominik Lukeš's agent skills, MIT),
+`reference-verifier` and `convergence-check`. §0 of the guide lists the sources.
+
+The rules added to `guidelines/CODING_GUIDELINES.md` in 3.7.0 (`CODE-LANG-004` shell traps, `CODE-DOC-005`,
+`CODE-NUM-013`, `CODE-PROV-006`, `CODE-TEST-009`, `CODE-TEST-010`, `CODE-VAL-004`) adapt the *Shell commands*,
+*Verifying work* and *Writing* sections of `guidance/CLAUDE-starter.md` and the results archive of
+`guidance/paper-CLAUDE.md` from the same toolkit (CC BY 4.0).
+
+`STAT-DES-010` to `STAT-DES-012` in `guidelines/STATISTICS_GUIDELINES.md` 2.1.0 adapt the forking-paths guard, the
+append-only deviations and the pilot decision rule of the toolkit's `pre-register` skill (CC BY 4.0).

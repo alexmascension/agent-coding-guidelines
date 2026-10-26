@@ -216,6 +216,7 @@ CODE-NUM-009	active	CODING_GUIDELINES.md	Every reported number states its univer
 CODE-NUM-010	active	CODING_GUIDELINES.md	Classifications carry their rule. A column produced by a documented classificati
 CODE-NUM-011	active	CODING_GUIDELINES.md	Thresholds and analysis parameters are named constants in one configuration modu
 CODE-NUM-012	active	CODING_GUIDELINES.md	Statistical practice (test choice, multiple testing, effect sizes, reporting) fo
+CODE-NUM-013	active	CODING_GUIDELINES.md	Round only when presenting. Computations, comparisons, bounds and stored tables 
 CODE-PERF-001	active	CODING_GUIDELINES.md	Prioritize correctness and readability; optimize when there is a meaningful expe
 CODE-PERF-002	active	CODING_GUIDELINES.md	Avoid repeated expensive conversions, allocations, I/O and computations.
 CODE-PERF-003	active	CODING_GUIDELINES.md	Keep optimized code understandable and document non-obvious performance decision
@@ -239,6 +240,7 @@ CODE-PROV-002	active	CODING_GUIDELINES.md	MUST NOT commit data, results or large
 CODE-PROV-003	active	CODING_GUIDELINES.md	Each analysis run writes to its own directory (e.g. results/<run>/) containing, 
 CODE-PROV-004	active	CODING_GUIDELINES.md	Write outputs atomically (write to a temporary file in the same directory, then 
 CODE-PROV-005	active	CODING_GUIDELINES.md	Scripts MUST NOT overwrite existing outputs unless an explicit --overwrite flag 
+CODE-PROV-006	active	CODING_GUIDELINES.md	Results that must no longer be used are marked and refused. A run found to be br
 CODE-RCP-001	active	CODING_GUIDELINES.md	Non-obvious procedures of the domain guidelines MAY have a reference implementat
 CODE-RCP-002	active	CODING_GUIDELINES.md	When a guideline links a recipe, use it instead of re-implementing the procedure
 CODE-RCP-003	active	CODING_GUIDELINES.md	Adapt a recipe through its parameters and named constants. A change to its logic
@@ -268,6 +270,8 @@ CODE-TEST-005	active	CODING_GUIDELINES.md	Compare numbers with tolerances (numpy
 CODE-TEST-006	active	CODING_GUIDELINES.md	Build small input tables inline or from tiny fixtures in tests/data/. Tests MUST
 CODE-TEST-007	active	CODING_GUIDELINES.md	Keep tests independent: no shared mutable state and no reliance on execution ord
 CODE-TEST-008	active	CODING_GUIDELINES.md	For pipelines, SHOULD include an end-to-end test on a minimal fixture whose expe
+CODE-TEST-009	active	CODING_GUIDELINES.md	Every input validation has a test that triggers it. Each check at a public entry
+CODE-TEST-010	active	CODING_GUIDELINES.md	Expected values are established independently of the code under test: from the s
 CODE-TYPE-001	active	CODING_GUIDELINES.md	Add type hints to public functions and non-trivial internal functions.
 CODE-TYPE-002	active	CODING_GUIDELINES.md	Use built-in generics (list[str], dict[str, int]) and X | None, not typing.List 
 CODE-TYPE-003	active	CODING_GUIDELINES.md	Do not add annotations that reduce readability or that cannot express the type m
@@ -282,6 +286,7 @@ CODE-USE-008	active	CODING_GUIDELINES.md	Rule identifiers. Every rule (top-level
 CODE-VAL-001	active	CODING_GUIDELINES.md	After modifying code, run the most relevant tests and static checks (pytest, ruf
 CODE-VAL-002	active	CODING_GUIDELINES.md	MUST NOT claim that tests or checks passed unless they were actually run.
 CODE-VAL-003	active	CODING_GUIDELINES.md	If validation cannot be performed, state exactly what was not verified.
+CODE-VAL-004	active	CODING_GUIDELINES.md	Run what was changed, not only its tests. After changing code that produces an o
 CODE-VCS-001	active	CODING_GUIDELINES.md	Each commit is one logical change; an implementation and its tests go in the sam
 CODE-VCS-002	active	CODING_GUIDELINES.md	Commit message: a summary line in the imperative, capitalized, at most 50 charac
 CODE-VCS-003	active	CODING_GUIDELINES.md	At the end of each meaningful operation or code change, propose a commit: a summ
@@ -450,6 +455,42 @@ META-SENS-003	active	META_ANALYSIS_GUIDELINES.md	Alternative $\tau^2$ estimators
 META-STRAT-001	active	META_ANALYSIS_GUIDELINES.md	Effect-size combination is the default. Reproducibility improves more with more 
 META-STRAT-002	active	META_ANALYSIS_GUIDELINES.md	p-value combination MUST be done separately for each direction (one-sided p-valu
 META-STRAT-003	active	META_ANALYSIS_GUIDELINES.md	Rank products are an option for microarray and mixed-platform data [Hong 2006].
+MS-CITE-001	active	MANUSCRIPT_GUIDELINES.md	MUST NOT add a reference from memory or from model output without retrieving its
+MS-CITE-002	active	MANUSCRIPT_GUIDELINES.md	Before submission, check the whole bibliography against bibliographic databases 
+MS-CITE-003	active	MANUSCRIPT_GUIDELINES.md	Each citation supports the sentence it is attached to. A reference that exists i
+MS-CITE-004	active	MANUSCRIPT_GUIDELINES.md	Cite the primary source of a finding, not a review or a later paper that reports
+MS-CITE-005	active	MANUSCRIPT_GUIDELINES.md	Read cited papers within the limits of AGENTIC_GUIDELINES.md §10 (confidential a
+MS-CLAIM-001	active	MANUSCRIPT_GUIDELINES.md	Keep a claims table for the load-bearing claims of the title, abstract, contribu
+MS-CLAIM-002	active	MANUSCRIPT_GUIDELINES.md	The scope of each claim matches the design that produced it: the population, tis
+MS-CLAIM-003	active	MANUSCRIPT_GUIDELINES.md	Exploratory analyses are labelled as exploratory in the text, and departures fro
+MS-CLAIM-004	active	MANUSCRIPT_GUIDELINES.md	The limitations section states the known limitations, including those recorded d
+MS-CLAIM-005	active	MANUSCRIPT_GUIDELINES.md	The Methods report what STATISTICS_GUIDELINES.md §12 (what to report) and the re
+MS-LAY-001	active	MANUSCRIPT_GUIDELINES.md	The manuscript lives in the project repository, in paper/ (the default layout of
+MS-LAY-002	active	MANUSCRIPT_GUIDELINES.md	Papers and other documents the text relies on are read-only inputs, kept in
+MS-LAY-003	active	MANUSCRIPT_GUIDELINES.md	The terms of the manuscript are the controlled vocabulary of the project
+MS-REP-001	active	MANUSCRIPT_GUIDELINES.md	The target venue, the date its criteria and author instructions were consulted, 
+MS-REP-002	active	MANUSCRIPT_GUIDELINES.md	The manuscript format and build command, the generated values file, the claims t
+MS-REP-003	active	MANUSCRIPT_GUIDELINES.md	Submission and revision tags with the runs each uses (MS-TRACE-004, MS-RESP-003)
+MS-REP-004	active	MANUSCRIPT_GUIDELINES.md	How AI tools were used in writing and review, for the disclosure the venue requi
+MS-RESP-001	active	MANUSCRIPT_GUIDELINES.md	A question from a reviewer, editor or co-author is answered, not acted on (AGT-U
+MS-RESP-002	active	MANUSCRIPT_GUIDELINES.md	The response letter quotes each point, answers it and gives the location of each
+MS-RESP-003	active	MANUSCRIPT_GUIDELINES.md	Each revision is a tagged commit (MS-TRACE-004, submission tags), so that a mark
+MS-RESP-004	active	MANUSCRIPT_GUIDELINES.md	Check whether revision rounds converge (AGT-LOOP-002, convergence of revision lo
+MS-REV-001	active	MANUSCRIPT_GUIDELINES.md	Before submission, review the manuscript along independent dimensions, each by a
+MS-REV-002	active	MANUSCRIPT_GUIDELINES.md	Each finding states its location (section, paragraph, figure, table, equation), 
+MS-REV-003	active	MANUSCRIPT_GUIDELINES.md	Review against the venue's current criteria: look up its reviewer guidelines and
+MS-REV-004	active	MANUSCRIPT_GUIDELINES.md	MUST NOT apply review changes without the author's approval of each item. Approv
+MS-REV-005	active	MANUSCRIPT_GUIDELINES.md	After applying changes, verify them: every approved change is implemented as spe
+MS-TRACE-001	active	MANUSCRIPT_GUIDELINES.md	Every figure and table is produced by a script from an explicit run, never from 
+MS-TRACE-002	active	MANUSCRIPT_GUIDELINES.md	Every number in the text comes from a generated file. The analysis writes the va
+MS-TRACE-003	active	MANUSCRIPT_GUIDELINES.md	Broken or superseded runs are moved out of reach as CODE-PROV-006 (superseded re
+MS-TRACE-004	active	MANUSCRIPT_GUIDELINES.md	Before each submission, regenerate every figure, table and number from a clean c
+MS-TRACE-005	active	MANUSCRIPT_GUIDELINES.md	Data and code availability statements name what a reader needs to obtain them: a
+MS-WRITE-001	active	MANUSCRIPT_GUIDELINES.md	Say what is computed and what it gives. Avoid figurative verbs ("pushes the erro
+MS-WRITE-002	active	MANUSCRIPT_GUIDELINES.md	Write for the reader who acts on the text. Documents for funders, committees and
+MS-WRITE-003	active	MANUSCRIPT_GUIDELINES.md	Text drafted or revised by an AI is the authors' responsibility, checked by them
+MS-WRITE-004	active	MANUSCRIPT_GUIDELINES.md	A rewrite by a second model or service gets a brief and is checked against it. T
+MS-WRITE-005	active	MANUSCRIPT_GUIDELINES.md	Give an honest assessment, not compliance. When asked to improve a manuscript, s
 SC-ANNOT-001	active	SCRNASEQ_GUIDELINES.md	Annotate in three steps: automatic, manual review with known markers, verificati
 SC-ANNOT-002	active	SCRNASEQ_GUIDELINES.md	With a reference atlas: label transfer (scANVI) or CellTypist with a pretrained 
 SC-ANNOT-003	active	SCRNASEQ_GUIDELINES.md	With a marker dictionary and no reference (frequent case): CellTypist does not a
@@ -635,6 +676,10 @@ STAT-DES-005	active	STATISTICS_GUIDELINES.md	Justify the sample size and state h
 STAT-DES-006	active	STATISTICS_GUIDELINES.md	MUST NOT report post-hoc ("observed") power. It is a transformation of the p-val
 STAT-DES-007	active	STATISTICS_GUIDELINES.md	Plan positive and negative controls (a gene or condition with a known effect, an
 STAT-DES-008	active	STATISTICS_GUIDELINES.md	Low power has two consequences beyond missed effects: for a given significance l
+STAT-DES-009	active	STATISTICS_GUIDELINES.md	Fix the analysis plan before running the analyses that produce the outcome, for 
+STAT-DES-010	active	STATISTICS_GUIDELINES.md	Audit the forking paths. List the choices that could be tuned on the outcome (th
+STAT-DES-011	active	STATISTICS_GUIDELINES.md	Departures from the plan are appended, never edited in. Record each one, dated: 
+STAT-DES-012	active	STATISTICS_GUIDELINES.md	Pilot data decide feasibility, not the effect size of the power calculation. Use
 STAT-EFF-001	active	STATISTICS_GUIDELINES.md	Every result reports an estimate with its uncertainty: the effect size (differen
 STAT-EFF-002	active	STATISTICS_GUIDELINES.md	p-values are graded evidence, not a verdict. A p-value measures how incompatible
 STAT-EFF-003	active	STATISTICS_GUIDELINES.md	MUST NOT conclude "no effect" from $p > 0.05$. Report the confidence interval; i
@@ -686,6 +731,7 @@ STAT-REP-004	active	STATISTICS_GUIDELINES.md	One- or two-sided, and the multiple
 STAT-REP-005	active	STATISTICS_GUIDELINES.md	The estimate, its confidence interval and the exact p-value (or adjusted p); not
 STAT-REP-006	active	STATISTICS_GUIDELINES.md	The universe of the result, as required by CODING_GUIDELINES.md §11 (numerical c
 STAT-REP-007	active	STATISTICS_GUIDELINES.md	For figures: what each point, bar and error bar represents (FIGURE_GUIDELINES.md
+STAT-REP-008	active	STATISTICS_GUIDELINES.md	Whether the analysis was planned (confirmatory) or exploratory, the date of the 
 STAT-RES-001	active	STATISTICS_GUIDELINES.md	Permutation tests MUST permute what is exchangeable under the null: the conditio
 STAT-RES-002	active	STATISTICS_GUIDELINES.md	Exchangeability is a property of the design, not of the procedure. Permuting wit
 STAT-RES-003	active	STATISTICS_GUIDELINES.md	Permutation p-values are $p = (b + 1)/(m + 1)$, where $b$ is the number of permu

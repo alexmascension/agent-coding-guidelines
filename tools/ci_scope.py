@@ -10,7 +10,8 @@ runs, new branches) every suite runs.
 
 Rules
 -----
-* ``python``: a file under ``recipes/`` changed, or ``pyproject.toml``, or the CI definition.
+* ``python``: a file under ``recipes/`` or ``tools/`` changed, or ``pyproject.toml``, or the CI
+  definition.
 * ``r``: an ``*.R`` file changed; or a changed file depends on R at the base or at the head, so a
   change that adds, removes or alters a dependency on R is caught. A file depends on R when it
   calls R or names an R script (``Rscript``, ``RECIPES_RSCRIPT``, ``<name>.R``), when it is a
@@ -131,7 +132,7 @@ def r_dependent(files: Iterable[str], read: Callable[[str], str | None]) -> set[
 def scope(changed: set[str], trees: list[tuple[set[str], Callable[[str], str | None]]]) -> dict:
     """Return which suites the changed files need, given the base and head trees."""
     shared = bool(changed & (CI_FILES | {"pyproject.toml"}))
-    python = shared or any(f.startswith("recipes/") for f in changed)
+    python = shared or any(f.startswith(("recipes/", "tools/")) for f in changed)
     r = shared or any(f.endswith(".R") for f in changed)
     for files, read in trees:
         r = r or bool(changed & r_dependent(files, read))

@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.2.0 (2026-10-18)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.2.1 (2026-10-26)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -208,7 +208,7 @@ each step.
 ### 4.3 Doublets
 
 * `SC-QC-009` **Detect doublets per capture, before integration, with two methods: Scrublet (`scanpy.pp.scrublet`)
-  [Wolock 2019] and DoubletDetection** [Gayoso 2020]. Store both scores and calls, and derive `doublet_consensus` (both methods agree)
+  [Wolock 2019] and DoubletDetection** [Gayoso 2025]. Store both scores and calls, and derive `doublet_consensus` (both methods agree)
   and `doublet_any` (either method).
   * *Why two methods:* single methods are unstable across datasets, and combining methods improves accuracy and
     stability [Xiong 2022; Neavin 2024]. In a benchmark of nine methods, DoubletFinder (R) had the best accuracy

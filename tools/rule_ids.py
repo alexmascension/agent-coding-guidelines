@@ -39,6 +39,7 @@ PREFIX = {
     "DECONVOLUTION_GUIDELINES.md": "DECON",
     "HPC_GUIDELINES.md": "HPC",
     "AGENTIC_GUIDELINES.md": "AGT",
+    "MANUSCRIPT_GUIDELINES.md": "MS",
 }
 # Topic code per section number. Sections absent from a map contain no rules: scope and audience
 # notes (§0 of the
@@ -185,6 +186,16 @@ TOPIC = {
         11: "SESS",
         12: "LOOP",
         13: "REP",
+    },
+    "MS": {
+        1: "LAY",
+        2: "TRACE",
+        3: "CLAIM",
+        4: "CITE",
+        5: "REV",
+        6: "RESP",
+        7: "WRITE",
+        8: "REP",
     },
 }
 # Subsections with their own topic (overrides the section topic from the subsection heading on).
