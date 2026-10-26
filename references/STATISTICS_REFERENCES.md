@@ -2,6 +2,8 @@
 
 > Companion to `STATISTICS_GUIDELINES.md` in <https://github.com/alexmascension/agent-coding-guidelines>.
 > Compiled 2026-10-13. DOIs and bibliographic data verified against Crossref; BibTeX in `STATISTICS_REFERENCES.bib`.
+> Years are those of first publication, online or in print (Crossref's *issued* date), and can precede the year of
+> the printed issue.
 
 Bracketed keys in the guides, e.g. `[Squair 2021]` in `STATISTICS_GUIDELINES.md` or `[Squair 2021†]` in the omics
 guides, refer to the bold key at the start of each entry. Each entry gives the reference and the practical rule it supports. Entries are grouped by topic; within a topic, the most

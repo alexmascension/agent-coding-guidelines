@@ -5,6 +5,48 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-26 (reference files: verification and BibTeX fixes)
+
+Every entry of both `.bib` files was checked against Crossref, OpenAlex, Semantic Scholar and arXiv with the
+`reference-verifier` skill of the Co-Scientist toolkit (Shocklab, University of Cape Town,
+<https://github.com/shocklab/co-scientist-toolkit>), and Zenodo DOIs against DataCite: all 347 references exist and
+match their titles and DOIs. Years differ from the databases' print dates in 39 entries only because the files
+use the year of first publication; this is now stated in both headers.
+
+### SCRNASEQ_GUIDELINES.md [3.2.1]
+
+#### Changed
+
+- `SC-QC-009` (doublets): cites [Gayoso 2025] (DoubletDetection 4.3.0.post1, the 4.x defaults the recipes use)
+  instead of [Gayoso 2020].
+
+### STATISTICS_REFERENCES.md
+
+#### Fixed
+
+- `.bib`: six Krzywinski & Altman columns shared two keys; they now use the keys of the Markdown list
+  (`Krzywinski_2013a` to `Krzywinski_2014c`).
+- `.bib`: month values `Sept`, `June` and `July`, which are not BibTeX month macros and stop some parsers, replaced
+  by `sep`, `jun` and `jul`.
+- Header: years are those of first publication, online or in print (Crossref's *issued* date).
+
+### OMICS_REFERENCES.md
+
+#### Fixed
+
+- `.bib`: duplicated keys `Love_2016`, `Soneson_2016`, `Palla_2022` and `Zhao_2021` split into the `a`/`b` keys of the
+  Markdown list; keys `2019` (two entries), `2024` and `2017` renamed `Lun_2019`, `Thompson_2019`, `CZI_2024` and `Tukiainen_2017`.
+- `.bib`: four entries had an empty first author where Crossref lists a group author; the group is kept as first
+  author for `CZI_2024` (cited as such in the Markdown list) and dropped from the author lists of `Lun_2019`,
+  `Thompson_2019` and `Tukiainen_2017`.
+- `.bib`: month values `Sept`, `June` and `July` replaced by `sep`, `jun` and `jul`.
+- [Gayoso 2020] replaced by [Gayoso 2025]: the entry cited version 3.0 with five authors under the concept DOI of
+  all releases, which resolves to the latest one; it now cites version 4.3.0.post1 (the 4.x defaults the recipes
+  use) with its version DOI and the two authors of its DataCite record.
+- [Fortmann 2023]: "version 0.1" is the package version; the entry now gives the commit the recipes pin (62292a0,
+  five commits after release v1.1) and states that the DOI is the concept DOI.
+- Header: software DOIs are checked against DataCite; years are those of first publication, online or in print.
+
 ## 2026-10-26 (pre-registration)
 
 ### STATISTICS_GUIDELINES.md [2.1.0]
