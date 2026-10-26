@@ -13,6 +13,7 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 |---|---|---|
 | `guidelines/CODING_GUIDELINES.md` | Code, data, provenance, reproducibility, testing, project documentation (`AGENTS.md`, `PROJECT_CONTEXT.md`) | stable |
 | `guidelines/AGENTIC_GUIDELINES.md` | Agent working discipline: scope, evidence, verification, claims, decisions, unattended batches, delegation, confidential material, handoffs, iteration | new |
+| `guidelines/MANUSCRIPT_GUIDELINES.md` | Manuscripts built on the analyses: traceability of figures, tables and numbers, claims, citations, pre-submission review, revisions, writing | new |
 | `guidelines/STATISTICS_GUIDELINES.md` | Design, test choice, multiple testing, resampling, reporting | stable |
 | `guidelines/RNASEQ_BULK_GUIDELINES.md` | Bulk RNA-seq from reads to differential expression and enrichment | stable |
 | `guidelines/SCRNASEQ_GUIDELINES.md` | Single-cell and single-nucleus RNA-seq (10x, STARsolo, scverse) | stable |
@@ -92,3 +93,9 @@ Town (<https://github.com/shocklab/co-scientist-toolkit>), licensed under
 `guidance/paper-CLAUDE.md`, `guidance/handoff-CURRENT.md`) and the skills `fable-mode`, `pre-register`,
 `convergence-check`, `decision-page` and `claim-fact-checker`. The text was rewritten as rules, generalised and
 extended; §0 of the guide lists the sources.
+
+`guidelines/MANUSCRIPT_GUIDELINES.md` adapts text from the same toolkit (CC BY 4.0): `guidance/paper-CLAUDE.md`
+(itself adapted from Dominik Lukeš's agents-for-reproducibility course), the *Writing* and *Research papers*
+sections of `guidance/CLAUDE-starter.md`, and the skills `paper-review` (review templates adapted from Dominik
+Lukeš's paper-reviewer skill, MIT), `claim-fact-checker` (adapted from Dominik Lukeš's agent skills, MIT),
+`reference-verifier` and `convergence-check`. §0 of the guide lists the sources.

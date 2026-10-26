@@ -450,6 +450,42 @@ META-SENS-003	active	META_ANALYSIS_GUIDELINES.md	Alternative $\tau^2$ estimators
 META-STRAT-001	active	META_ANALYSIS_GUIDELINES.md	Effect-size combination is the default. Reproducibility improves more with more 
 META-STRAT-002	active	META_ANALYSIS_GUIDELINES.md	p-value combination MUST be done separately for each direction (one-sided p-valu
 META-STRAT-003	active	META_ANALYSIS_GUIDELINES.md	Rank products are an option for microarray and mixed-platform data [Hong 2006].
+MS-CITE-001	active	MANUSCRIPT_GUIDELINES.md	MUST NOT add a reference from memory or from model output without retrieving its
+MS-CITE-002	active	MANUSCRIPT_GUIDELINES.md	Before submission, check the whole bibliography against bibliographic databases 
+MS-CITE-003	active	MANUSCRIPT_GUIDELINES.md	Each citation supports the sentence it is attached to. A reference that exists i
+MS-CITE-004	active	MANUSCRIPT_GUIDELINES.md	Cite the primary source of a finding, not a review or a later paper that reports
+MS-CITE-005	active	MANUSCRIPT_GUIDELINES.md	Read cited papers within the limits of AGENTIC_GUIDELINES.md §10 (confidential a
+MS-CLAIM-001	active	MANUSCRIPT_GUIDELINES.md	Keep a claims table for the load-bearing claims of the title, abstract, contribu
+MS-CLAIM-002	active	MANUSCRIPT_GUIDELINES.md	The scope of each claim matches the design that produced it: the population, tis
+MS-CLAIM-003	active	MANUSCRIPT_GUIDELINES.md	Exploratory analyses are labelled as exploratory in the text, and departures fro
+MS-CLAIM-004	active	MANUSCRIPT_GUIDELINES.md	The limitations section states the known limitations, including those recorded d
+MS-CLAIM-005	active	MANUSCRIPT_GUIDELINES.md	The Methods report what STATISTICS_GUIDELINES.md §12 (what to report) and the re
+MS-LAY-001	active	MANUSCRIPT_GUIDELINES.md	The manuscript lives in the project repository, in paper/ (the default layout of
+MS-LAY-002	active	MANUSCRIPT_GUIDELINES.md	Papers and other documents the text relies on are read-only inputs, kept in
+MS-LAY-003	active	MANUSCRIPT_GUIDELINES.md	The terms of the manuscript are the controlled vocabulary of the project
+MS-REP-001	active	MANUSCRIPT_GUIDELINES.md	The target venue, the date its criteria and author instructions were consulted, 
+MS-REP-002	active	MANUSCRIPT_GUIDELINES.md	The manuscript format and build command, the generated values file, the claims t
+MS-REP-003	active	MANUSCRIPT_GUIDELINES.md	Submission and revision tags with the runs each uses (MS-TRACE-004, MS-RESP-003)
+MS-REP-004	active	MANUSCRIPT_GUIDELINES.md	How AI tools were used in writing and review, for the disclosure the venue requi
+MS-RESP-001	active	MANUSCRIPT_GUIDELINES.md	A question from a reviewer, editor or co-author is answered, not acted on (AGT-U
+MS-RESP-002	active	MANUSCRIPT_GUIDELINES.md	The response letter quotes each point, answers it and gives the location of each
+MS-RESP-003	active	MANUSCRIPT_GUIDELINES.md	Each revision is a tagged commit (MS-TRACE-004, submission tags), so that a mark
+MS-RESP-004	active	MANUSCRIPT_GUIDELINES.md	Check whether revision rounds converge (AGT-LOOP-002, convergence of revision lo
+MS-REV-001	active	MANUSCRIPT_GUIDELINES.md	Before submission, review the manuscript along independent dimensions, each by a
+MS-REV-002	active	MANUSCRIPT_GUIDELINES.md	Each finding states its location (section, paragraph, figure, table, equation), 
+MS-REV-003	active	MANUSCRIPT_GUIDELINES.md	Review against the venue's current criteria: look up its reviewer guidelines and
+MS-REV-004	active	MANUSCRIPT_GUIDELINES.md	MUST NOT apply review changes without the author's approval of each item. Approv
+MS-REV-005	active	MANUSCRIPT_GUIDELINES.md	After applying changes, verify them: every approved change is implemented as spe
+MS-TRACE-001	active	MANUSCRIPT_GUIDELINES.md	Every figure and table is produced by a script from an explicit run, never from 
+MS-TRACE-002	active	MANUSCRIPT_GUIDELINES.md	Every number in the text comes from a generated file. The analysis writes the va
+MS-TRACE-003	active	MANUSCRIPT_GUIDELINES.md	Broken or superseded runs are moved out of reach: to results/_ARCHIVE/<run>/, wi
+MS-TRACE-004	active	MANUSCRIPT_GUIDELINES.md	Before each submission, regenerate every figure, table and number from a clean c
+MS-TRACE-005	active	MANUSCRIPT_GUIDELINES.md	Data and code availability statements name what a reader needs to obtain them: a
+MS-WRITE-001	active	MANUSCRIPT_GUIDELINES.md	Say what is computed and what it gives. Avoid figurative verbs ("pushes the erro
+MS-WRITE-002	active	MANUSCRIPT_GUIDELINES.md	Write for the reader who acts on the text. Documents for funders, committees and
+MS-WRITE-003	active	MANUSCRIPT_GUIDELINES.md	Text drafted or revised by an AI is the authors' responsibility, checked by them
+MS-WRITE-004	active	MANUSCRIPT_GUIDELINES.md	A rewrite by a second model or service gets a brief and is checked against it. T
+MS-WRITE-005	active	MANUSCRIPT_GUIDELINES.md	Give an honest assessment, not compliance. When asked to improve a manuscript, s
 SC-ANNOT-001	active	SCRNASEQ_GUIDELINES.md	Annotate in three steps: automatic, manual review with known markers, verificati
 SC-ANNOT-002	active	SCRNASEQ_GUIDELINES.md	With a reference atlas: label transfer (scANVI) or CellTypist with a pretrained 
 SC-ANNOT-003	active	SCRNASEQ_GUIDELINES.md	With a marker dictionary and no reference (frequent case): CellTypist does not a
