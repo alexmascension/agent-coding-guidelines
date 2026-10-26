@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.4.0 (2026-10-24)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.5.0 (2026-10-26)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -42,7 +42,7 @@
   * PATCH: wording or clarifications that do not change what a rule requires.
 * `CODE-USE-008` **Rule identifiers.** Every rule (top-level list item of a section with rules) carries a stable
   identifier `PREFIX-TOPIC-NNN` written as inline code after its list marker, e.g. `SC-QC-004`: the prefix names
-  the guide (`CODE`, `STAT`, `BULK`, `SC`, `SP`, `META`, `SEX`, `ID`, `DECON`, `HPC`), the topic names the section where the
+  the guide (`CODE`, `STAT`, `BULK`, `SC`, `SP`, `META`, `SEX`, `ID`, `DECON`, `HPC`, `AGT`), the topic names the section where the
   rule was created, and the number is sequential within the topic.
   * Identifiers are never renumbered or reused. A rule moved to another section keeps its identifier; a removed
     rule's identifier is marked `retired` in `RULE_IDS.tsv`; a new rule takes the next free number of its topic
@@ -73,8 +73,9 @@ Every project developed with agents MUST contain at least:
 Add further documents only when they carry information that does not fit the above, e.g.
 `PROJECT_SCOPE.md` (scientific scope and design rationale), `DECISIONS.md` (if the decisions log
 outgrows `PROJECT_CONTEXT.md`), copied domain guidelines in `guidelines/` (`STATISTICS_GUIDELINES.md`,
-`FIGURE_GUIDELINES.md`, `RNASEQ_BULK_GUIDELINES.md`, …), and, for repositories that are published,
-`LICENSE`, `CITATION.cff` and `CHANGELOG.md`.
+`FIGURE_GUIDELINES.md`, `RNASEQ_BULK_GUIDELINES.md`, …), handoff files in `handoffs/` (`AGENTIC_GUIDELINES.md`
+§11, sessions and handoffs), and, for repositories that are published, `LICENSE`, `CITATION.cff` and
+`CHANGELOG.md`.
 
 ### `AGENTS.md` template
 
@@ -89,7 +90,8 @@ Before any work in this repository, read and follow, in this order:
 1. `PROJECT_CONTEXT.md` — project-specific decisions; its *Overrides* section takes
    precedence over the guidelines for the rules it lists.
 2. `guidelines/CODING_GUIDELINES.md` — general development rules.
-3. Domain guidelines in `guidelines/` (`*_GUIDELINES.md`; site profiles in `guidelines/hpc_sites/`), when the task
+3. `guidelines/AGENTIC_GUIDELINES.md` — how to scope, verify, report, delegate and hand over work.
+4. Domain guidelines in `guidelines/` (`*_GUIDELINES.md`; site profiles in `guidelines/hpc_sites/`), when the task
    touches them.
 ```
 
@@ -624,6 +626,9 @@ interface, a threshold or a data invariant MUST update it in the same change.
 
 ## 25. Working process (agents)
 
+How agents scope, verify, report, delegate and hand over work is in `AGENTIC_GUIDELINES.md`, which builds on the
+rules of this section.
+
 * `CODE-AGENT-001` **Ask before assuming when a request admits more than one reading that changes the result**: a
   vague instruction, a term that can name more than one thing (two files, samples, rules or versions with the same
   name), or an unstated scope. First resolve what the project answers (code, `PROJECT_CONTEXT.md`, the decisions
@@ -659,6 +664,8 @@ interface, a threshold or a data invariant MUST update it in the same change.
 
 Available in the same repository; copy the ones relevant to the project:
 
+* `AGENTIC_GUIDELINES.md` — agent working discipline: scope, evidence, verification, claims, decisions, batches,
+  delegation, confidential material, handoffs, iteration. Copy it into every project developed with agents.
 * `STATISTICS_GUIDELINES.md` — experimental design, test choice, multiple testing, reporting.
 * `FIGURE_GUIDELINES.md` — chart choice, colour, layout, export (planned; not yet available).
 * `RNASEQ_BULK_GUIDELINES.md` — bulk RNA-seq from reads to differential expression and enrichment.

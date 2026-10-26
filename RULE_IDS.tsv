@@ -1,4 +1,68 @@
 id	status	guide	summary
+AGT-BATCH-001	active	AGENTIC_GUIDELINES.md	A batch runs under a written brief: the question, the authorised scope, the budg
+AGT-BATCH-002	active	AGENTIC_GUIDELINES.md	Stop and report when the questions are answered, the budget is spent, or the nex
+AGT-BATCH-003	active	AGENTIC_GUIDELINES.md	Run a long batch in stages whose state lives on disk, so that each stage can sta
+AGT-BATCH-004	active	AGENTIC_GUIDELINES.md	The closing report states what was attempted, passed, failed and remains uncerta
+AGT-BATCH-005	active	AGENTIC_GUIDELINES.md	An unattended or scheduled agent has no one to approve its commands. Before sche
+AGT-BATCH-006	active	AGENTIC_GUIDELINES.md	MUST NOT rephrase, split or wrap a command to get past an approval prompt or a s
+AGT-CHAL-001	active	AGENTIC_GUIDELINES.md	Before committing to a plan or reporting a finding, make one honest attempt to r
+AGT-CHAL-002	active	AGENTIC_GUIDELINES.md	For results others will build on, use a reviewer with a fresh context (a subagen
+AGT-CHAL-003	active	AGENTIC_GUIDELINES.md	Treat adversarial or delegated output as raw material. Report "the reviewer argu
+AGT-CHAL-004	active	AGENTIC_GUIDELINES.md	Hold positions on merit. When a challenge fails, keep the position and say why; 
+AGT-CLAIM-001	active	AGENTIC_GUIDELINES.md	Bound universal and negative claims by what was checked: "no caller was found in
+AGT-CLAIM-002	active	AGENTIC_GUIDELINES.md	MUST NOT assert an absence from a single search. A failed search and an empty on
+AGT-CLAIM-003	active	AGENTIC_GUIDELINES.md	Regenerate each reported number from its source when writing it; MUST NOT copy i
+AGT-CLAIM-004	active	AGENTIC_GUIDELINES.md	State which kind of evidence a result provides: reproducibility (the recorded pr
+AGT-CLAIM-005	active	AGENTIC_GUIDELINES.md	Label exploratory results as exploratory. A criterion chosen after seeing the ou
+AGT-CLAIM-006	active	AGENTIC_GUIDELINES.md	A report leads with the outcome, in words the user could repeat to someone outsi
+AGT-CLAIM-007	active	AGENTIC_GUIDELINES.md	Use the reader's words, not the session's. Replace labels coined during the work
+AGT-DEL-001	active	AGENTIC_GUIDELINES.md	Delegate by kind of work. Mechanical, well-specified work (searching, extracting
+AGT-DEL-002	active	AGENTIC_GUIDELINES.md	A delegation brief carries its own authority: the question, the sources, what th
+AGT-DEL-003	active	AGENTIC_GUIDELINES.md	A subagent does not see the project's instructions unless it is given them. The 
+AGT-DEL-004	active	AGENTIC_GUIDELINES.md	Judge a subagent by what it produced, not by its report that it finished. Check 
+AGT-DEL-005	active	AGENTIC_GUIDELINES.md	Check long lists of independent items one item per fresh context: claims against
+AGT-DEL-006	active	AGENTIC_GUIDELINES.md	Use a subagent for substantial reading that would otherwise fill the main contex
+AGT-EVID-001	active	AGENTIC_GUIDELINES.md	MUST NOT argue from memory about an artefact that can be read. Read the file, ta
+AGT-EVID-002	active	AGENTIC_GUIDELINES.md	Check that a file or resource named in a request exists and matches its descript
+AGT-EVID-003	active	AGENTIC_GUIDELINES.md	Look up any tool, version, method, model or paper that cannot be placed with con
+AGT-EVID-004	active	AGENTIC_GUIDELINES.md	Prefer primary sources, and trace derived material to them. Summaries, notes, ha
+AGT-EVID-005	active	AGENTIC_GUIDELINES.md	A status file, meeting note or handoff is a dated snapshot, not evidence of the 
+AGT-EVID-006	active	AGENTIC_GUIDELINES.md	Read papers and long documents as text converted on the machine (the LaTeX sourc
+AGT-LOOP-001	active	AGENTIC_GUIDELINES.md	When stuck, change the question, not the effort. Re-running a failing approach h
+AGT-LOOP-002	active	AGENTIC_GUIDELINES.md	After two or three rounds of revision, check whether the loop converges (rounds 
+AGT-LOOP-003	active	AGENTIC_GUIDELINES.md	Check for drift from the original motivation: complete the sentence "this versio
+AGT-LOOP-004	active	AGENTIC_GUIDELINES.md	Triage an idea before investing substantial compute or time in it. Write down th
+AGT-LOOP-005	active	AGENTIC_GUIDELINES.md	Fix predictions before the pilot: the predicted direction and rough size of the 
+AGT-PRIV-001	active	AGENTIC_GUIDELINES.md	Whatever an agent reads is sent to its model provider. Before reading, uploading
+AGT-PRIV-002	active	AGENTIC_GUIDELINES.md	MUST NOT read individual-level controlled-access or personal data into the agent
+AGT-PRIV-003	active	AGENTIC_GUIDELINES.md	MUST NOT send a manuscript, grant application or report received for confidentia
+AGT-PRIV-004	active	AGENTIC_GUIDELINES.md	SHOULD NOT send the full text of a subscription paper to an AI service. Use an o
+AGT-PROP-001	active	AGENTIC_GUIDELINES.md	Scale the rigour of this guide to the cost of being wrong. Ask what a mistake wo
+AGT-PROP-002	active	AGENTIC_GUIDELINES.md	Within a task, spend the effort where the risk is: on the parts the scope flagge
+AGT-REP-001	active	AGENTIC_GUIDELINES.md	The handoff files in use (§11, sessions and handoffs) and the workstream that ow
+AGT-REP-002	active	AGENTIC_GUIDELINES.md	Standing authorisations for batches (§8, unattended and batch work), with their 
+AGT-REP-003	active	AGENTIC_GUIDELINES.md	Material the agent must not read and why (§10, confidential and licensed materia
+AGT-REP-004	active	AGENTIC_GUIDELINES.md	The models or model tiers used for delegation, if the project fixes them (§9, de
+AGT-SCOPE-001	active	AGENTIC_GUIDELINES.md	Before substantive work, state the goal in one sentence and what "done" will loo
+AGT-SCOPE-002	active	AGENTIC_GUIDELINES.md	List the main risks, not only the steps: the assumptions being made, the two or 
+AGT-SCOPE-003	active	AGENTIC_GUIDELINES.md	Before an expensive run, decide what it must keep for its result to be checked a
+AGT-SESS-001	active	AGENTIC_GUIDELINES.md	Keep the changing state of the project in a handoff file, handoffs/CURRENT.md: t
+AGT-SESS-002	active	AGENTIC_GUIDELINES.md	A new session reads the handoff first and checks it against the live state (git 
+AGT-SESS-003	active	AGENTIC_GUIDELINES.md	Update the handoff whenever that state changes, keeping the previous version (in
+AGT-SESS-004	active	AGENTIC_GUIDELINES.md	Parallel lines of work keep one handoff each, handoffs/<workstream>.md, rewritte
+AGT-SESS-005	active	AGENTIC_GUIDELINES.md	The conversation is not the archive. Sources, scripts, outputs, decisions and le
+AGT-SESS-006	active	AGENTIC_GUIDELINES.md	When the task changes during a long session, update the handoff and propose a fr
+AGT-USER-001	active	AGENTIC_GUIDELINES.md	A question is not a change request. When the user asks a question, or relays one
+AGT-USER-002	active	AGENTIC_GUIDELINES.md	Do the work before handing a step to the user. Before asking for a file, search 
+AGT-USER-003	active	AGENTIC_GUIDELINES.md	Put decisions so they can be answered. One or two decisions go in the reply, eac
+AGT-USER-004	active	AGENTIC_GUIDELINES.md	Record each substantive decision in the decisions log when it is made: the date,
+AGT-USER-005	active	AGENTIC_GUIDELINES.md	Turn a correction into a rule at the narrowest scope where it applies. Restate t
+AGT-VER-001	active	AGENTIC_GUIDELINES.md	Verify against the intended outcome, not against a rule written to stand for it.
+AGT-VER-002	active	AGENTIC_GUIDELINES.md	A finished process is not a result. A zero exit code, a completed job or a well-
+AGT-VER-003	active	AGENTIC_GUIDELINES.md	MUST NOT loosen an acceptance criterion, expected value or test to obtain a pass
+AGT-VER-004	active	AGENTIC_GUIDELINES.md	Before fixing a discrepancy, read the underlying material to choose the referenc
+AGT-VER-005	active	AGENTIC_GUIDELINES.md	Test that the workflow refuses bad input, with negative controls, known cases or
+AGT-VER-006	active	AGENTIC_GUIDELINES.md	Every claim of progress or completion maps to an observation made in this sessio
 BULK-DE-001	active	RNASEQ_BULK_GUIDELINES.md	Default in Python: pydeseq2 [Muzellec 2023]; R options: DESeq2 [Love 2014†; Love
 BULK-DE-002	active	RNASEQ_BULK_GUIDELINES.md	Wald test for a two-level contrast; likelihood-ratio test for factors with sever
 BULK-DE-003	active	RNASEQ_BULK_GUIDELINES.md	Shrunken log fold changes for ranking and plots [Zhu 2018†]; keep unshrunken est

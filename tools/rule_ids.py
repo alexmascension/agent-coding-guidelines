@@ -38,6 +38,7 @@ PREFIX = {
     "SAMPLE_IDENTITY_GUIDELINES.md": "ID",
     "DECONVOLUTION_GUIDELINES.md": "DECON",
     "HPC_GUIDELINES.md": "HPC",
+    "AGENTIC_GUIDELINES.md": "AGT",
 }
 # Topic code per section number. Sections absent from a map contain no rules: scope and audience
 # notes (§0 of the
@@ -169,6 +170,21 @@ TOPIC = {
         7: "PROV",
         8: "AGENT",
         9: "REP",
+    },
+    "AGT": {
+        1: "PROP",
+        2: "SCOPE",
+        3: "EVID",
+        4: "CHAL",
+        5: "VER",
+        6: "CLAIM",
+        7: "USER",
+        8: "BATCH",
+        9: "DEL",
+        10: "PRIV",
+        11: "SESS",
+        12: "LOOP",
+        13: "REP",
     },
 }
 # Subsections with their own topic (overrides the section topic from the subsection heading on).

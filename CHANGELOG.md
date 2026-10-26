@@ -5,6 +5,49 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-26 (agentic guidelines)
+
+### AGENTIC_GUIDELINES.md [1.0.0]
+
+#### Added
+
+- New guide (prefix `AGT`): how agents scope, verify, report, delegate and hand over work. Proportionality (§1);
+  scope and main risks before work (§2); evidence before reasoning: read rather than recall, look up what cannot be
+  placed, trace derived material to primary sources (§3); one honest refutation attempt before committing (§4);
+  verification against the intended outcome, finished runs are not results, no loosening of criteria (§5); bounded
+  universal and negative claims, regenerated numbers, kinds of evidence (§6); questions are not change requests,
+  decisions put so they can be answered, corrections recorded at the narrowest scope (§7); unattended batches
+  under a written brief (§8); delegation to subagents (§9); confidential and licensed material (§10); handoffs
+  between sessions (§11); convergence of revision loops and idea triage (§12); what to record in
+  `PROJECT_CONTEXT.md` (§13).
+- Adapted in part from the Co-Scientist toolkit (Shocklab, University of Cape Town,
+  <https://github.com/shocklab/co-scientist-toolkit>, CC BY 4.0): `guidance/CLAUDE-starter.md`,
+  `guidance/paper-CLAUDE.md`, `guidance/handoff-CURRENT.md` and the skills `fable-mode`, `pre-register`,
+  `convergence-check`, `decision-page` and `claim-fact-checker`.
+- The working-process rules `CODE-AGENT-001` to `CODE-AGENT-007` stay in `CODING_GUIDELINES.md` §25; the new guide
+  refers to them and does not repeat them.
+
+### CODING_GUIDELINES.md [3.5.0]
+
+#### Changed
+
+- §2 (documentation set): the `AGENTS.md` template lists `guidelines/AGENTIC_GUIDELINES.md` after this file;
+  handoff files in `handoffs/` added to the optional documents.
+- `CODE-USE-008`: prefix `AGT` added to the list of guide prefixes.
+- §25 (working process): points to `AGENTIC_GUIDELINES.md`. §26 (related guidelines): lists it, to be copied into
+  every project developed with agents.
+
+### STATISTICS_REFERENCES.md
+
+- [Si 2025] (ideation-execution gap; arXiv preprint), section L; cited by `AGENTIC_GUIDELINES.md` §12.
+
+### Repository
+
+#### Changed
+
+- `tools/rule_ids.py`: prefix `AGT` and its topics.
+- `README.md`: contents table, copy example and licence note with the attribution of the adapted text.
+
 ## 2026-10-24 (repository layout)
 
 ### CODING_GUIDELINES.md [3.4.0]
