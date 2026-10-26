@@ -12,6 +12,7 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 | File | Scope | Status |
 |---|---|---|
 | `guidelines/CODING_GUIDELINES.md` | Code, data, provenance, reproducibility, testing, project documentation (`AGENTS.md`, `PROJECT_CONTEXT.md`) | stable |
+| `guidelines/AGENTIC_GUIDELINES.md` | Agent working discipline: scope, evidence, verification, claims, decisions, unattended batches, delegation, confidential material, handoffs, iteration | new |
 | `guidelines/STATISTICS_GUIDELINES.md` | Design, test choice, multiple testing, resampling, reporting | stable |
 | `guidelines/RNASEQ_BULK_GUIDELINES.md` | Bulk RNA-seq from reads to differential expression and enrichment | stable |
 | `guidelines/SCRNASEQ_GUIDELINES.md` | Single-cell and single-nucleus RNA-seq (10x, STARsolo, scverse) | stable |
@@ -41,7 +42,7 @@ TCR/BCR.
    ```bash
    UPSTREAM=/path/to/agent-coding-guidelines   # a clone at a pinned commit
    mkdir -p guidelines/references
-   cp "$UPSTREAM"/guidelines/{CODING,STATISTICS,SCRNASEQ}_GUIDELINES.md guidelines/
+   cp "$UPSTREAM"/guidelines/{CODING,AGENTIC,STATISTICS,SCRNASEQ}_GUIDELINES.md guidelines/
    cp "$UPSTREAM"/references/* guidelines/references/
    mkdir -p guidelines/hpc_sites && cp "$UPSTREAM"/guidelines/hpc_sites/DIPC_HYPERION.md guidelines/hpc_sites/  # clusters only
    ```
@@ -84,3 +85,10 @@ removing a call to R also triggers the R job. Scheduled and manual runs run ever
 ## License
 
 MIT (`LICENSE`), for the guidelines, references and code.
+
+`guidelines/AGENTIC_GUIDELINES.md` adapts text from the Co-Scientist toolkit by the Shocklab, University of Cape
+Town (<https://github.com/shocklab/co-scientist-toolkit>), licensed under
+[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/): its working rules (`guidance/CLAUDE-starter.md`,
+`guidance/paper-CLAUDE.md`, `guidance/handoff-CURRENT.md`) and the skills `fable-mode`, `pre-register`,
+`convergence-check`, `decision-page` and `claim-fact-checker`. The text was rewritten as rules, generalised and
+extended; §0 of the guide lists the sources.
