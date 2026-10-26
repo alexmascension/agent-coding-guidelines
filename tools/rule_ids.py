@@ -185,7 +185,11 @@ TOPIC = {
         10: "PRIV",
         11: "SESS",
         12: "LOOP",
-        13: "REP",
+        13: "INTENT",
+        14: "PLAN",
+        15: "REV",
+        16: "INSTR",
+        17: "REP",
     },
     "MS": {
         1: "LAY",

@@ -6,6 +6,58 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-10-26 (agent behaviour from superpowers)
+
+### AGENTIC_GUIDELINES.md [1.1.0]
+
+#### Added
+
+- §13 *Eliciting intent* (`AGT-INTENT-001` to `AGT-INTENT-010`): a private check of what is known about what the
+  user wants and why; look before asking; a first message that restates the request and asks the one question that
+  would most change the result; one open question per message; play-back in parts, with the agent's proposals and
+  defaults marked as such; two or three approaches with a recommendation; sizing and a written design; a check of
+  the design by a fresh reader playing the implementer; no building of a project before its design is approved,
+  except after an opt-out or for an agreed throwaway spike.
+- §14 *Plans* (`AGT-PLAN-001` to `AGT-PLAN-005`): what a plan records, task size, a specification's silence is not
+  permission, self-review against the specification, execution from the plan text.
+- §15 *Reviews* (`AGT-REV-001` to `AGT-REV-006`): fresh-context, read-only review from files; findings by severity
+  with a verdict and a list of what was set aside; no pre-judging in the reviewer's brief; receiving feedback by
+  checking it; no performative agreement; external suggestions checked before adoption.
+- §16 *Writing instructions for agents* (`AGT-INSTR-001` to `AGT-INSTR-008`): instructions written for observed
+  failures, in the form that fits the failure; no nuance or exemption clauses; wording tested against a
+  no-guidance control; descriptions say when, not what; mechanical checks automated; persuasive framing only in the
+  user's interest; proposals upstream state their motivating case and who drafted them.
+- `AGT-EVID-007` (read the current text of an instruction), `AGT-VER-007` to `AGT-VER-009` (the check that proves a
+  claim, completion item by item, checks on what is delivered), `AGT-CLAIM-008` (every observed failure reported),
+  `AGT-BATCH-007` to `AGT-BATCH-009` (rulings recorded and reported, no check-ins within a batch, the ledger
+  outranks memory), `AGT-DEL-007` to `AGT-DEL-011` (context constructed for subagents, report contract, workers do
+  not dispatch agents, parallel work only on independent problems, models chosen by turns), `AGT-LOOP-006` (three
+  failed attempts: question the approach), `AGT-REP-005`.
+
+#### Changed
+
+- `AGT-SCOPE-001`: points to §13 for open-ended work. `AGT-BATCH-002`: irreversible, security-sensitive and unnamed
+  external actions, and a broken plan, also stop a batch; ambiguities of implementation do not.
+- *What to record in `PROJECT_CONTEXT.md`* moves from §13 to §17; identifiers unchanged.
+- Adapted in part from superpowers (Jesse Vincent and Prime Radiant, <https://github.com/obra/superpowers>, MIT
+  licence, commit `2ce8aa1`): skills `brainstorming`, `writing-plans`, `executing-plans`, `requesting-code-review`,
+  `receiving-code-review`, `verification-before-completion`, `subagent-driven-development`,
+  `dispatching-parallel-agents`, `systematic-debugging` (one rule) and `writing-skills` with its references, and the
+  design notes on brainstorming and on positive instructions. Test-driven development, test quality and debugging
+  techniques are deferred to a later round of `CODING_GUIDELINES.md`.
+
+### STATISTICS_REFERENCES.md
+
+- [Meincke 2026] (persuasion principles and LLM compliance, PNAS), section L; metadata checked against Crossref,
+  figures against the abstract (Europe PMC). Cited by `AGENTIC_GUIDELINES.md` §16.
+
+### Repository
+
+#### Changed
+
+- `tools/rule_ids.py`: topics of `AGENTIC_GUIDELINES.md` §13 to §17.
+- `README.md`: licence note with the attribution of the text adapted from superpowers.
+
 ## 2026-10-26 (upstream sources: registry and monthly check)
 
 ### Repository

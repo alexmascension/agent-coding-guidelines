@@ -124,3 +124,9 @@ The rules added to `guidelines/CODING_GUIDELINES.md` in 3.7.0 (`CODE-LANG-004` s
 
 `STAT-DES-010` to `STAT-DES-012` in `guidelines/STATISTICS_GUIDELINES.md` 2.1.0 adapt the forking-paths guard, the
 append-only deviations and the pilot decision rule of the toolkit's `pre-register` skill (CC BY 4.0).
+
+`guidelines/AGENTIC_GUIDELINES.md` 1.1.0 also adapts text from superpowers by Jesse Vincent and Prime Radiant
+(<https://github.com/obra/superpowers>, MIT licence, Copyright (c) 2025 Jesse Vincent): the skills `brainstorming`,
+`writing-plans`, `executing-plans`, `requesting-code-review`, `receiving-code-review`,
+`verification-before-completion`, `subagent-driven-development`, `dispatching-parallel-agents`,
+`systematic-debugging` and `writing-skills`, and two of its design notes. §0 of the guide lists the sources.

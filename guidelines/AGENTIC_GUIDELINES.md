@@ -1,6 +1,6 @@
 # Agentic guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.0 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-26)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -23,9 +23,15 @@
 * Sources: several rules adapt the working rules and skills of the Co-Scientist toolkit (Shocklab, University of
   Cape Town; <https://github.com/shocklab/co-scientist-toolkit>; text licensed under CC BY 4.0), in particular
   `guidance/CLAUDE-starter.md`, `guidance/paper-CLAUDE.md`, `guidance/handoff-CURRENT.md` and the skills
-  `fable-mode`, `pre-register`, `convergence-check`, `decision-page` and `claim-fact-checker`. They were rewritten
-  as rules with identifiers, generalised beyond one agent and platform, linked to the other guides of this
-  repository and given examples from computational biology.
+  `fable-mode`, `pre-register`, `convergence-check`, `decision-page` and `claim-fact-checker`. Others adapt the
+  skills of superpowers (Jesse Vincent and Prime Radiant; <https://github.com/obra/superpowers>; MIT licence;
+  reviewed at commit `2ce8aa1`): `brainstorming` (§13), `writing-plans` and `executing-plans` (§14),
+  `requesting-code-review` and `receiving-code-review` (§15), `writing-skills` with its references and the
+  design note on positive instructions (§16), and `verification-before-completion`, `subagent-driven-development`,
+  `dispatching-parallel-agents` and `systematic-debugging` (rules in §3, §5, §6, §8, §9 and §12). All of them were
+  rewritten as rules with identifiers, generalised beyond one agent and platform, linked to the other guides of
+  this repository and given examples from computational biology. The repositories and the commits reviewed are
+  listed in `references/SOURCE_REPOS.toml` upstream.
 
 ## 1. Proportionality
 
@@ -44,7 +50,8 @@
 
 * `AGT-SCOPE-001` **Before substantive work, state the goal in one sentence and what "done" will look like**: an
   artefact, a passing check, a decision with stated confidence. If the done-condition cannot be stated, the task is
-  not yet understood; resolve that first (`CODE-AGENT-001`, ambiguous requests).
+  not yet understood; resolve that first: for a defined task, by asking about the ambiguity (`CODE-AGENT-001`,
+  ambiguous requests); for open-ended work, by eliciting what the user wants (§13, eliciting intent).
 * `AGT-SCOPE-002` **List the main risks, not only the steps**: the assumptions being made, the two or three most
   likely ways the work fails, and for each, the evidence that would settle it and when in the work it will arrive.
   Do the uncertain parts first.
@@ -86,6 +93,10 @@
   search them, rather than reading page images.
   * *Why:* converted text can be searched, quoted exactly and re-read in a later session without converting it
     again; tables converted separately keep their columns.
+* `AGT-EVID-007` **Read the current text of an instruction before applying it**: the guideline section, the brief,
+  the plan task or the skill, not the version remembered from earlier in the session or from another project.
+  * *Why:* a remembered rule is a paraphrase of an older version, and the details that make it binding
+    (thresholds, exceptions, exact values) are the first to be lost; guides are versioned and change.
 
 ## 4. Challenging conclusions
 
@@ -132,6 +143,15 @@
 * `AGT-VER-006` **Every claim of progress or completion maps to an observation made in this session**: a command
   output, a test run, a file read. Anything else is reported as not verified (`CODE-VAL-002`, `CODE-VAL-003`,
   claims about validation). One clean run of an intermittent failure is not a fix; report it as intermittent.
+* `AGT-VER-007` **Run the check that proves a statement about the work before making it.** Name the command or
+  observation that would show the claim, run it in full on the current state, read its whole output (exit status,
+  number of failures, warnings), and only then state the claim, with the evidence. Words that announce success
+  before that ("should pass now", "looks correct", "done") signal that the check was skipped.
+  * *Why:* confidence and the memory of an earlier run feel like evidence and are not.
+* `AGT-VER-008` **Check completion against the request, item by item.** Re-read the request, plan or brief, list
+  what it asks for and check each item; passing tests show only that the tested items work.
+* `AGT-VER-009` **A check proves the state it ran on.** Run the checks on what is delivered or integrated (the final
+  commit, the merged result, the output files as written), not on an earlier state of the work.
 
 ## 6. Claims and reports
 
@@ -163,6 +183,9 @@
 * `AGT-CLAIM-007` **Use the reader's words, not the session's.** Replace labels coined during the work ("the v2
   filter", "case B") with what they name; explain a term the reader may not know on first use; a count names its
   members ("four models": which four). Complements `CODE-DOC-005` (self-contained documents).
+* `AGT-CLAIM-008` **Report every failure observed during the work**, including failures the agent did not cause
+  and failures outside the task's scope: name the test, job or check and what it showed. A failure seen and not
+  mentioned makes the report false by omission.
 
 ## 7. Working with the user
 
@@ -199,7 +222,10 @@
   `CODE-AGENT-005` (expensive jobs) refer to.
 * `AGT-BATCH-002` **Stop and report** when the questions are answered, the budget is spent, or the next step needs
   a scientific decision. Changes to the question, the acceptance thresholds, data access or resource limits, and
-  any action outside the environment that the brief does not name, go back to the user.
+  any action outside the environment that the brief does not name, go back to the user. So do an irreversible or
+  destructive action, a security-sensitive action, a side effect the brief does not name (a merge, a push to a
+  shared branch, a publication, a job submission), and a plan so broken that every way forward is a guess.
+  Ambiguities of implementation are not reasons to stop (`AGT-BATCH-007`).
 * `AGT-BATCH-003` **Run a long batch in stages whose state lives on disk**, so that each stage can start in a fresh
   session: the budget used, the open questions, and for each unit whether the worker finished and, separately,
   whether its result was accepted.
@@ -212,6 +238,23 @@
   * *Why:* a run that stops at an approval prompt waits or is killed, and can still be listed as finished.
 * `AGT-BATCH-006` **MUST NOT rephrase, split or wrap a command to get past an approval prompt or a safeguard**
   (`CODE-AGENT-004`, deletion and overwriting). If a needed action is blocked, report it.
+* `AGT-BATCH-007` **Within an authorised batch, settle ambiguities of implementation and record each decision as
+  a ruling.** Conflicts between tasks, gaps in the plan and choices the brief leaves open are decided with the
+  specification as the authority, and written to the run's ledger as
+  `Ruling: <decision> — <reason> — <cost if wrong>`. The closing report (`AGT-BATCH-004`) lists every ruling, in
+  order. Scientific decisions are not rulings: they stop the batch (`AGT-BATCH-002`).
+  * *Why:* a run parked on a question the agent could settle costs the user's day; a ruling costs rework the user
+    can see and undo. A ruling left out of the report is a decision made on the user's behalf in secret.
+  * *Trade-off:* some rulings will be wrong; the cost stated with each tells the user which to check first.
+* `AGT-BATCH-008` **Within an authorised batch, do not stop to ask whether to continue.** Progress goes to the
+  ledger, with at most one short line of narration between steps; the user is interrupted only for what
+  `AGT-BATCH-002` names.
+* `AGT-BATCH-009` **The ledger is written as the work happens and outranks memory.** One line per completed unit
+  (what, the commits or outputs, the check result), written in the same step as the commit or output it records;
+  after any loss of context (a new session, a summarised conversation), resume from the ledger and the version
+  history, not from recollection.
+  * *Why:* in long delegated runs, agents that lost their place have re-run entire sequences of completed work,
+    the most expensive failure superpowers recorded for subagent-driven development.
 
 ## 9. Delegation to subagents
 
@@ -240,6 +283,31 @@
     fan-out (`CODE-AGENT-005`, expensive jobs).
 * `AGT-DEL-006` **Use a subagent for substantial reading** that would otherwise fill the main context (a long
   paper, many files), not for a lookup in one or two files.
+* `AGT-DEL-007` **Construct the subagent's context; never pass the session's history.** The dispatch contains:
+  one line on where the task fits; the path of the file that holds its requirements, with exact values only
+  there; the interfaces and decisions from earlier work that it needs; the resolution of any ambiguity noticed in
+  the requirements; and the path of its report file with the report contract (`AGT-DEL-008`). Artefacts
+  (requirements, diffs, summaries of data) are handed over as files, not pasted.
+  * *Why:* everything pasted into a dispatch, or printed back, stays in the orchestrator's context and is re-read
+    on every later turn; pasted history buries the task, and values copied into several places diverge.
+* `AGT-DEL-008` **Workers report to a contract.** The full report goes to the named file; the reply is short: a
+  status (`DONE`, `DONE_WITH_CONCERNS`, `BLOCKED`, `NEEDS_CONTEXT`), the commits or outputs produced, a one-line
+  summary of the checks and the concerns. Escalating is always acceptable: bad work is worse than no work. A
+  `BLOCKED` or `NEEDS_CONTEXT` report is answered by changing something (more context, a more capable model, a
+  smaller task, a corrected plan), never by sending the same request again.
+* `AGT-DEL-009` **Workers do not dispatch further agents**, neither helpers nor reviewers, unless the brief says so;
+  review is the orchestrator's (§15, reviews).
+  * *Why:* a reviewer spawned by a worker duplicates the review the orchestrator dispatches anyway, at full cost,
+    and its approval counts for nothing.
+* `AGT-DEL-010` **Run agents in parallel only on independent problems**: no shared files, outputs or resources, and
+  no result that depends on another. When they return, check that their changes do not conflict, run the full
+  checks on the combined result and spot-check each.
+* `AGT-DEL-011` **Choose models by the number of turns, not by the price per token** (refines `AGT-DEL-001`). The
+  cheapest tier suits work whose instructions contain everything to write (a transcription, a single-file
+  mechanical change); a mid tier is the floor for reviewers and for workers that work from prose; the most capable
+  tier is for design and for the final review of a whole result; after repeated failure, escalate one tier.
+  * *Why:* in superpowers' measured sessions the cheapest models took two to three times the turns on multi-step
+    work, and turns, not tokens, drive elapsed time and context cost.
 
 ## 10. Confidential and licensed material
 
@@ -313,8 +381,195 @@
   the outcome (thresholds, subsets, parameters) [Simmons 2011†]. Record them in the decisions log or in
   `PROJECT_SCOPE.md` (`STATISTICS_GUIDELINES.md` §1, design before analysis). Later changes are appended as dated
   deviations, never edited into the original.
+* `AGT-LOOP-006` **After three failed attempts at the same problem, stop and question the approach.** When each
+  fix reveals a new problem elsewhere, or needs ever larger changes, the setup (the design, the data model, the
+  structure of the pipeline) is the likely fault; say so, with the attempts as evidence, and discuss it with the
+  user before a fourth attempt.
+  * *Example:* a third adjustment of normalization that still leaves clusters driven by batch points at the design
+    (batch confounded with condition, `STAT-DES-004`), not at the normalization.
 
-## 13. What to record in `PROJECT_CONTEXT.md`
+## 13. Eliciting intent
+
+This section applies when the user asks for something new and open-ended (an analysis, a pipeline, a tool, a
+document) and what they want, or why, is not settled. Disambiguating a defined task follows `CODE-AGENT-001`.
+
+* `AGT-INTENT-001` **Start with a private check: what do I know about what the user wants, and why?** If everything
+  that matters is in the request ("rename this column", "rerun with seed 2"), do it and say what was done. If
+  something non-trivial is missing, start the conversation this section describes.
+  * *Why:* agents build what they believe the user wants, and that belief is usually thinner than it feels; an
+    agent that knows the why makes the many unstated decisions the way the user would.
+  * *Trade-off:* questions cost the user's time; the check keeps trivial requests cheap.
+* `AGT-INTENT-002` **Look before you ask.** Read what the user referred to (files, a plan, earlier conversation) and
+  what it connects to, until you can explain how the relevant parts work today and what the request would touch.
+  Never ask what the project already answers (`CODE-AGENT-001`).
+* `AGT-INTENT-003` **Make the first message move the work forward.** When the user has described what they want,
+  restate it in your own words (what, for whom, why), add what you found that bears on it (how the relevant parts
+  work, a constraint, a conflict, a cheaper path), and end with one question: the open point whose answer would
+  most change what gets built. When they have not, ask one open question, in their terms, about the biggest
+  unsettled point, and say what the answer would change. If they did not ask for a design conversation, offer once
+  to proceed without it; if they accept, state any significant choice of method or tool in one line and do the
+  work.
+* `AGT-INTENT-004` **Ask one question per message, open before closed.** Ask open questions first and offer a short
+  menu only when the user is stuck: options steer people towards the agent's assumptions. Build each question on
+  the last answer or on something found, say what the answer would change, and when the user says "just guess",
+  propose something concrete with its reason. Cover, as territory rather than as a script: what the thing is and
+  what makes it special; why now, and what success looks like; goals, non-goals and anti-goals (what would make it
+  a failure even if it technically works); prior art; the current state; the details the user cares about; and
+  which choices the user wants to make and which they hand over. This rhythm is for eliciting intent; the
+  questions that disambiguate a defined task are grouped (`CODE-AGENT-001`).
+  * *Example:* "If the gene list is for wet-lab validation I would favour precision and a short list; if it feeds
+    a screen, recall. Which is it for?"
+* `AGT-INTENT-005` **Play back what you understood, in parts.** As soon as one part is understood (its purpose, who
+  uses it, how one piece behaves), describe it back in about 200 to 300 words and ask what is wrong or missing.
+  Only what the user said goes in as theirs; anything the agent filled in goes in as a proposal with its reason,
+  and defaults are stated out loud.
+  * *Why:* a default the user never heard is one they could not reject.
+* `AGT-INTENT-006` **Lay out the approaches before writing anything up.** Generate several real ways of doing it,
+  drop the weak ones (including any that work against why the user wants it, or that the existing work rules out),
+  and present two or three, each grounded in what the project does, with its trade-off; recommend one and say
+  why, in a message of its own. When only one way is sensible, say why the others do not fit.
+* `AGT-INTENT-007` **Size the work and write it down.** Say how big the work is, in plain words; the user can
+  override it. A small change gets a short written summary of what was agreed. A project gets a design that a
+  competent person in the domain could plan from without going back to the user: the intent and why; goals,
+  non-goals and anti-goals; constraints; the approaches considered, the one chosen and why; the decisions the user
+  made; and what is left to the implementer. For an analysis, the design is its analysis plan (`STAT-DES-009` in
+  `STATISTICS_GUIDELINES.md`). It goes in `PROJECT_SCOPE.md` or where `PROJECT_CONTEXT.md` says (`AGT-REP-005`).
+  If the work grows, say so and move up a size; if it is several independent projects, agree an order and treat
+  them one at a time.
+* `AGT-INTENT-008` **Check a project's design with a fresh reader before handing it over.** A reviewer with a fresh
+  context, playing a competent implementer in the domain who cannot talk to the user, lists the questions it would
+  still need answered where a wrong guess would matter, most important first. Sort them: already answered (put the
+  answer in the design); minor (decide, and mark the decision as the agent's); the user's (only they can answer,
+  and the answer changes what gets built). Bring the user's questions in one message, update the design, and hand
+  it over with the list of decisions the agent made.
+* `AGT-INTENT-009` **MUST NOT build a project before the user has approved its written design.** Building includes
+  writing analysis or product code, scaffolding, installing dependencies, downloading data and launching runs;
+  reading and exploring are not building. Approval covers what the user was shown: agreement with an idea is not
+  approval of a design not yet written.
+  * *Deviate when:* the user opted out of the conversation (`AGT-INTENT-003`), or agreed to a spike
+    (`AGT-INTENT-010`).
+* `AGT-INTENT-010` **Offer a throwaway spike when building is the cheapest way to learn.** A quick prototype (a run
+  on a subset, a draft figure, a toy implementation) can show what the user wants or whether something works. A
+  spike is labelled throwaway, skips the plan, tests and review, and what it taught goes back into the
+  conversation; keeping what it produced is a new request that goes through `AGT-INTENT-009`.
+
+## 14. Plans
+
+A plan turns an approved design into tasks that another agent, or a later session, can carry out.
+
+* `AGT-PLAN-001` **A plan records the decisions the implementer cannot make alone**: which files are created or
+  changed and what each is responsible for; the interfaces between tasks (names, signatures, column names and
+  dtypes); the exact values the specification fixes; and, for every task, the check that proves it done (a test
+  or command with its expected result). Constraints that bind every task (versions, genome build and annotation
+  release, naming rules) are copied once, verbatim, at the top. A line that decides nothing ("TBD", "handle edge
+  cases") is a gap; a function body that the signature and the test already determine is a transcript.
+  * *Why:* an implementer that sees only its task can reconstruct anything except the decisions; a plan longer
+    than the code it describes has written the code instead.
+* `AGT-PLAN-002` **Tasks are the smallest units that carry their own check and are worth reviewing separately**;
+  each ends with a deliverable that can be checked on its own. Setup and documentation fold into the task whose
+  deliverable needs them; the steps of a task are single actions with a checkable result.
+* `AGT-PLAN-003` **A specification's silence is not permission.** List the inputs and conditions the specification
+  implies but no task checks, with the behaviour a reasonable user would expect, most likely first, and add a
+  check for each to the task that owns the code; reviewers grade such findings by their effect on that user.
+  * *Example:* a sample with zero cells of a type, a gene identifier absent from the annotation release, a filter
+    that leaves nothing, a group with a single sample.
+* `AGT-PLAN-004` **Review the plan against its specification before handing it over**: every requirement maps to a
+  task; names and types agree across tasks; no step is a gap or a transcript (`AGT-PLAN-001`); the checks of
+  `AGT-PLAN-003` are in place. Fix what the review finds, then hand the plan over.
+* `AGT-PLAN-005` **Execute from the plan, not from memory.** Read each task's text before doing it
+  (`AGT-EVID-007`); a departure from the plan is recorded as a ruling (`AGT-BATCH-007`), never made silently.
+
+## 15. Reviews
+
+* `AGT-REV-001` **Review delegated work, and any result before it is integrated, with a fresh-context reviewer.**
+  The reviewer receives the requirements, the implementer's account of what was built, and the change itself as
+  files (a diff, the outputs), never the session's history. It works read-only, does not dispatch further agents,
+  and reads the change rather than trusting the account.
+  * *Why:* the author of a change, and anyone who shares its context, share its blind spots (`AGT-CHAL-002`).
+* `AGT-REV-002` **A review states its findings so they can be acted on.** Strengths first, briefly; then findings
+  by severity (critical: wrong results, data loss, broken behaviour; important: to fix before proceeding; minor:
+  to note), each with its location, what is wrong, why it matters and the fix when it is not obvious; then a clear
+  verdict. The review also lists, one line each, what the reviewer considered and set aside as out of scope, so
+  that nothing is dropped silently.
+* `AGT-REV-003` **MUST NOT pre-judge findings in a reviewer's brief.** A brief that contains "do not flag", "at most
+  minor" or "the plan chose this" decides the review in advance; let the reviewer raise the finding, then
+  adjudicate it and record the decision.
+  * *Why:* such phrases are usually written to avoid another round of review, which is what the review is for.
+* `AGT-REV-004` **Receive feedback by checking it.** Read all of it; restate each requirement; check it against the
+  actual code, data or text; decide whether it is right for this project; then reply with a technical
+  acknowledgment or a reasoned objection, and implement one item at a time, each with its check. If any item is
+  unclear, ask about it before implementing any: items may be related. This applies to feedback from the user,
+  from reviewers (human or agent) and from co-authors.
+* `AGT-REV-005` **Reply with the fix or the objection, not with agreement or thanks** ("You're absolutely right",
+  "Great point"). State what was changed ("Fixed: …") or why not. When an objection turns out wrong, say so in one
+  factual line ("Checked X: it does Y; fixing"), without apology.
+  * *Why:* agreement before checking commits the agent to something it has not verified, and signals a
+    verification that did not happen.
+* `AGT-REV-006` **Check external suggestions before adopting them.** Is it correct for this project and these
+  data? Does it break existing behaviour or a documented decision? Is there a reason for the current choice? Does
+  the reviewer have the full context? Is the feature it asks to "do properly" used at all (search for its callers
+  first)? A suggestion that conflicts with a decision the user made goes to the user.
+  * *Example:* a reviewer asks for a different normalization: check it against the guideline rule and the data
+    before changing anything, and cite both in the reply.
+
+## 16. Writing instructions for agents
+
+This section applies to instructions written for agents: briefs and prompts, rules in `AGENTS.md` and
+`PROJECT_CONTEXT.md`, skills, and the rules of these guidelines.
+
+* `AGT-INSTR-001` **Write an instruction to correct an observed failure.** First observe what the agent does
+  without it (a no-guidance control); if the control does not show the failure, do not write the instruction.
+  Record the failure that motivated the instruction as its *Why* (`CODE-DOC-010`).
+  * *Why:* an instruction against a failure that does not occur costs context on every turn and can provoke the
+    behaviour it names (`AGT-INSTR-002`).
+* `AGT-INSTR-002` **Match the form of the instruction to the failure.**
+
+  | Failure observed | Form that works | Form that backfires |
+  |---|---|---|
+  | The agent knows the rule and skips it under pressure | A bright-line rule, the excuses the agent gives with the answer to each, and a list of red flags | Soft guidance ("prefer", "consider") |
+  | The output has the wrong shape (bloated, the verdict buried, the requirements restated) | A positive recipe: what the output contains, in order | A list of prohibitions |
+  | A required element is left out | A required slot in the template the agent fills in | A reminder in the prose |
+  | The behaviour should depend on a condition | A conditional on an observable fact ("if the brief exists, cite its path") | An unconditional rule with exceptions |
+
+  * *Why:* in superpowers' wording tests (five samples per variant), a prohibition against restating the
+    requirements in dispatch prompts produced more restated content than no guidance at all, while a positive
+    recipe produced the least, with no variation; a prohibition of a discrete action that the agent had no
+    incentive to take worked as well as a recipe.
+* `AGT-INSTR-003` **Keep a working instruction short and unqualified.** Do not append nuance clauses ("unless it
+  matters"): express a real exception as its own conditional. An exemption clause does not limit a rule ("this
+  limit does not apply to code blocks" still suppresses code blocks): restructure so that the rule cannot reach the
+  exempt part. Between two wordings that work equally well, choose the shorter: instructions that are always
+  loaded are re-read on every turn.
+  * *Why:* in the same tests, appending one nuance clause to a winning recipe turned consistent output into noisy
+    output.
+* `AGT-INSTR-004` **Test the wording against behaviour before relying on it.** Use fresh-context samples, with the
+  instruction in its real surrounding context and a task that tempts the failure: at least five per variant, and
+  a no-guidance control. Read every flagged output by hand rather than trusting automated counts, since quoted
+  counter-examples look like violations. Wide variation between samples means the wording does not bind. Rules
+  that must hold under pressure are also tested under combined pressures (time, sunk cost, authority, fatigue).
+  * *Trade-off:* testing costs agent runs; scale it to the cost of the instruction failing (§1, proportionality).
+* `AGT-INSTR-005` **A description used to decide whether to read an instruction says when it applies, not what it
+  says.** Descriptions of skills, and summaries that route agents to a section, list the situations and symptoms
+  that trigger it.
+  * *Why:* a summary of the procedure becomes a shortcut that agents follow instead of reading the instruction.
+* `AGT-INSTR-006` **Automate what can be checked mechanically.** A constraint that a script can verify (a schema, a
+  naming pattern, a link, a version bump) becomes a validation, a lint or a test; prose is kept for judgement. For
+  example, `tools/check_guides.py` checks citation keys and BibTeX files upstream.
+* `AGT-INSTR-007` **Use persuasive framing only where it serves the user.** Firm language and commitments ("state
+  which rule you are applying") are legitimate for practices that protect the user's results; flattery and false
+  urgency are not, and flattery breeds sycophancy. The test: would the user endorse the technique if they
+  understood it?
+  * *Why:* language models respond to human persuasion principles: across 126,000 conversations with three
+    models, persuasion raised compliance with objectionable requests from 35.3% to 51.3% [Meincke 2026†]; the same
+    mechanism makes framing a lever on agents, in either direction.
+* `AGT-INSTR-008` **A proposed change to shared instructions states the case that motivated it and who drafted
+  it.** A proposal for a project's `AGENTS.md`, a skill or these guidelines names the concrete failure or session
+  it comes from, not a theoretical concern, and, when an agent drafted it, the agent, the model and the harness.
+  This applies to reports upstream (`AGT-USER-005`).
+  * *Why:* a rule derived from a real failure can be checked against that failure, and a proposal reasoned from
+    documentation alone is weighed differently from one grounded in a session.
+
+## 17. What to record in `PROJECT_CONTEXT.md`
 
 1. `AGT-REP-001` The handoff files in use (§11, sessions and handoffs) and the workstream that owns each.
 2. `AGT-REP-002` Standing authorisations for batches (§8, unattended and batch work), with their scope, budget and
@@ -322,3 +577,4 @@
 3. `AGT-REP-003` Material the agent must not read and why (§10, confidential and licensed material), and the
    agreements that permit processing where they exist.
 4. `AGT-REP-004` The models or model tiers used for delegation, if the project fixes them (§9, delegation).
+5. `AGT-REP-005` Where design documents (§13), plans (§14) and the ledgers of batches (§8) are kept.
