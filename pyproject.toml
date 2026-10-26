@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-coding-guidelines-recipes"
-version = "0.3.1"
+version = "0.4.0"
 description = "Reference implementations (recipes) for the agent coding guidelines"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -23,7 +23,8 @@ scrnaseq = [
 bulk = ["pydeseq2>=0.5,<0.6"]
 dev = ["pytest", "ruff"]
 
-# R scripts (recipes/**/*.R) need R with: scran, tximport, Matrix, optparse (Bioconductor / CRAN).
+# R scripts (recipes/**/*.R) need R with: scran, scDblFinder, SingleCellExperiment, tximport, Matrix, optparse
+# (Bioconductor / CRAN).
 # Tests that call R are skipped unless RECIPES_RSCRIPT (or Rscript on PATH) points to such an installation.
 
 [tool.setuptools.packages.find]

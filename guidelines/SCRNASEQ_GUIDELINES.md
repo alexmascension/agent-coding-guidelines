@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.2.1 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.0.0 (2026-10-26)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -28,7 +28,9 @@
 
 * `SC-DATA-001` Store each representation in a named layer: `layers["counts"]` (raw), `layers["counts_ambient_corrected"]`,
   `layers["spliced"]`, `layers["unspliced"]`, `layers["ambiguous"]`, `layers["log1p_norm"]`. `.X` holds one of them,
-  and `adata.uns["X_content"]` states which.
+  and `adata.uns["X_content"]` states which. `adata.uns["ambient_correction"]` records the method that produced
+  `counts_ambient_corrected` (`cellbender`, `soupx`, `decontx`) and its version; doublet detection checks it
+  (`SC-QC-012`).
 * `SC-DATA-002` **Do not use `adata.raw`.**
   * *Why:* `.raw` is a frozen snapshot whose content differs between workflows (raw counts in some, log-normalized
     values in most), and several scanpy functions read it by default, so the same code can silently operate on
@@ -39,12 +41,14 @@
 
   | Step | Input layer |
   |---|---|
-  | Cell-level QC metrics (§4.2), doublet detection (§4.3) | `counts` |
+  | Cell-level QC metrics (§4.2), doublet detection and co-expression review (§4.3) | `counts` |
   | Size factors and normalization (§5), HVG, PCA, clustering, annotation | `counts_ambient_corrected` if it exists, else `counts` |
   | Pseudobulk DE and abundance (§10–11) | `counts_ambient_corrected` if it exists; check key genes on `counts` |
   | RNA velocity (§13) | `spliced`, `unspliced` |
 
-  * *Why:* QC and doublet detectors are defined on observed counts; ambient correction removes contamination that
+  * *Why:* QC and doublet detectors are defined on observed counts, and SoupX or decontX correction before doublet
+    detection leaves more doublets undetected [Meier 2026] (`SC-QC-012`), so with these methods the corrected layer is
+    created after doublet removal and the first clustering reads `counts`; ambient correction removes contamination that
     otherwise appears as expression of abundant-type markers in every cell type, including in pseudobulk. Checking
     key genes on uncorrected counts shows whether a result depends on the correction.
 
@@ -161,6 +165,12 @@
 All QC is done **per capture**, before merging or integration. Record, per capture, the number of barcodes removed at
 each step.
 
+Order of the steps (`SC-QC-012`). With CellBender (the default, `SC-QC-001`): CellBender on the raw matrix (cell
+calling and correction); cell-level QC metrics (§4.2) and doublet detection (§4.3) on `counts`; the first clustering of
+the doublet review and everything downstream on `counts_ambient_corrected` (`SC-DATA-004`). With SoupX or decontX: cell
+calling (§4.1), §4.2 and the whole of §4.3, first clustering included, on `counts`; then the correction, applied to the
+cells that remain, and its layer from normalization (§5) onwards.
+
 ### 4.1 Cell calling and ambient RNA
 
 * `SC-QC-001` **CellBender is the default** for ambient RNA removal and cell calling on the raw (unfiltered) STARsolo matrix
@@ -168,10 +178,14 @@ each step.
   `layers["counts_ambient_corrected"]`, and compare the calls with STARsolo `EmptyDrops_CR`; record barcodes called by
   only one of the two.
   * *Why:* it models ambient RNA and cell-containing droplets jointly. Ambient transcripts make every cell appear to
-    express markers of abundant types (e.g. neuronal transcripts in glia in nuclei data).
+    express markers of abundant types (e.g. neuronal transcripts in glia in nuclei data). Of the three ambient methods
+    compared in [Meier 2026], it is the only one that models doublets, and the only one recommended before doublet
+    detection (`SC-QC-012`).
   * *Trade-off:* needs a GPU to be practical.
-  * *Deviate when:* without a GPU, SoupX (R) [Young 2020]; for statistical cell calling alone, EmptyDrops (R)
-    [Lun 2019] or dropkick (Python) [Heiser 2021].
+  * *Deviate when:* without a GPU, SoupX (R) [Young 2020]; without the raw (unfiltered) matrix, e.g. public data
+    shared as filtered matrices, decontX (R) [Yang 2020], the only one of the three methods compared in
+    [Meier 2026] that needs no empty droplets. Both run after doublet removal (`SC-QC-012`). For statistical cell
+    calling alone, EmptyDrops (R) [Lun 2019] or dropkick (Python) [Heiser 2021].
 * `SC-QC-002` **Nuclear fraction** per barcode is `unspliced / (spliced + unspliced)` from the STARsolo `Velocyto` layers.
   * *Why:* in scRNA-seq, barcodes with very low nuclear fraction are often cytoplasmic fragments without a nucleus,
     frequent even in reference atlases [Montserrat-Ayuso 2024]; damaged cells and empty droplets have characteristic
@@ -208,25 +222,81 @@ each step.
 ### 4.3 Doublets
 
 * `SC-QC-009` **Detect doublets per capture, before integration, with two methods: Scrublet (`scanpy.pp.scrublet`)
-  [Wolock 2019] and DoubletDetection** [Gayoso 2025]. Store both scores and calls, and derive `doublet_consensus` (both methods agree)
-  and `doublet_any` (either method).
+  [Wolock 2019] and scDblFinder (R, through a script)** [Germain 2021]. A third detector MAY be added in large captures:
+  DoubletDetection [Gayoso 2020] or Solo (`scvi-tools`) [Bernstein 2025]. Store every score and call, the number of
+  detectors that evaluated and that called each cell (`doublet_n_evaluated`, `doublet_n_calls`), and derive
+  `doublet_consensus` (every evaluated detector calls it, at least two evaluated) and `doublet_any` (at least one).
   * *Why two methods:* single methods are unstable across datasets, and combining methods improves accuracy and
-    stability [Xiong 2022; Neavin 2024]. In a benchmark of nine methods, DoubletFinder (R) had the best accuracy
-    [Xi 2021]; scDblFinder (R) ranked first in a later independent benchmark [Germain 2021]; they are the R
-    alternatives. Solo (`scvi-tools`) is a further Python option [Bernstein 2020].
+    stability [Xiong 2022; Neavin 2024]. On in silico pools with known doublets (2–128 donors), scDblFinder, Scrublet
+    and scds (R) were among the best detectors, while DoubletFinder (R) and DoubletDecon (R) had the lowest MCC and
+    flagged more singlets as doublets [Neavin 2024]; an earlier benchmark had ranked DoubletFinder first [Xi 2021].
+    scDblFinder also detected the most true doublets in most datasets of [Meier 2026]. DoubletDetection performed
+    poorly in the smallest pools (about 1,500 droplets) and among the best from about 13,000 droplets, and Solo also
+    improved with pool size [Neavin 2024].
+  * *Trade-off:* scDblFinder needs R; it runs through a script with a file interface (`CODING_GUIDELINES.md` §3,
+    languages).
+  * *Deviate when:* without R, Scrublet with DoubletDetection or Solo; both performed poorly in small pools
+    [Neavin 2024].
+* `SC-QC-013` **Check the Scrublet threshold of every capture.** scanpy places it at the minimum between the two modes of
+  the histogram of simulated-doublet scores, and the fraction of cells called changes markedly with its position.
+  Inspect the histogram per capture; when it is not bimodal or the threshold does not separate the modes, set the
+  threshold by hand and record it, or report Scrublet as not evaluated for that capture. When no automatic threshold is
+  found, scanpy logs a warning and calls no doublet: this MUST NOT be read as a capture without doublets.
+  * *Why:* the scanpy documentation recommends checking the threshold on that histogram; [Neavin 2024] set it by hand
+    when it did not fall between the modes of a bimodal distribution; with automatic thresholds, Scrublet called none
+    or very few doublets after SoupX or decontX in several datasets [Meier 2026].
+  * *Trade-off:* a manual threshold is a judgement per capture; record the value and keep the histogram.
+* `SC-QC-012` **Doublets are detected on counts without ambient correction** (`layers["counts"]`, `SC-DATA-004`). Counts
+  corrected with SoupX [Young 2020] or decontX [Yang 2020] MUST NOT be the input of the detectors (`SC-QC-009`) or of
+  the doublet review (`SC-QC-010`). With these two methods the whole procedure of `SC-QC-010`, first clustering
+  included, runs on `counts`, and the correction is applied to the cells that remain. The method behind
+  `counts_ambient_corrected` is read from `adata.uns["ambient_correction"]` (`SC-DATA-001`).
+  * *Why:* in three multiplexed datasets (tumour cells, lavage cells, cortex nuclei), uncorrected counts matched or
+    exceeded SoupX- and decontX-corrected counts in the fraction of true doublets detected, for each of six detectors in
+    each dataset. Scrublet was the most affected: after decontX without empty droplets it found at most 1% of true
+    doublets in all three datasets, and none after SoupX in one of them, so `doublet_consensus` would remove almost
+    nothing. With known doublets (engineered from 10x Flex data, scDblFinder), 58% stayed undetected after decontX
+    against 22% without correction. Both methods removed more counts from the doublets they hid: decontX models each
+    droplet as one cell type plus contamination from the others, and the doublets it hid were mostly of two types with
+    very unequal RNA contributions; SoupX scales the removal with the droplet's total counts, which are larger in
+    doublets. In a tonsil dataset, a cluster of B–T doublets disappeared after decontX: CD3E fell and 98% of its cells
+    joined B-cell clusters [Meier 2026].
+  * *Trade-off:* uncorrected counts carry ambient transcripts, which add markers of abundant types to every cell; the
+    recipe counts a lineage in a cell only when its markers reach a fraction of that lineage's level in its home
+    cluster (`SC-QC-011`).
+  * *Deviate when:* with CellBender, which runs first because it also calls cells (`SC-QC-001`), its
+    `counts_ambient_corrected` MAY be the input, recorded in `PROJECT_CONTEXT.md`; the authors report that it mostly
+    matched or improved on uncorrected counts. `counts` stays the default because, for Scrublet, scDblFinder and
+    DoubletDetection, uncorrected counts gave an equal or higher Matthews correlation coefficient (MCC) than
+    CellBender-corrected counts in seven of the nine detector–dataset pairs [Meier 2026].
+  * *Note:* one preprint (2026). Ground truth comes from between-sample doublets and from engineered Flex doublets;
+    tools ran at default parameters; in the nuclei dataset every detector performed poorly, corrected or not. The
+    authors expect, without testing it, that removing doublets before SoupX or decontX also improves the correction.
+* `SC-QC-014` **Pooled captures** (`SAMPLE_IDENTITY_GUIDELINES.md` §6): remove the doublets called by genotype
+  demultiplexing (`ID-POOL-001`) in addition to those removed by `SC-QC-010`, and store them as `doublet_genotype`.
+  Transcriptional detection (`SC-QC-009`) is still run: demultiplexers detect almost none of the doublets formed by two
+  cells of one donor, which are a large share of all doublets when few donors are pooled [Neavin 2024].
+  * *Deviate when:* more than 20 donors per capture, where such doublets are rare; demultiplexing alone MAY then be
+    used [Neavin 2024].
+  * *Note:* giving the genotype doublets to scDblFinder as known doublets did not improve it [Neavin 2024].
 * `SC-QC-010` **Flag first, remove later**:
-  1. Keep all cells through a first clustering.
+  1. Keep all cells through a first clustering (on `counts` with SoupX or decontX, `SC-QC-012`).
   2. Remove cells with `doublet_consensus`.
-  3. Remove clusters enriched in `doublet_any` that co-express markers of two lineages; review borderline clusters
-     manually.
+  3. Remove clusters enriched in `doublet_any` that co-express markers of two lineages, measured on `counts`
+     (`SC-QC-012`); review borderline clusters manually.
   4. Run the final clustering and all downstream analyses without doublets.
   * *Why:* removing true singlets of rare types costs more than leaving isolated doublets, which the cluster-level
     evidence captures. Doublets MUST be removed before final clustering, DE and abundance analysis because they create
     spurious intermediate populations [Xi 2021].
-  * *Note:* no benchmark compares union and intersection of these two methods; this rule is a precision-first default.
+  * *Note:* this is a precision-first default. [Neavin 2024] compared, for every combination of detectors, calling a
+    droplet a singlet when more than half of the methods do (for two methods: removing `doublet_any`) or when at least
+    half do (for two methods: removing `doublet_consensus`); its recommended combinations use the first rule. Detectors
+    were also biased against rare and proliferating cell types [Neavin 2024], the cost this default avoids.
 
-* `SC-QC-011` Recipe: `recipes/scrnaseq/doublets.py` (both detectors per capture, consensus and union calls, per-cluster review
-  table with an enrichment test and a lineage co-expression level).
+* `SC-QC-011` Recipe: `recipes/scrnaseq/doublets.py` (Scrublet, scDblFinder through `recipes/scrnaseq/scdblfinder.R` and
+  optionally DoubletDetection, per capture; Scrublet thresholds per capture, manual when given, automatic failures
+  reported; consensus and union calls; per-cluster review table with an enrichment test and a lineage co-expression
+  level; genotype doublets added to the removal mask; the input layer is checked against `uns["ambient_correction"]`).
 
 ## 5. Normalization and feature selection
 
@@ -424,7 +494,8 @@ Following minSCe [Füllgrabe 2020] and `STATISTICS_GUIDELINES.md` §12:
 1. `SC-REP-001` Tissue handling: dissociation or nuclei protocol, chemistry, multiplexing.
 2. `SC-REP-002` STAR version and `--solo*` parameters (or the alternative tool), reference and annotation release.
 3. `SC-REP-003` Per capture: barcodes, cells after each QC step (cell calling, ambient, nuclear fraction, filters, doublets), final
-   cells per cell type.
+   cells per cell type; the ambient-correction method and the layer read by doublet detection (`SC-QC-012`); the
+   Scrublet threshold and whether it was set by hand (`SC-QC-013`).
 4. `SC-REP-004` Normalization, gene selection, PCs and criteria, integration method and metrics, clustering resolution and stability.
 5. `SC-REP-005` Annotation method, references or dictionaries, unmatched markers.
 6. `SC-REP-006` DE, abundance, communication and trajectory methods with parameters, pseudobulk thresholds and designs.
@@ -437,7 +508,7 @@ Following minSCe [Füllgrabe 2020] and `STATISTICS_GUIDELINES.md` §12:
 | Data structure | `anndata` | — |
 | QC, normalization, HVG (highly variable genes), PCA, Leiden, UMAP, PAGA | `scanpy` | — |
 | Cell calling and ambient RNA | STARsolo `EmptyDrops_CR`, `cellbender` (CLI) | SoupX, DropletUtils (EmptyDrops) |
-| Doublets | `scanpy.pp.scrublet`, `doubletdetection` | scDblFinder, DoubletFinder |
+| Doublets | `scanpy.pp.scrublet`; optional `doubletdetection`, Solo (`scvi-tools`) | scDblFinder (default, via script), scds |
 | Size factors | `scranPY` (GitHub, pinned commit) | scran |
 | Integration | `harmonypy` (or `scanpy.external`), `scvi-tools` | — |
 | Integration metrics | `scib-metrics` | — |

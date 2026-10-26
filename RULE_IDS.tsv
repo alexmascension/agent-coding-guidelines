@@ -556,7 +556,10 @@ SC-QC-007	active	SCRNASEQ_GUIDELINES.md	MUST NOT filter cells by the expression 
 SC-QC-008	active	SCRNASEQ_GUIDELINES.md	Recipe for §4.1–4.2: recipes/scrnaseq/qc.py (gene groups from the GTF chromosome
 SC-QC-009	active	SCRNASEQ_GUIDELINES.md	Detect doublets per capture, before integration, with two methods: Scrublet (sca
 SC-QC-010	active	SCRNASEQ_GUIDELINES.md	Flag first, remove later:
-SC-QC-011	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/scrnaseq/doublets.py (both detectors per capture, consensus and 
+SC-QC-011	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/scrnaseq/doublets.py (Scrublet, scDblFinder through recipes/scrn
+SC-QC-012	active	SCRNASEQ_GUIDELINES.md	Doublets are detected on counts without ambient correction (layers["counts"], SC
+SC-QC-013	active	SCRNASEQ_GUIDELINES.md	Check the Scrublet threshold of every capture. scanpy places it at the minimum b
+SC-QC-014	active	SCRNASEQ_GUIDELINES.md	Pooled captures (SAMPLE_IDENTITY_GUIDELINES.md §6): remove the doublets called b
 SC-QUANT-001	active	SCRNASEQ_GUIDELINES.md	Default: STARsolo [Kaminow 2021], gene-level counts, with these features in one 
 SC-QUANT-002	active	SCRNASEQ_GUIDELINES.md	Isoform-level questions need full-length (e.g. Smart-seq) or long-read protocols
 SC-QUANT-003	active	SCRNASEQ_GUIDELINES.md	Record STAR version, all --solo parameters, chemistry and whitelist, reference g

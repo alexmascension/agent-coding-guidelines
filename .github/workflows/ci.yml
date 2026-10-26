@@ -87,7 +87,7 @@ jobs:
           cd /tmp
           /tmp/wheel-env/bin/python -c "
           from recipes.common.resources import package_script
-          for package, script in [('recipes.scrnaseq', 'scran_size_factors.R'), ('recipes.bulk', 'tximport_lengthscaled.R')]:
+          for package, script in [('recipes.scrnaseq', 'scran_size_factors.R'), ('recipes.scrnaseq', 'scdblfinder.R'), ('recipes.bulk', 'tximport_lengthscaled.R')]:
               assert package_script(package, script).is_file(), (package, script)
           import recipes.bulk.counts_io, recipes.stats.permutation
           print('wheel ok')
@@ -114,6 +114,8 @@ jobs:
             any::optparse
             any::Matrix
             bioc::scran
+            bioc::scDblFinder
+            bioc::SingleCellExperiment
             bioc::tximport
             bioc::DESeq2
       - run: pip install -e ".[bulk,scrnaseq,dev]"

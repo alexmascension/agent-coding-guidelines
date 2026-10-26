@@ -5,6 +5,45 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+
+## 2026-10-26 (doublets and ambient RNA correction: [Meier 2026], [Neavin 2024])
+
+### SCRNASEQ_GUIDELINES.md [4.0.0]
+#### Changed (breaking)
+
+- `SC-QC-009`: the two default detectors are Scrublet and scDblFinder (R, through a script); DoubletDetection or Solo
+  MAY be added as a third detector in large captures. DoubletFinder is no longer listed as an alternative: on in silico
+  pools with known doublets it had one of the lowest MCC values and flagged more singlets as doublets [Neavin 2024].
+  New columns `doublet_n_evaluated` and `doublet_n_calls`; `doublet_consensus` requires every evaluated detector and at
+  least two.
+
+#### Added
+
+- `SC-QC-012`: doublets are detected on counts without ambient correction; SoupX- or decontX-corrected counts MUST
+  NOT be the input of the detectors or of the doublet review; with these methods the whole doublet procedure, first
+  clustering included, runs on `counts` and the correction is applied afterwards; CellBender-corrected counts MAY be
+  used as a recorded deviation [Meier 2026].
+- `SC-QC-013`: the Scrublet threshold is checked per capture and set by hand when the histogram of simulated scores
+  is not bimodal; a failed automatic threshold MUST NOT be read as a capture without doublets.
+- `SC-QC-014`: in pooled captures, genotype-demultiplexing doublets are removed in addition to `SC-QC-010`, and
+  transcriptional detection is still run (up to 20 donors per capture) [Neavin 2024].
+
+#### Changed
+
+- `SC-DATA-001`: `adata.uns["ambient_correction"]` records the method and version behind `counts_ambient_corrected`.
+- `SC-DATA-004`: the `counts` row covers the co-expression review; *Why* cites [Meier 2026] and states that, with SoupX
+ or decontX, the corrected layer is created after doublet removal.
+- §4 introduction: order of the QC steps with CellBender and with SoupX or decontX.
+- `SC-QC-001`: *Why* adds that CellBender is the only compared method that models doublets; *Deviate when* adds decontX
+  for data without the raw matrix, and both SoupX and decontX run after doublet removal.
+- `SC-QC-010`: step 1 on `counts` with SoupX or decontX; step 3, co-expression measured on `counts`; *Note* corrected:
+  [Neavin 2024] compared both combination rules.
+ `SC-QC-011`: the recipe runs scDblFinder through a script, handles Scrublet thresholds and checks the input layer.
+- `SC-REP-003`: report the ambient-correction method, the layer read by doublet detection and the Scrublet thresholds.
+- §16: doublet tools updated.
+
+
+
 ## 2026-10-26 (reference files: verification and BibTeX fixes)
 
 Every entry of both `.bib` files was checked against Crossref, OpenAlex, Semantic Scholar and arXiv with the
@@ -176,6 +215,74 @@ use the year of first publication; this is now stated in both headers.
 
 - `tools/rule_ids.py`: prefix `MS` and its topics.
 - `README.md`: contents table and licence note with the attribution of the adapted text.
+## 2026-10-26 (doublets and ambient RNA correction: [Meier 2026], [Neavin 2024])
+
+### SCRNASEQ_GUIDELINES.md [4.0.0]
+
+#### Changed (breaking)
+
+- `SC-QC-009`: the two default detectors are Scrublet and scDblFinder (R, through a script); DoubletDetection or Solo
+  MAY be added as a third detector in large captures. DoubletFinder is no longer listed as an alternative: on in silico
+  pools with known doublets it had one of the lowest MCC values and flagged more singlets as doublets [Neavin 2024].
+  New columns `doublet_n_evaluated` and `doublet_n_calls`; `doublet_consensus` requires every evaluated detector and at
+  least two.
+
+#### Added
+
+- `SC-QC-012`: doublets are detected on counts without ambient correction; SoupX- or decontX-corrected counts MUST
+  NOT be the input of the detectors or of the doublet review; with these methods the whole doublet procedure, first
+  clustering included, runs on `counts` and the correction is applied afterwards; CellBender-corrected counts MAY be
+  used as a recorded deviation [Meier 2026].
+- `SC-QC-013`: the Scrublet threshold is checked per capture and set by hand when the histogram of simulated scores
+  is not bimodal; a failed automatic threshold MUST NOT be read as a capture without doublets.
+- `SC-QC-014`: in pooled captures, genotype-demultiplexing doublets are removed in addition to `SC-QC-010`, and
+  transcriptional detection is still run (up to 20 donors per capture) [Neavin 2024].
+
+#### Changed
+
+- `SC-DATA-001`: `adata.uns["ambient_correction"]` records the method and version behind `counts_ambient_corrected`.
+- `SC-DATA-004`: the `counts` row covers the co-expression review; *Why* cites [Meier 2026] and states that, with SoupX
+  or decontX, the corrected layer is created after doublet removal.
+- §4 introduction: order of the QC steps with CellBender and with SoupX or decontX.
+- `SC-QC-001`: *Why* adds that CellBender is the only compared method that models doublets; *Deviate when* adds decontX
+  for data without the raw matrix, and both SoupX and decontX run after doublet removal.
+- `SC-QC-010`: step 1 on `counts` with SoupX or decontX; step 3, co-expression measured on `counts`; *Note* corrected:
+  [Neavin 2024] compared both combination rules.
+- `SC-QC-011`: the recipe runs scDblFinder through a script, handles Scrublet thresholds and checks the input layer.
+- `SC-REP-003`: report the ambient-correction method, the layer read by doublet detection and the Scrublet thresholds.
+- §16: doublet tools updated.
+
+### SAMPLE_IDENTITY_GUIDELINES.md [2.3.0]
+
+#### Changed
+
+- `ID-POOL-001`: with genotypes, Demuxalot with refined genotypes (combined with Dropulation when more than one tool can
+  be run); without genotypes, vireo above 20 donors or as the only tool, souporcell with vireo otherwise; combined
+  calls require more than half of the tools to call a singlet [Neavin 2024]; demuxlet as a deviation.
+- `ID-POOL-009`: genotype-free demultiplexers are interchangeable for labelling, not for singlet and doublet calls.
+- §9: demultiplexing tools updated.
+
+### OMICS_REFERENCES.md
+
+- Two references: [Meier 2026] (preprint) and [Yang 2020] (DecontX).
+
+### recipes/ [0.4.0]
+
+#### Changed
+
+- `doublets`: `detect_doublets` runs the detectors named in `detectors` (default Scrublet and scDblFinder, the latter
+  through the new `scdblfinder.R`; DoubletDetection optional, imported only when used); manual Scrublet thresholds per
+  capture (`scrublet_thresholds`); a failed automatic threshold raises, or marks Scrublet as not evaluated for that
+  capture (`on_scrublet_failure`), instead of being recorded as zero doublets; simulated Scrublet scores stored in
+  `uns["doublets"]["scrublet"]`; new columns `doublet_n_evaluated` and `doublet_n_calls`; `combine_calls` takes two or
+  more call vectors; `doublet_removal_mask` adds genotype doublets (`genotype_key`).
+- `doublets`: new `ambient_method_of_layer`; `detect_doublets` and `doublet_cluster_review` reject
+  `counts_ambient_corrected` when `uns["ambient_correction"]` names SoupX or decontX or names no method, and warn on
+  layers other than `counts` and `counts_ambient_corrected`; `doublet_cluster_review` warns when a SoupX or decontX
+  layer already exists (the first clustering must not use it). The per-capture summary reports `input_layer` and
+  `ambient_method`.
+- CI: R-backed job installs scDblFinder and SingleCellExperiment; the wheel check includes `scdblfinder.R`.
+- `pyproject.toml`: R requirements list scDblFinder and SingleCellExperiment.
 
 ## 2026-10-26 (agentic guidelines)
 
