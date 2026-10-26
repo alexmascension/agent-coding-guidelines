@@ -35,7 +35,7 @@ include = ["recipes*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
-testpaths = ["recipes/tests"]
+testpaths = ["recipes/tests", "tools/tests"]
 markers = [
     "r: calls R through Rscript (run by the R job in CI; RECIPES_REQUIRE_R=1 turns skips into failures)",
 ]
@@ -52,4 +52,5 @@ convention = "numpy"
 
 [tool.ruff.lint.per-file-ignores]
 "recipes/tests/*" = ["D", "E501"]
+"tools/tests/*" = ["D", "E501"]
 "**/__init__.py" = ["D104"]

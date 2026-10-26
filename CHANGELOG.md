@@ -47,6 +47,21 @@ use the year of first publication; this is now stated in both headers.
   five commits after release v1.1) and states that the DOI is the concept DOI.
 - Header: software DOIs are checked against DataCite; years are those of first publication, online or in print.
 
+### Repository
+
+#### Added
+
+- `tools/check_guides.py`: checks of the `.bib` files: unique keys, no empty author names, months as BibTeX macros,
+  and the same DOIs as the Markdown list, one entry per DOI on each side. Run on the files before the fixes above,
+  it reports every problem fixed here.
+- `tools/tests/test_check_guides.py`: tests of these checks (`CODE-TEST-009`); `tools/tests` added to the pytest
+  paths.
+
+#### Changed
+
+- `tools/ci_scope.py`: a change under `tools/` also runs the Python test job, which now includes the tool tests;
+  `README.md` CI table updated.
+
 ## 2026-10-26 (pre-registration)
 
 ### STATISTICS_GUIDELINES.md [2.1.0]
