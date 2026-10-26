@@ -1,6 +1,6 @@
 # Manuscript guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.0.0 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-26)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -65,9 +65,9 @@
   naming the file and run it was read from.
   * *Why:* numbers retyped into the text drift from the results with every rerun, and a rerun gives no error when
     the text keeps the old value (`AGT-CLAIM-003`, regenerated numbers).
-* `MS-TRACE-003` **Broken or superseded runs are moved out of reach**: to `results/_ARCHIVE/<run>/`, with a
-  `DO_NOT_USE.md` stating why and which run replaces them. Figure and table scripts MUST fail when given an archived
-  run.
+* `MS-TRACE-003` **Broken or superseded runs are moved out of reach** as `CODE-PROV-006` (superseded results)
+  requires: to `results/_superseded/<run>/`, with a `DO_NOT_USE.md` stating why and which run replaces them. Figure
+  and table scripts MUST fail when given such a run.
   * *Why:* a superseded run left in place is eventually read by a script whose argument was not updated, and the
     figure it produces is indistinguishable from a current one.
 * `MS-TRACE-004` **Before each submission, regenerate every figure, table and number from a clean checkout** of the

@@ -99,3 +99,8 @@ extended; §0 of the guide lists the sources.
 sections of `guidance/CLAUDE-starter.md`, and the skills `paper-review` (review templates adapted from Dominik
 Lukeš's paper-reviewer skill, MIT), `claim-fact-checker` (adapted from Dominik Lukeš's agent skills, MIT),
 `reference-verifier` and `convergence-check`. §0 of the guide lists the sources.
+
+The rules added to `guidelines/CODING_GUIDELINES.md` in 3.7.0 (`CODE-LANG-004` shell traps, `CODE-DOC-005`,
+`CODE-NUM-013`, `CODE-PROV-006`, `CODE-TEST-009`, `CODE-TEST-010`, `CODE-VAL-004`) adapt the *Shell commands*,
+*Verifying work* and *Writing* sections of `guidance/CLAUDE-starter.md` and the results archive of
+`guidance/paper-CLAUDE.md` from the same toolkit (CC BY 4.0).

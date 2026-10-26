@@ -216,6 +216,7 @@ CODE-NUM-009	active	CODING_GUIDELINES.md	Every reported number states its univer
 CODE-NUM-010	active	CODING_GUIDELINES.md	Classifications carry their rule. A column produced by a documented classificati
 CODE-NUM-011	active	CODING_GUIDELINES.md	Thresholds and analysis parameters are named constants in one configuration modu
 CODE-NUM-012	active	CODING_GUIDELINES.md	Statistical practice (test choice, multiple testing, effect sizes, reporting) fo
+CODE-NUM-013	active	CODING_GUIDELINES.md	Round only when presenting. Computations, comparisons, bounds and stored tables 
 CODE-PERF-001	active	CODING_GUIDELINES.md	Prioritize correctness and readability; optimize when there is a meaningful expe
 CODE-PERF-002	active	CODING_GUIDELINES.md	Avoid repeated expensive conversions, allocations, I/O and computations.
 CODE-PERF-003	active	CODING_GUIDELINES.md	Keep optimized code understandable and document non-obvious performance decision
@@ -239,6 +240,7 @@ CODE-PROV-002	active	CODING_GUIDELINES.md	MUST NOT commit data, results or large
 CODE-PROV-003	active	CODING_GUIDELINES.md	Each analysis run writes to its own directory (e.g. results/<run>/) containing, 
 CODE-PROV-004	active	CODING_GUIDELINES.md	Write outputs atomically (write to a temporary file in the same directory, then 
 CODE-PROV-005	active	CODING_GUIDELINES.md	Scripts MUST NOT overwrite existing outputs unless an explicit --overwrite flag 
+CODE-PROV-006	active	CODING_GUIDELINES.md	Results that must no longer be used are marked and refused. A run found to be br
 CODE-RCP-001	active	CODING_GUIDELINES.md	Non-obvious procedures of the domain guidelines MAY have a reference implementat
 CODE-RCP-002	active	CODING_GUIDELINES.md	When a guideline links a recipe, use it instead of re-implementing the procedure
 CODE-RCP-003	active	CODING_GUIDELINES.md	Adapt a recipe through its parameters and named constants. A change to its logic
@@ -268,6 +270,8 @@ CODE-TEST-005	active	CODING_GUIDELINES.md	Compare numbers with tolerances (numpy
 CODE-TEST-006	active	CODING_GUIDELINES.md	Build small input tables inline or from tiny fixtures in tests/data/. Tests MUST
 CODE-TEST-007	active	CODING_GUIDELINES.md	Keep tests independent: no shared mutable state and no reliance on execution ord
 CODE-TEST-008	active	CODING_GUIDELINES.md	For pipelines, SHOULD include an end-to-end test on a minimal fixture whose expe
+CODE-TEST-009	active	CODING_GUIDELINES.md	Every input validation has a test that triggers it. Each check at a public entry
+CODE-TEST-010	active	CODING_GUIDELINES.md	Expected values are established independently of the code under test: from the s
 CODE-TYPE-001	active	CODING_GUIDELINES.md	Add type hints to public functions and non-trivial internal functions.
 CODE-TYPE-002	active	CODING_GUIDELINES.md	Use built-in generics (list[str], dict[str, int]) and X | None, not typing.List 
 CODE-TYPE-003	active	CODING_GUIDELINES.md	Do not add annotations that reduce readability or that cannot express the type m
@@ -282,6 +286,7 @@ CODE-USE-008	active	CODING_GUIDELINES.md	Rule identifiers. Every rule (top-level
 CODE-VAL-001	active	CODING_GUIDELINES.md	After modifying code, run the most relevant tests and static checks (pytest, ruf
 CODE-VAL-002	active	CODING_GUIDELINES.md	MUST NOT claim that tests or checks passed unless they were actually run.
 CODE-VAL-003	active	CODING_GUIDELINES.md	If validation cannot be performed, state exactly what was not verified.
+CODE-VAL-004	active	CODING_GUIDELINES.md	Run what was changed, not only its tests. After changing code that produces an o
 CODE-VCS-001	active	CODING_GUIDELINES.md	Each commit is one logical change; an implementation and its tests go in the sam
 CODE-VCS-002	active	CODING_GUIDELINES.md	Commit message: a summary line in the imperative, capitalized, at most 50 charac
 CODE-VCS-003	active	CODING_GUIDELINES.md	At the end of each meaningful operation or code change, propose a commit: a summ
@@ -478,7 +483,7 @@ MS-REV-004	active	MANUSCRIPT_GUIDELINES.md	MUST NOT apply review changes without
 MS-REV-005	active	MANUSCRIPT_GUIDELINES.md	After applying changes, verify them: every approved change is implemented as spe
 MS-TRACE-001	active	MANUSCRIPT_GUIDELINES.md	Every figure and table is produced by a script from an explicit run, never from 
 MS-TRACE-002	active	MANUSCRIPT_GUIDELINES.md	Every number in the text comes from a generated file. The analysis writes the va
-MS-TRACE-003	active	MANUSCRIPT_GUIDELINES.md	Broken or superseded runs are moved out of reach: to results/_ARCHIVE/<run>/, wi
+MS-TRACE-003	active	MANUSCRIPT_GUIDELINES.md	Broken or superseded runs are moved out of reach as CODE-PROV-006 (superseded re
 MS-TRACE-004	active	MANUSCRIPT_GUIDELINES.md	Before each submission, regenerate every figure, table and number from a clean c
 MS-TRACE-005	active	MANUSCRIPT_GUIDELINES.md	Data and code availability statements name what a reader needs to obtain them: a
 MS-WRITE-001	active	MANUSCRIPT_GUIDELINES.md	Say what is computed and what it gives. Avoid figurative verbs ("pushes the erro

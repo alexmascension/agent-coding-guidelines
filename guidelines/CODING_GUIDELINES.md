@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.6.0 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.7.0 (2026-10-26)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -157,6 +157,21 @@ interface, a threshold or a data invariant MUST update it in the same change.
     * *Why:* under `set -e`, a failing command whose STDERR is discarded ends the script with a non-zero code and an
       empty log. The trap does not fire in `if`/`while` conditions or `&&`/`||` lists; for a failing pipeline it
       names the last command of the pipeline, not necessarily the one that failed.
+  * Write files from the shell with a quoted heredoc (`cat > file <<'EOF'`).
+    * *Why:* in an unquoted heredoc the shell expands `$name`, `$(…)` and backticks, so code or configuration
+      written through it can arrive with empty values and no error.
+  * Wait for a background job by its PID (`job & pid=$!; wait "$pid"`), not by matching its command line with
+    `pgrep -f` or `pkill -f`.
+    * *Why:* when the waiting loop runs as `bash -c '…'` (as agents' tools run commands), its own command line
+      contains the pattern, so `pgrep -f` matches the loop itself and it never ends, and `pkill -f` kills it.
+  * Bound a command that can hang with `timeout <seconds> <command>` after checking that `timeout` exists
+    (`CODE-EXT-002`, required executables).
+    * *Why:* `timeout=120 command` is an environment assignment, not a limit: the shell runs the command with no
+      time limit and no error.
+  * A script that starts background processes (`tail -f`, a server, a monitor) stops them by PID when it exits
+    (`trap 'kill "$pid"' EXIT`), and an agent checks for leftover processes at the end of a task.
+    * *Why:* background processes started by a script are not stopped when the script ends; they keep running
+      and holding files, ports or CPU.
 * `CODE-LANG-005` R code, when needed, follows the tidyverse style guide, is formatted with `styler` and linted
   with `lintr`.
 * `CODE-LANG-006` Default Python stack (a project MAY override it in `PROJECT_CONTEXT.md`): polars for tables,
@@ -288,7 +303,8 @@ interface, a threshold or a data invariant MUST update it in the same change.
 ### Self-contained comments and documents
 
 * `CODE-DOC-005` Every comment and document MUST be understandable by a reader who knows the project scope but
-  has no knowledge of how the code was developed.
+  has no knowledge of how the code was developed. Labels coined during development (`the v2 filter`, `case B`)
+  are replaced by what they name or by the term defined in `PROJECT_CONTEXT.md` §4 (domain vocabulary).
 * `CODE-DOC-006` Comments explain *why*, not *what*. Use them for non-obvious decisions, assumptions,
   performance considerations and tricky logic; do not comment self-explanatory code.
 * `CODE-DOC-007` State the **reason**, not the **history**. MUST NOT refer to the conversation, request,
@@ -372,6 +388,11 @@ interface, a threshold or a data invariant MUST update it in the same change.
     changed in one place and is visible in review.
 * `CODE-NUM-012` Statistical practice (test choice, multiple testing, effect sizes, reporting) follows
   `STATISTICS_GUIDELINES.md` when present.
+* `CODE-NUM-013` **Round only when presenting.** Computations, comparisons, bounds and stored tables use values at
+  full precision; rounding happens once, when a value is formatted for a report, table or label, and a rounded
+  value is never read back as an input.
+  * *Why:* a bound or an agreement computed from rounded output can be wrong by the rounding step, and a value
+    rounded twice (stored rounded, rounded again for display) can differ from the value rounded once.
 
 ## 12. External tools and subprocesses
 
@@ -406,6 +427,14 @@ interface, a threshold or a data invariant MUST update it in the same change.
   Re-running a script with the same inputs and parameters SHOULD give the same outputs.
   * *Why:* re-running a script by mistake should never destroy hours of results; an explicit flag makes overwriting
     a deliberate act.
+* `CODE-PROV-006` **Results that must no longer be used are marked and refused.** A run found to be broken or
+  superseded is moved to `results/_superseded/<run>/` with a `DO_NOT_USE.md` stating why and which run replaces
+  it, and the decision is recorded in the decisions log (`CODE-IFACE-003`, stale outputs). Functions that load
+  results MUST raise when given a run under `_superseded/` or containing `DO_NOT_USE.md`.
+  * *Why:* a superseded run left readable is eventually loaded by a script whose path was not updated, and its
+    numbers are indistinguishable from current ones; an error at load time is a signal that cannot be missed.
+  * *Deviate when:* a superseded run is read on purpose (to compare old and new results): through an explicit
+    argument (e.g. `allow_superseded=True`) whose use is logged.
 
 ### Downloads from public archives
 
@@ -537,6 +566,23 @@ interface, a threshold or a data invariant MUST update it in the same change.
 * `CODE-TEST-007` Keep tests independent: no shared mutable state and no reliance on execution order.
 * `CODE-TEST-008` For pipelines, SHOULD include an end-to-end test on a minimal fixture whose expected output is
   checked in.
+* `CODE-TEST-009` **Every input validation has a test that triggers it.** Each check at a public entry point
+  (`CODE-ROB-001`, `CODE-DATA-003`) has a test that passes the input it guards against (a missing column, a wrong
+  dtype, a duplicated key, an empty table, identifiers that do not match) and asserts the specific error. The
+  end-to-end test of a pipeline (`CODE-TEST-008`) has a negative counterpart on a deliberately corrupted fixture (a
+  truncated file, a duplicated sample) that MUST fail.
+  * *Why:* a validation that is never exercised can be dead code (a misspelt column name, an inverted condition);
+    the pipeline then passes bad input through while every test stays green (`AGT-VER-005` in
+    `AGENTIC_GUIDELINES.md`, refusing bad input).
+* `CODE-TEST-010` **Expected values are established independently of the code under test**: from the source the
+  code reproduces (a published table, a rule stated in a paper), a hand calculation on a tiny input, or a reference
+  implementation, never by running the code and copying its output. When a test fails, MUST NOT change its
+  expected value to the observed one until it is established which of the two is right (`AGT-VER-003`,
+  `AGT-VER-004`); the commit that changes an expectation states the reason.
+  * *Why:* a test whose expectation was copied from the implementation checks only that the code still does what
+    it did, bugs included; changing it to match a new output turns a detected regression into a passing test.
+  * *Deviate when:* regression tests that pin current behaviour on purpose (snapshot tests) are allowed when marked
+    as such in their name or marker, and are not presented as evidence that the behaviour is correct.
 
 ## 17. Style
 
@@ -624,6 +670,12 @@ interface, a threshold or a data invariant MUST update it in the same change.
   suite when appropriate.
 * `CODE-VAL-002` MUST NOT claim that tests or checks passed unless they were actually run.
 * `CODE-VAL-003` If validation cannot be performed, state exactly what was not verified.
+* `CODE-VAL-004` **Run what was changed, not only its tests.** After changing code that produces an output, run the
+  changed entry point on a fixture or a small real input and inspect what it produced, where the next step will
+  read it: row counts before and after, key columns, a few values against their source (`AGT-VER-001` in
+  `AGENTIC_GUIDELINES.md`, outcome over proxy). Report what was inspected.
+  * *Why:* tests cover the cases someone thought of; a join that drops rows or a column renamed for a downstream
+    reader can pass every test and still change the output.
 
 ## 25. Working process (agents)
 

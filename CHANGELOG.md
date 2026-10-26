@@ -5,6 +5,47 @@ follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and each guide
 versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_GUIDELINES.md`
 §0 (versioning).
 
+## 2026-10-26 (verification, tests and shell rules)
+
+### CODING_GUIDELINES.md [3.7.0]
+
+#### Added
+
+- `CODE-NUM-013`: round only when presenting; computations, bounds and stored tables use full precision, and rounded
+  values are never read back as inputs.
+- `CODE-PROV-006`: broken or superseded runs go to `results/_superseded/<run>/` with a `DO_NOT_USE.md`; loaders
+  raise when given one, unless an explicit, logged argument allows it.
+- `CODE-TEST-009`: every input validation has a test that triggers it; a pipeline's end-to-end test has a negative
+  counterpart on a corrupted fixture.
+- `CODE-TEST-010`: expected values are established independently of the code under test; a failing test's
+  expectation is not changed to the observed value until it is established which is right; snapshot tests are
+  marked as such.
+- `CODE-VAL-004`: run the changed entry point and inspect its output where the next step reads it, not only the
+  tests.
+
+#### Changed
+
+- `CODE-LANG-004`: quoted heredocs; waiting on background jobs by PID, not `pgrep -f`; `timeout` checked to exist
+  (`timeout=120 command` is an environment assignment); background processes stopped on exit.
+- `CODE-DOC-005`: labels coined during development are replaced by what they name.
+- Adapted in part from `guidance/CLAUDE-starter.md` (*Shell commands*, *Verifying work*, *Writing*) and
+  `guidance/paper-CLAUDE.md` of the Co-Scientist toolkit (Shocklab, University of Cape Town,
+  <https://github.com/shocklab/co-scientist-toolkit>, CC BY 4.0).
+
+### MANUSCRIPT_GUIDELINES.md [1.1.0]
+
+#### Changed
+
+- `MS-TRACE-003`: superseded runs go to `results/_superseded/<run>/` as `CODE-PROV-006` requires (previously
+  `results/_ARCHIVE/`, a name easily confused with the `ARCHIVE` storage role of `HPC_GUIDELINES.md`, which holds
+  promoted results).
+
+### Repository
+
+#### Changed
+
+- `README.md`: licence note lists the `CODING_GUIDELINES.md` rules adapted from the Co-Scientist toolkit.
+
 ## 2026-10-26 (manuscript guidelines)
 
 ### MANUSCRIPT_GUIDELINES.md [1.0.0]
