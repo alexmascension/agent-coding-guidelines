@@ -259,3 +259,212 @@ into = "AGENTIC §0 (sources)"
 glob = "skills/*/SKILL.md"
 status = "watch"
 into = "new skills"
+
+[[repo]]
+name = "single-cell-best-practices"
+url = "https://github.com/theislab/single-cell-best-practices"
+branch = "main"
+licence = "Apache-2.0"
+reviewed_commit = "dd6eb86b30385cc3c5b5ddb2d8b63945b18dc1a5"
+reviewed_on = "2026-10-26"
+
+[[repo.path]]
+glob = "jupyter-book/introduction/raw_data_processing.md"
+status = "deferred"
+into = "SCRNASEQ round: library-level sequencing QC (§3)"
+
+[[repo.path]]
+glob = "jupyter-book/introduction/*"
+status = "not-integrated"
+into = "protocol overview, data structures, interoperability, GPU: tutorials"
+
+[[repo.path]]
+glob = "jupyter-book/preprocessing_visualization/quality_control.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: mitochondrial MAD on the logit scale with a fixed cap, gene filter, top-gene fraction (§4.2)"
+
+[[repo.path]]
+glob = "jupyter-book/preprocessing_visualization/dimensionality_reduction.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: scaling before PCA, embedding initialization (§6)"
+
+[[repo.path]]
+glob = "jupyter-book/preprocessing_visualization/*"
+status = "watch"
+into = "SCRNASEQ §5 (normalization, feature selection): consistent, nothing to adapt"
+
+[[repo.path]]
+glob = "jupyter-book/cellular_structure/annotation.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: label-transfer uncertainty, LLM and foundation-model labels (§9)"
+
+[[repo.path]]
+glob = "jupyter-book/cellular_structure/integration.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: choice of batch covariate, tumour samples, reading integration metrics (§7)"
+
+[[repo.path]]
+glob = "jupyter-book/cellular_structure/*"
+status = "watch"
+into = "SCRNASEQ §8 (clustering): nothing to adapt"
+
+[[repo.path]]
+glob = "jupyter-book/conditions/differential_gene_expression.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: pseudobulk count threshold, exploration of pseudobulk samples (§10)"
+
+[[repo.path]]
+glob = "jupyter-book/conditions/compositional.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: Milo neighbourhood size and diagnostics (§11)"
+
+[[repo.path]]
+glob = "jupyter-book/conditions/gsea_pathway.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: new section on pathway and transcription-factor activity"
+
+[[repo.path]]
+glob = "jupyter-book/conditions/perturbation_modeling.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: new section on pooled perturbation screens"
+
+[[repo.path]]
+glob = "jupyter-book/mechanisms/gene_regulatory_networks.ipynb"
+status = "deferred"
+into = "SCRNASEQ round: new section on pathway and transcription-factor activity"
+
+[[repo.path]]
+glob = "jupyter-book/mechanisms/*"
+status = "watch"
+into = "SCRNASEQ §12 (cell-cell communication): nothing to adapt"
+
+[[repo.path]]
+glob = "jupyter-book/trajectories/*"
+status = "watch"
+into = "SCRNASEQ §13 (trajectories, velocity, lineage tracing): nothing to adapt"
+
+[[repo.path]]
+glob = "jupyter-book/surface_protein/*"
+status = "deferred"
+into = "multimodal round: CITE-seq"
+
+[[repo.path]]
+glob = "jupyter-book/chromatin_accessibility/*"
+status = "deferred"
+into = "multimodal round: scATAC-seq and Multiome"
+
+[[repo.path]]
+glob = "jupyter-book/multimodal_integration/*"
+status = "deferred"
+into = "multimodal round: paired, unpaired and mosaic integration"
+
+[[repo.path]]
+glob = "jupyter-book/air_repertoire/*"
+status = "deferred"
+into = "multimodal round: TCR and BCR repertoires"
+
+[[repo.path]]
+glob = "jupyter-book/spatial/*"
+status = "watch"
+into = "SPATIAL_GUIDELINES: not compared in the 2026-10-26 review"
+
+[[repo.path]]
+glob = "jupyter-book/deconvolution/*"
+status = "watch"
+into = "DECONVOLUTION_GUIDELINES: not compared in the 2026-10-26 review"
+
+[[repo.path]]
+glob = "jupyter-book/*"
+status = "not-integrated"
+into = "book front matter, glossary, changelog, chapter template"
+
+[[repo]]
+name = "panpipes"
+url = "https://github.com/DendrouLab/panpipes"
+branch = "main"
+licence = "BSD-3-Clause"
+reviewed_commit = "81721cf4981725369017702b911909251379186e"
+reviewed_on = "2026-10-26"
+
+[[repo.path]]
+glob = "panpipes/resources/qc_gene*"
+status = "deferred"
+into = "SCRNASEQ round: genes excluded from HVG selection (§5)"
+
+[[repo.path]]
+glob = "docs/usage/gene_list_format.md"
+status = "deferred"
+into = "SCRNASEQ round: genes excluded from HVG selection (§5)"
+
+[[repo.path]]
+glob = "docs/workflows/preprocess.md"
+status = "deferred"
+into = "SCRNASEQ round: genes excluded from HVG selection (§5)"
+
+[[repo.path]]
+glob = "docs/workflows/refmap.md"
+status = "deferred"
+into = "SCRNASEQ round: preparing a query for reference mapping (§9)"
+
+[[repo.path]]
+glob = "docs/workflows/qc.md"
+status = "deferred"
+into = "multimodal round: ADT isotype outliers, per-antibody metrics, background in empty droplets, ATAC aggregation"
+
+[[repo.path]]
+glob = "docs/usage/normalization_methods.md"
+status = "deferred"
+into = "multimodal round: CLR margin, dsb, ATAC TF-IDF"
+
+[[repo.path]]
+glob = "docs/usage/integration_methods.md"
+status = "deferred"
+into = "multimodal round: integration methods"
+
+[[repo.path]]
+glob = "docs/*spatial*"
+status = "watch"
+into = "SPATIAL_GUIDELINES: not compared in the 2026-10-26 review"
+
+[[repo.path]]
+glob = "docs/*"
+status = "not-integrated"
+into = "pipeline usage, installation, troubleshooting"
+
+[[repo.path]]
+glob = "panpipes/panpipes/pipeline_ingest/pipeline.yml"
+status = "deferred"
+into = "multimodal round: QC defaults per modality"
+
+[[repo.path]]
+glob = "panpipes/panpipes/*/pipeline.yml"
+status = "watch"
+into = "pipeline defaults"
+
+[[repo.path]]
+glob = "README.md"
+status = "watch"
+into = "new workflows or modalities"
+
+[[repo.path]]
+glob = "*"
+status = "not-integrated"
+into = "pipeline code and tests"
+
+[[repo]]
+name = "sc-best-practices-ce"
+url = "https://github.com/theislab/sc-best-practices-ce"
+branch = "master"
+licence = "none stated (ideas only, no text adapted)"
+reviewed_commit = "4a4d9147c5db71827fca251b3573d5b6b60a9ce9"
+reviewed_on = "2026-10-26"
+
+[[repo.path]]
+glob = "*README.md"
+status = "watch"
+into = "planning repository, inactive since 2020; benchmark fairness criteria"
+
+[[repo.path]]
+glob = "*"
+status = "not-integrated"
+into = "empty package skeleton"

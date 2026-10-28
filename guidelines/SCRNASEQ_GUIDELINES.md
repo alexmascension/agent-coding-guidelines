@@ -16,11 +16,17 @@
   `RNASEQ_BULK_GUIDELINES.md` (pseudobulk differential expression, DE, follows its §7–8). Sex checks follow `SEX_INFERENCE_GUIDELINES.md`;
   identity and pooled designs follow `SAMPLE_IDENTITY_GUIDELINES.md`.
 * Scope: droplet-based scRNA-seq (cells) and snRNA-seq (nuclei), human and mouse, from FASTQ to annotation,
-  differential expression, abundance, communication and trajectories. Multimodal assays are out of scope.
+  differential expression, abundance, communication, trajectories, pathway and transcription-factor activity, and
+  pooled CRISPR screens read out by the transcriptome (§15). Multimodal assays (surface proteins, chromatin
+  accessibility, immune repertoires) are out of scope.
 * Ecosystem: scverse (`anndata`, `scanpy`, `scvi-tools`, `pertpy`, `decoupler`, `cellrank`, `liana`) [Virshup 2023;
   Wolf 2018; Gayoso 2022]. R tools are called through scripts (`CODING_GUIDELINES.md` §3, languages). Seurat
   [Hao 2023] is the main R alternative and is not used unless a project requires it. Workflow references:
   [Heumos 2023; Luecken 2019; Amezquita 2019].
+* Upstream sources: some rules of version 4.1.0 adapt ideas, rewritten, from the single-cell best-practices book
+  (<https://github.com/theislab/single-cell-best-practices>, Theis lab, Apache-2.0, commit `dd6eb86`), which
+  accompanies [Heumos 2023], and from panpipes (<https://github.com/DendrouLab/panpipes>, Dendrou lab,
+  BSD-3-Clause, commit `81721cf`) [Curion 2024]. `references/SOURCE_REPOS.toml` records which files were followed.
 
 ## 1. Data conventions
 
@@ -57,6 +63,12 @@
 * `SC-DATA-005` `adata.obs` MUST contain for every cell: `sample_id` (one capture), `donor_id` (the experimental unit), `condition`,
   and each technical variable (`batch`, `chemistry`, `capture_date`). Names are declared once
   (`CODING_GUIDELINES.md` §6, controlled vocabulary).
+* **Library-level metrics live in `adata.uns["library_qc"]`**: one row per `sample_id` with the metrics of
+  `SC-QUANT-006`, their source file and the tool version. Per-cell metrics stay in `obs`; library values are not
+  copied into every cell's row. The table is added after the captures are concatenated, because
+  `anndata.concat` keeps no `uns` entry by default.
+  * *Why:* a cell's QC is read against its library; with both in the same object, a capture that failed at the
+    library level cannot pass unnoticed through per-capture cell filters.
 
 ### 1.3 Gene identifiers and symbols
 
@@ -147,6 +159,23 @@
   transcript compatibility counts [Ntranos 2019]. For full-length per-cell isoform quantification, use Salmon rather
   than alevin. Isoforms are not quantified from 3' tag data.
 * `SC-QUANT-003` Record STAR version, all `--solo*` parameters, chemistry and whitelist, reference genome and annotation release.
+* **Check every library before its cells enter QC.**
+  1. FastQC on the barcode read and on the cDNA read, aggregated with MultiQC together with the STAR logs
+     (`RNASEQ_BULK_GUIDELINES.md`, `BULK-RQC-001`).
+  2. From STARsolo, `Solo.out/<feature>/Summary.csv` of the main feature and `Solo.out/Barcodes.stats`: number of
+     reads, fraction with a valid barcode, Q30 of the barcode and UMI bases and of the cDNA read, sequencing
+     saturation, fraction mapped to the genome and to the feature, estimated cells, fraction of unique reads in
+     called cells, and median UMIs and genes per cell.
+  3. Compare the libraries of the project with each other and with the number of cells loaded. Investigate a
+     library that departs from the others before using it, for example: few valid barcodes (wrong chemistry or
+     whitelist), a low fraction of reads in cells (much ambient RNA, or cell calling failed), low saturation
+     (undersequenced), many more or fewer cells than loaded.
+  4. Store the metrics in `adata.uns["library_qc"]` (§1.2) and keep the MultiQC report with the run outputs.
+  * *Why:* cell-level thresholds are relative to each capture (`SC-QC-003`), so a failed library still yields
+    cells that pass them; only the library metrics show the failure.
+  * *Deviate when:* public data without FASTQs or STARsolo output: record which metrics are unavailable.
+* Recipe: `recipes/scrnaseq/library_qc.py` (reads `Summary.csv` and `Barcodes.stats` of each sample into one table,
+  flags libraries that depart from the others, stores the table in `uns["library_qc"]`).
 * `SC-QUANT-004` Default references can miss reads from genes with incomplete 3' annotation; optimized references recover them
   [Pool 2023]. Check the annotation of a gene of interest before concluding it is not expressed.
 * `SC-QUANT-005` **Archived droplet alignments (`HPC_GUIDELINES.md` §2, `HPC-FLOW-006`) SHOULD keep the corrected barcodes and MAY drop
@@ -194,9 +223,20 @@ cells that remain, and its layer from normalization (§5) onwards.
 ### 4.2 Cell-level filters
 
 * `SC-QC-003` **Thresholds are adaptive and per capture**: remove cells more than 3–5 scaled median absolute deviations from the
-  capture median in log total counts, log genes detected, and mitochondrial fraction, plus the nuclear-fraction
-  filter above. The scaled MAD is $1.4826 \times \text{median}(|x - \text{median}(x)|)$, which estimates the SD for
-  normal data; 5 scaled MADs equal 7.41 unscaled MADs. State which convention is used.
+  capture median in log total counts and log genes detected (both tails), and in the mitochondrial fraction as
+  below, plus the nuclear-fraction filter above. The scaled MAD is
+  $1.4826 \times \text{median}(|x - \text{median}(x)|)$, which estimates the SD for normal data; 5 scaled MADs equal
+  7.41 unscaled MADs. State which convention is used.
+  * **Mitochondrial fraction: upper tail only, on the logit scale, and above a floor.** Compute the MADs on
+    $\text{logit}(f + \epsilon)$ with a small pseudocount $\epsilon$, and flag a cell only when it is beyond the MAD
+    threshold *and* above a fixed floor that the project states for its tissue and assay. pipeComp's filters flag
+    the mitochondrial fraction at more than 2.5 or 3 MADs *and* more than 8% [Germain 2020]; the logit scale is the
+    single-cell best-practices book's choice. A low mitochondrial fraction does not mark a bad cell.
+  * *Why the logit scale:* the fraction is bounded and skewed, so MADs on the raw scale put the upper threshold too
+    close to the median when most cells have little mitochondrial RNA. *Why the floor:* in a capture of healthy
+    cells with uniformly low fractions, a few MADs above the median is still a healthy cell.
+  * **Fraction of counts in the 20 most expressed genes**, both tails: a dominant handful of transcripts marks
+    degraded cells or over-amplification [Germain 2020]. It is recorded and flagged like the other metrics.
   * Values that cannot be evaluated (non-finite metrics) are flagged, not passed. When the MAD is 0 (e.g.
     mitochondrial fraction in nuclei), the MAD rule cannot be applied: use a project-justified absolute threshold
     or report the metric as not evaluated.
@@ -205,6 +245,14 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Why:* depth and quality differ between captures; one fixed threshold removes good cells in one capture and keeps
     bad cells in another.
   * *Trade-off:* MAD (median absolute deviation) filters assume most cells are good; inspect distributions when a capture is mostly poor.
+* **Check what the filters remove from each population before removing it.** After the first clustering (§4.3),
+  tabulate per cluster the fraction of cells flagged by each metric. When one cluster loses a much larger fraction
+  than the others, inspect it (lineage markers against signs of damage) and record whether its cells are removed.
+  * *Why:* QC metrics differ between cell types (large or metabolically active cells have more counts or more
+    mitochondrial RNA), so thresholds computed on the whole capture remove more cells from such populations.
+    Stringent filtering raised clustering accuracy only up to a point, and applied within clusters it removed almost
+    no cells, which suggests that what it removed globally were extreme subpopulations rather than damaged cells
+    [Germain 2020].
 * `SC-QC-004` **Mitochondrial genes are identified by chromosome** (`MT` in Ensembl, `chrM` in UCSC) from the GTF (gene transfer format) of the reference
   used, not by symbol prefix.
   * *Why:* with Ensembl IDs as index, prefixes depend on a symbol column that may be incomplete; a regex without the
@@ -213,11 +261,14 @@ cells that remain, and its layer from normalization (§5) onwards.
   human tissues [Osorio 2020]; model-based alternatives exist [Hippen 2021]. In nuclei, mitochondrial reads should be
   near zero.
 * `SC-QC-006` Ribosomal and haemoglobin genes, which have no dedicated chromosome, are defined by explicit species-specific lists
-  stored in the project.
+  stored in the project. **Their fractions are diagnostics, not filters**: a high haemoglobin fraction points to red
+  blood cell contamination (or to erythroid cells, in blood and bone marrow), and the ribosomal fraction varies with
+  cell state and helps explain what separates clusters. Cells are removed on them only for a recorded reason.
 * `SC-QC-007` MUST NOT filter cells by the expression of markers of the hypothesis being tested.
 
 * `SC-QC-008` Recipe for §4.1–4.2: `recipes/scrnaseq/qc.py` (gene groups from the GTF chromosome, nuclear fraction, per-capture
-  MAD flags with the thresholds used per capture).
+  MAD flags with the thresholds used per capture, mitochondrial fraction on the logit scale with an optional floor,
+  top-20-gene fraction, flagged fraction per cluster).
 
 ### 4.3 Doublets
 

@@ -6,6 +6,18 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-10-26 (single-cell sources)
+
+### Repository
+
+#### Added
+
+- `references/SOURCE_REPOS.toml`: three single-cell sources, reviewed against `SCRNASEQ_GUIDELINES.md` and nothing
+  adapted yet: the single-cell best-practices book (Theis lab, Apache-2.0, `dd6eb86`), panpipes (Dendrou lab,
+  BSD-3-Clause, `81721cf`) and its inactive community edition (`4a4d914`, no licence stated). Chapters and files
+  with proposed changes are `deferred` to a SCRNASEQ round or a multimodal round; the spatial and deconvolution
+  chapters are `watch`, not yet compared with their guides.
+
 ## 2026-10-26 (SCRNASEQ citation fixes)
 
 ### SCRNASEQ_GUIDELINES.md [4.0.1]
