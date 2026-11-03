@@ -41,7 +41,8 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
   `Barcodes.stats` (STAR 2.7.11b names) in the nf-core/scrnaseq output layout; one row per library with the STAR
   version and source files; flags libraries more than 3 scaled MADs from the other libraries in the direction of a
   problem (not evaluated with fewer than 3 libraries or MAD = 0); stores the table in `uns["library_qc"]` with nullable
-  dtypes. Tests on synthetic outputs.
+  booleans and categorical strings, which `write_h5ad` accepts in current and older anndata versions. Tests on
+  synthetic outputs.
 - `scrnaseq/qc`: `qc_metrics` adds `top20_fraction`; `mad_outlier_flags` flags it on both tails (`n_mads_top20`);
   new `flagged_fraction_by_cluster` (`SC-QC-015`), with clusters marked for inspection at twice the median flagged
   fraction and at least 5 points above it (project defaults).

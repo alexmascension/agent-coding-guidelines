@@ -197,6 +197,10 @@ def test_store_requires_every_sample_and_writes_h5ad(tmp_path):
     adata = ad.AnnData(X=np.ones((15, 2), dtype=np.float32), obs=obs)
     store_library_qc(adata, flagged)
     assert list(adata.uns["library_qc"].index) == sorted(samples)
+    # anndata versions still in use refuse nullable string arrays unless this setting is on
+    if hasattr(ad.settings, "allow_write_nullable_strings"):
+        with ad.settings.override(allow_write_nullable_strings=False):
+            adata.write_h5ad(tmp_path / "strict.h5ad")
     adata.write_h5ad(tmp_path / "out.h5ad")
     back = ad.read_h5ad(tmp_path / "out.h5ad")
     assert bool(back.uns["library_qc"].loc["S5", "library_flagged"])

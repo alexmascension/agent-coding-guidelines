@@ -414,15 +414,24 @@ def store_library_qc(
     extra = sorted(set(samples_table) - samples_obs)
     if extra:
         logger.warning(f"library metrics for samples absent from obs: {extra}")
-    adata.uns[UNS_KEY] = _to_pandas(table).set_index("sample_id")
+    frame = _to_pandas(table.drop("sample_id"))
+    frame.index = pd.Index(
+        [str(sample) for sample in samples_table], dtype=object, name="sample_id"
+    )
+    adata.uns[UNS_KEY] = frame
 
 
 def _to_pandas(table: pl.DataFrame) -> pd.DataFrame:
-    """Convert to pandas with nullable dtypes, so missing values survive ``write_h5ad``."""
+    """Convert to pandas with dtypes that ``write_h5ad`` stores with missing values.
+
+    Booleans become nullable booleans; strings become categoricals, because nullable string arrays
+    are refused by default in anndata versions still in use.
+    """
     frame = table.to_pandas()
     for name, dtype in table.schema.items():
+        values = table.get_column(name).to_list()
         if dtype == pl.Boolean:
-            frame[name] = pd.array(table.get_column(name).to_list(), dtype="boolean")
+            frame[name] = pd.array(values, dtype="boolean")
         elif dtype == pl.Utf8:
-            frame[name] = pd.array(table.get_column(name).to_list(), dtype="string")
+            frame[name] = pd.Categorical(values)
     return frame
