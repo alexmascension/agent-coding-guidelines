@@ -6,6 +6,61 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-03 (SCRNASEQ 4.1.0: library QC and cell filters)
+
+### SCRNASEQ_GUIDELINES.md [4.1.0]
+
+#### Added
+
+- `SC-QUANT-006`: check every library before its cells enter QC: FastQC and MultiQC; from STARsolo `Summary.csv`
+  and `Barcodes.stats`, reads, valid barcodes, Q30, saturation, mapping, estimated cells, reads in cells, UMIs and
+  genes per cell; libraries compared with each other and with the cells loaded.
+- `SC-QUANT-007`: recipe `recipes/scrnaseq/library_qc.py`.
+- `SC-DATA-011`: library-level metrics in `adata.uns["library_qc"]`, one row per `sample_id`, added after the
+  captures are concatenated.
+- `SC-QC-015`: check what the filters remove from each population: flagged fraction per cluster after the first
+  clustering, inspection of clusters that lose much more than the others [Germain 2020].
+- §0: upstream sources (single-cell best-practices book, panpipes [Curion 2024]).
+
+#### Changed
+
+- `SC-QC-003`: log total counts and log genes, both tails; mitochondrial fraction upper tail only, on the logit
+  scale, flagged only above a floor stated by the project [Germain 2020]; fraction of counts in the 20 most expressed
+  genes, both tails.
+- `SC-QC-006`: ribosomal and haemoglobin fractions are diagnostics, not filters.
+- `SC-QC-008`: the recipe description lists the logit mitochondrial rule with a floor, the top-20 fraction and the
+  flagged fraction per cluster.
+- §0 scope: pathway and transcription-factor activity listed; multimodal assays named. Pooled CRISPR screens, which
+  the draft named with a reference to a section that does not exist, are moved to `TODO.md`.
+
+### recipes/ [0.5.0]
+
+#### Added
+
+- `scrnaseq/library_qc`: reads STARsolo `Summary.csv` (feature name detected in the rows; `NoMulti` kept missing) and
+  `Barcodes.stats` (STAR 2.7.11b names) in the nf-core/scrnaseq output layout; one row per library with the STAR
+  version and source files; flags libraries more than 3 scaled MADs from the other libraries in the direction of a
+  problem (not evaluated with fewer than 3 libraries or MAD = 0); stores the table in `uns["library_qc"]` with nullable
+  dtypes. Tests on synthetic outputs.
+- `scrnaseq/qc`: `qc_metrics` adds `top20_fraction`; `mad_outlier_flags` flags it on both tails (`n_mads_top20`);
+  new `flagged_fraction_by_cluster` (`SC-QC-015`), with clusters marked for inspection at twice the median flagged
+  fraction and at least 5 points above it (project defaults).
+
+#### Changed
+
+- `scrnaseq/qc`: the mitochondrial MAD rule is computed on the logit scale (`MITO_LOGIT_EPS`) and, with the new
+  `mito_floor`, flags a cell only above the floor; without a floor the report status is `evaluated_no_floor`. The
+  report gains `scale` and `floor`; `median` and `upper` of the mitochondrial row are on the fraction scale.
+
+### Repository
+
+#### Added
+
+- `references/OMICS_REFERENCES.md` and `.bib`: [Curion 2024] (panpipes) and [Germain 2020] (pipeComp), cited by
+  SCRNASEQ 4.1.0.
+- `RULE_IDS.tsv`: `SC-DATA-011`, `SC-QUANT-006`, `SC-QUANT-007`, `SC-QC-015`.
+- `TODO.md`: planned work not yet in the guides.
+
 ## 2026-10-26 (single-cell sources)
 
 ### Repository
