@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.0.1 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.1.0 (2026-11-03)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -16,9 +16,8 @@
   `RNASEQ_BULK_GUIDELINES.md` (pseudobulk differential expression, DE, follows its §7–8). Sex checks follow `SEX_INFERENCE_GUIDELINES.md`;
   identity and pooled designs follow `SAMPLE_IDENTITY_GUIDELINES.md`.
 * Scope: droplet-based scRNA-seq (cells) and snRNA-seq (nuclei), human and mouse, from FASTQ to annotation,
-  differential expression, abundance, communication, trajectories, pathway and transcription-factor activity, and
-  pooled CRISPR screens read out by the transcriptome (§15). Multimodal assays (surface proteins, chromatin
-  accessibility, immune repertoires) are out of scope.
+  differential expression, abundance, communication, trajectories, and pathway and transcription-factor activity.
+  Multimodal assays (surface proteins, chromatin accessibility, immune repertoires) are out of scope.
 * Ecosystem: scverse (`anndata`, `scanpy`, `scvi-tools`, `pertpy`, `decoupler`, `cellrank`, `liana`) [Virshup 2023;
   Wolf 2018; Gayoso 2022]. R tools are called through scripts (`CODING_GUIDELINES.md` §3, languages). Seurat
   [Hao 2023] is the main R alternative and is not used unless a project requires it. Workflow references:
@@ -63,7 +62,7 @@
 * `SC-DATA-005` `adata.obs` MUST contain for every cell: `sample_id` (one capture), `donor_id` (the experimental unit), `condition`,
   and each technical variable (`batch`, `chemistry`, `capture_date`). Names are declared once
   (`CODING_GUIDELINES.md` §6, controlled vocabulary).
-* **Library-level metrics live in `adata.uns["library_qc"]`**: one row per `sample_id` with the metrics of
+* `SC-DATA-011` **Library-level metrics live in `adata.uns["library_qc"]`**: one row per `sample_id` with the metrics of
   `SC-QUANT-006`, their source file and the tool version. Per-cell metrics stay in `obs`; library values are not
   copied into every cell's row. The table is added after the captures are concatenated, because
   `anndata.concat` keeps no `uns` entry by default.
@@ -159,7 +158,7 @@
   transcript compatibility counts [Ntranos 2019]. For full-length per-cell isoform quantification, use Salmon rather
   than alevin. Isoforms are not quantified from 3' tag data.
 * `SC-QUANT-003` Record STAR version, all `--solo*` parameters, chemistry and whitelist, reference genome and annotation release.
-* **Check every library before its cells enter QC.**
+* `SC-QUANT-006` **Check every library before its cells enter QC.**
   1. FastQC on the barcode read and on the cDNA read, aggregated with MultiQC together with the STAR logs
      (`RNASEQ_BULK_GUIDELINES.md`, `BULK-RQC-001`).
   2. From STARsolo, `Solo.out/<feature>/Summary.csv` of the main feature and `Solo.out/Barcodes.stats`: number of
@@ -174,7 +173,7 @@
   * *Why:* cell-level thresholds are relative to each capture (`SC-QC-003`), so a failed library still yields
     cells that pass them; only the library metrics show the failure.
   * *Deviate when:* public data without FASTQs or STARsolo output: record which metrics are unavailable.
-* Recipe: `recipes/scrnaseq/library_qc.py` (reads `Summary.csv` and `Barcodes.stats` of each sample into one table,
+* `SC-QUANT-007` Recipe: `recipes/scrnaseq/library_qc.py` (reads `Summary.csv` and `Barcodes.stats` of each sample into one table,
   flags libraries that depart from the others, stores the table in `uns["library_qc"]`).
 * `SC-QUANT-004` Default references can miss reads from genes with incomplete 3' annotation; optimized references recover them
   [Pool 2023]. Check the annotation of a gene of interest before concluding it is not expressed.
@@ -245,7 +244,7 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Why:* depth and quality differ between captures; one fixed threshold removes good cells in one capture and keeps
     bad cells in another.
   * *Trade-off:* MAD (median absolute deviation) filters assume most cells are good; inspect distributions when a capture is mostly poor.
-* **Check what the filters remove from each population before removing it.** After the first clustering (§4.3),
+* `SC-QC-015` **Check what the filters remove from each population before removing it.** After the first clustering (§4.3),
   tabulate per cluster the fraction of cells flagged by each metric. When one cluster loses a much larger fraction
   than the others, inspect it (lineage markers against signs of damage) and record whether its cells are removed.
   * *Why:* QC metrics differ between cell types (large or metabolically active cells have more counts or more

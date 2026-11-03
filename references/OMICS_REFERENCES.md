@@ -145,6 +145,8 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
 
 ### Reviews, workflows and ecosystems
 
+- **[Curion 2024]** Curion et al. (2024). Panpipes: a pipeline for multiomic single-cell and spatial transcriptomic data analysis. *Genome Biology*. [doi:10.1186/s13059-024-03322-7](https://doi.org/10.1186/s13059-024-03322-7)  
+  Panpipes: cgat-core workflows for QC, preprocessing, integration, clustering, reference mapping and spatial deconvolution of multimodal single-cell and spatial data, built on scverse tools.
 - **[Wolf 2018]** Wolf et al. (2018). SCANPY: large-scale single-cell gene expression data analysis. *Genome Biology*. [doi:10.1186/s13059-017-1382-0](https://doi.org/10.1186/s13059-017-1382-0)  
   SCANPY is a scalable Python toolkit—supporting preprocessing, visualization, clustering, pseudotime/trajectory inference, differential expression, and gene regulatory network simulation—that efficiently analyzes single-cell gene expression datasets exceeding one million cells, using the accompanying AnnData data structure.
 - **[Amezquita 2019]** Amezquita et al. (2019). Orchestrating single-cell analysis with Bioconductor. *Nature Methods*. [doi:10.1038/s41592-019-0654-x](https://doi.org/10.1038/s41592-019-0654-x)  
@@ -185,6 +187,8 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
 
 ### Quality control: cells, droplets, ambient RNA, doublets, artefacts
 
+- **[Germain 2020]** Germain et al. (2020). pipeComp, a general framework for the evaluation of computational pipelines, reveals performant single cell RNA-seq preprocessing tools. *Genome Biology*. [doi:10.1186/s13059-020-02136-7](https://doi.org/10.1186/s13059-020-02136-7)  
+  pipeComp: evaluates each step of scRNA-seq pipelines on benchmark data; MAD-based cell filters combined with a mitochondrial cut-off performed well, and stringent filtering removed whole subpopulations.
 - **[Lun 2019]** Lun et al. (2019). EmptyDrops: distinguishing cells from empty droplets in droplet-based single-cell RNA sequencing data. *Genome Biology*. [doi:10.1186/s13059-019-1662-y](https://doi.org/10.1186/s13059-019-1662-y)  
   EmptyDrops identifies real cells in droplet-based scRNA-seq by testing for significant deviations from the ambient RNA profile, retaining distinct cell types that conventional knee-point methods discard.
 - **[Wolock 2019]** Wolock et al. (2019). Scrublet: Computational Identification of Cell Doublets in Single-Cell Transcriptomic Data. *Cell Systems*. [doi:10.1016/j.cels.2018.11.005](https://doi.org/10.1016/j.cels.2018.11.005)  

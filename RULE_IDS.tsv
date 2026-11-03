@@ -561,6 +561,7 @@ SC-DATA-007	active	SCRNASEQ_GUIDELINES.md	Write marker dictionaries in symbols (
 SC-DATA-008	active	SCRNASEQ_GUIDELINES.md	Display symbols in plots and tables through the same mapping; keep the ID in res
 SC-DATA-009	active	SCRNASEQ_GUIDELINES.md	Cross-species marker lists use one-to-one orthologs from a stated Ensembl releas
 SC-DATA-010	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/common/gene_ids.py (annotation table from the GTF, stable IDs, m
+SC-DATA-011	active	SCRNASEQ_GUIDELINES.md	Library-level metrics live in adata.uns["library_qc"]: one row per sample_id wit
 SC-DE-001	active	SCRNASEQ_GUIDELINES.md	MUST use pseudobulk or mixed models; MUST NOT use cell-level tests to compare co
 SC-DE-002	active	SCRNASEQ_GUIDELINES.md	Pseudobulk procedure:
 SC-DE-003	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/scrnaseq/pseudobulk.py (aggregation with cell counts per pseudob
@@ -604,11 +605,14 @@ SC-QC-011	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/scrnaseq/doublets.py (Sc
 SC-QC-012	active	SCRNASEQ_GUIDELINES.md	Doublets are detected on counts without ambient correction (layers["counts"], SC
 SC-QC-013	active	SCRNASEQ_GUIDELINES.md	Check the Scrublet threshold of every capture. scanpy places it at the minimum b
 SC-QC-014	active	SCRNASEQ_GUIDELINES.md	Pooled captures (SAMPLE_IDENTITY_GUIDELINES.md §6): remove the doublets called b
+SC-QC-015	active	SCRNASEQ_GUIDELINES.md	Check what the filters remove from each population before removing it. After the
 SC-QUANT-001	active	SCRNASEQ_GUIDELINES.md	Default: STARsolo [Kaminow 2021], gene-level counts, with these features in one 
 SC-QUANT-002	active	SCRNASEQ_GUIDELINES.md	Isoform-level questions need full-length (e.g. Smart-seq) or long-read protocols
 SC-QUANT-003	active	SCRNASEQ_GUIDELINES.md	Record STAR version, all --solo parameters, chemistry and whitelist, reference g
 SC-QUANT-004	active	SCRNASEQ_GUIDELINES.md	Default references can miss reads from genes with incomplete 3' annotation; opti
 SC-QUANT-005	active	SCRNASEQ_GUIDELINES.md	Archived droplet alignments (HPC_GUIDELINES.md §2, HPC-FLOW-006) SHOULD keep the
+SC-QUANT-006	active	SCRNASEQ_GUIDELINES.md	Check every library before its cells enter QC.
+SC-QUANT-007	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/scrnaseq/library_qc.py (reads Summary.csv and Barcodes.stats of 
 SC-REP-001	active	SCRNASEQ_GUIDELINES.md	Tissue handling: dissociation or nuclei protocol, chemistry, multiplexing.
 SC-REP-002	active	SCRNASEQ_GUIDELINES.md	STAR version and --solo parameters (or the alternative tool), reference and anno
 SC-REP-003	active	SCRNASEQ_GUIDELINES.md	Per capture: barcodes, cells after each QC step (cell calling, ambient, nuclear 

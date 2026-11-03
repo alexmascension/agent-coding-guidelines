@@ -115,6 +115,7 @@ def test_mad_flags_catch_low_quality_cells(sim_adata):
         "log1p_total_counts",
         "log1p_n_genes",
         "mito_fraction",
+        "top20_fraction",
         "nuclear_fraction",
     }
 

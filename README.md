@@ -26,8 +26,9 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 | `guidelines/hpc_sites/` | Site profiles (facts of one cluster, dated): `DIPC_HYPERION.md` | — |
 | `guidelines/FIGURE_GUIDELINES.md` | Figures | planned |
 | `references/` | `OMICS_REFERENCES.md` / `.bib`, `STATISTICS_REFERENCES.md` / `.bib`: references with keys used in the guides | — |
-| `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.4.0 |
+| `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.5.0 |
 | `CHANGELOG.md` | Changes per guide (semantic versioning per file) | — |
+| `TODO.md` | Planned work not yet in the guides, recipes or tooling | — |
 | `RULE_IDS.tsv` | Registry of rule identifiers (active and retired) | — |
 | `references/SOURCE_REPOS.toml` | Upstream repositories the guides adapt: commit last reviewed, files followed and where each was adapted (maintenance only; not copied into projects) | — |
 
