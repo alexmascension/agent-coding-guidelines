@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.7.0 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.0.0 (2026-11-04)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -119,7 +119,8 @@ omission.
 7. `CODE-PROJ-007` **Interfaces** — outputs consumed by notebooks, other repositories or people; sibling
    libraries that MUST be reused rather than copied (see §21, interfaces).
 8. `CODE-PROJ-008` **Overrides** — first, the version of each adopted guideline file; then every deviation
-   from them, each with the rule identifier (e.g. `SC-QC-003`), the replacement rule and the reason.
+   from them, each with the rule identifier (e.g. `SC-QC-003`), the replacement rule and the reason; deviations from
+   a pipeline or recipe go in the `pipeline_deviations` block (`CODE-PIPE-004`).
 9. `CODE-PROJ-009` **Decisions log** — dated entries: decision, rationale, affected outputs. MAY instead link to
    `DECISIONS.md`.
 
@@ -407,6 +408,75 @@ interface, a threshold or a data invariant MUST update it in the same change.
 * `CODE-EXT-004` Capture stderr and include its tail in the error message when a tool fails.
 * `CODE-EXT-005` Parse tool outputs in dedicated parser functions that convert to internal conventions (see
   §11, coordinate convention) and return typed tables.
+
+### Established pipelines
+
+* `CODE-PIPE-001` **Run a processing stage with an established pipeline when the domain guide names one for it.**
+  Processing stages are reads to matrix, matrix to a filtered and integrated object, segmentation and demultiplexing;
+  exploratory analysis, statistics and figures are not. Established means a tagged release (not `dev`), a release or
+  commit in the last 12 months, tests and containers; the domain guides list the pipelines in their *Implementation*
+  tables. Pin the release (`HPC-WF-003`) and keep its parameters in a tracked file (`HPC-WF-005`). A domain guide MAY
+  name a pipeline without a release; pin it to a commit whose tests pass, with "first release" as its return condition
+  (`CODE-PIPE-004`). Running a pipeline and writing its configuration is not code in another language
+  (`CODE-LANG-003`).
+  * *Why:* a community pipeline has been run on many datasets and its failure modes are fixed upstream; a hand-built
+    equivalent repeats them, is tested only on the project's data, and its outputs are not comparable with studies
+    that used the pipeline [Ewels 2020].
+  * *Trade-off:* pipeline defaults may differ from the domain guides (`CODE-PIPE-002`); engine and container setup
+    cost time (`hpc_sites/`).
+* `CODE-PIPE-002` **Domain rules fix what is computed; implement each at the lowest level that can express it.** The
+  levels apply to the pipelines of `CODE-PIPE-001` and to the recipes of this repository (§26):
+  1. parameters and profiles; for a recipe, its parameters and named constants;
+  2. configuration without changing code: `ext.args`, `withName` selectors and container pins in a tracked `-c` file
+     (Nextflow), `pipeline.yml` (panpipes);
+  3. split run: the pipeline up to the step before, the external step, and the pipeline again from the next step that
+     accepts its output;
+  4. patch: a fork of the pipeline at a pinned commit with the smallest diff, proposed upstream; for a recipe, a change
+     to its logic, with its tests kept passing or replaced by tests of the new behaviour;
+  5. external implementation of the step, in this order: the reference implementation or container of the method's
+     authors, a recipe of this repository, own code.
+
+  Move to the next level only when the current one cannot express the rule, and record the fact that shows it (the
+  value is absent from the pipeline schema; the module writes the argument itself). Disabling the pipeline's parameter
+  validation is not level 1. Levels 4 and 5 need the user's confirmation (`CODE-AGENT-001`) unless *Overrides* already
+  decide them.
+  * *Why:* each level leaves more of the run outside the tests of the pipeline or recipe and adds a step to re-check
+    at every update; leaving late and re-entering early keeps the untested part to the step that needed the change.
+    Rebuilding a whole stage because one option is missing turns one deviation into many.
+* `CODE-PIPE-003` **A modified or replaced step mirrors the original step**: same tool version and container, same
+  arguments except the deviation, same output names and layout, so that the next step and the project's parsers
+  (`CODE-EXT-005`) read it unchanged. At level 2, start from the pipeline's own value: a `withName` block that sets
+  `ext.args` replaces the pipeline's string, it does not extend it. Test on a small fixture against the unmodified
+  pipeline or recipe (`CODE-TEST-008`): the outputs differ by the deviation and nothing else.
+  * *Why:* an aligned step can be dropped when the pipeline gains the feature; a rewritten one cannot.
+* `CODE-PIPE-004` **Record every deviation in the `pipeline_deviations` YAML block of *Overrides***: pipeline or recipe
+  and its release or commit; step; level (`CODE-PIPE-002`); the fact that forced it; re-entry point; equivalence test
+  (`CODE-PIPE-003`); for levels 4 and 5, who confirmed it and when; upstream issue or pull request; return condition,
+  typed when it can be checked (`schema_accepts`, `first_release`, `pipeline_includes`, `issue_closed`) and `manual`
+  otherwise. One entry, for example:
+
+  ```yaml
+  pipeline_deviations:
+    - id: DEV-001
+      rule: SC-QUANT-001
+      pipeline: nf-core/scrnaseq
+      pinned: 4.2.0
+      step: STAR_ALIGN
+      level: 4
+      fact: "nextflow_schema.json: star_feature does not accept GeneFull_Ex50pAS"
+      reentry: "Solo.out unchanged; the pipeline's h5ad conversion reads it"
+      equivalence_test: tests/test_starsolo_fork.py
+      fork: https://github.com/<org>/scrnaseq/tree/<commit>
+      confirmed: {by: user, on: 2026-11-03}
+      upstream: https://github.com/nf-core/scrnaseq/pull/<n>
+      return_condition:
+        schema_accepts: {param: star_feature, value: "GeneFull_Ex50pAS Velocyto"}
+  ```
+
+  * *Why:* a typed return condition can be checked by a script at each release; a deviation recorded in prose is
+    found again only when someone rereads it.
+* `CODE-PIPE-005` **When the release or pinned commit changes, check every recorded deviation against its return
+  condition** and return to the pipeline where it is met. The change makes previous outputs stale (`CODE-IFACE-003`).
 
 ## 13. Data management and provenance
 
@@ -749,7 +819,6 @@ Available in the same repository; copy the ones relevant to the project:
   `PROJECT_CONTEXT.md`.
   * *Why:* several agents implementing the same procedure from prose diverge in details (seeds, subsampling, how
     clusters are matched, which tail of a distribution is filtered), and their results stop being comparable.
-* `CODE-RCP-003` Adapt a recipe through its parameters and named constants. A change to its logic is a deviation: record it under
-  *Overrides* in `PROJECT_CONTEXT.md` and keep the recipe's tests passing (or replace them with tests of the new
-  behaviour).
+  * Adapting a recipe follows the levels of `CODE-PIPE-002` (parameters and named constants first; a change to its
+    logic is level 4) and is recorded as in `CODE-PIPE-004`.
 * `CODE-RCP-004` If a recipe and its guideline disagree, the guideline wins; report the discrepancy upstream.

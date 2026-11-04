@@ -1,6 +1,6 @@
 # Spatial transcriptomics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.0 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Palla 2022b]` point to
 > `OMICS_REFERENCES.md`; keys marked with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`.
@@ -90,12 +90,16 @@
 
 ## 5. Cell segmentation (imaging platforms)
 
-* `SP-SEG-001` Treat the platform segmentation as a baseline, not as ground truth. Alternatives: transcript-based Baysor
-  [Petukhov 2021] or Proseg [Jones 2025]; image-based Cellpose [Stringer 2020] or Mesmer [Greenwald 2021] on nuclear and
-  membrane stains.
+* `SP-SEG-001` **Segment through `nf-core/sopa` [Blampey 2024], pinned to a release, and treat the platform segmentation
+  as a baseline or prior, not as ground truth.** Methods: transcript-based Baysor [Petukhov 2021] or Proseg
+  [Jones 2025]; image-based Cellpose [Stringer 2020] on nuclear and membrane stains; Baysor with the platform
+  segmentation or Cellpose as prior. Mesmer [Greenwald 2021] is not in sopa: run it through sopa's
+  `custom_staining_based` with the sopa version of the nf-core/sopa release, so that patches, conflict resolution and
+  aggregation stay sopa's (level 3 of `CODING_GUIDELINES.md`, `CODE-PIPE-002`).
   * *Why:* segmentation errors (merged neighbours, truncated cells) assign transcripts to the wrong cell, creating
     apparent co-expression and spurious cell states; the vendor default is optimized for general tissue, not for
-    the tissue at hand.
+    the tissue at hand. sopa runs these methods on one data structure (SpatialData) with the same patching and
+    aggregation, so segmentations can be compared.
 * `SP-SEG-002` **Evaluate segmentation** before downstream analysis:
   * fraction of transcripts assigned to cells;
   * cells co-expressing markers of mutually exclusive types (e.g. a neuronal and an oligodendrocyte marker), which
@@ -104,8 +108,9 @@
 * `SP-SEG-003` The expansion distance around nuclei trades sensitivity against contamination from neighbours; choose it
   deliberately and record it [Marco Salas 2025].
 * `SP-SEG-004` For Xenium, transcript spillover between neighbouring cells can be estimated and corrected with snRNA-seq-informed
-  methods (SPLIT) [Bilous 2026].
+  methods (SPLIT) [Bilous 2026]. Run it on the SpatialData output of sopa, before downstream analysis (level 3 of `CODE-PIPE-002`).
 * `SP-SEG-005` Record the segmentation method, version, input stains and parameters; every downstream result depends on them.
+  With nf-core/sopa, the release and its parameters file hold method, version and parameters; record the input stains.
 
 ## 6. Normalization
 
@@ -190,7 +195,7 @@ In addition to `STATISTICS_GUIDELINES.md` §12 (what to report):
 |---|---|---|
 | Reading platform outputs | `spatialdata-io` | — |
 | Data structure | `spatialdata` | `SpatialExperiment` [Righelli 2022] |
-| Segmentation pipelines | `sopa` (Baysor, Proseg, Cellpose), `cellpose` | — |
+| Segmentation pipelines | `nf-core/sopa` (Baysor, Proseg, Cellpose, StarDist, ComSeg); `sopa` API for other methods (`custom_staining_based`) | — |
 | Expression QC, clustering | `scanpy` | — |
 | Spatial statistics (Moran's I, neighbourhoods) | `squidpy` | — |
 | Deconvolution | `cell2location` | `spacexr` (RCTD) |

@@ -33,10 +33,13 @@ Policies that the caller sees in the report
 * **Non-finite values** (e.g. nuclear fraction of a barcode with no spliced or unspliced reads)
   cannot be evaluated: they are flagged ``qc_invalid_<metric>``, never counted as passing.
   ``qc_fail = qc_outlier | qc_invalid``.
-* **MAD = 0** (typical for mitochondrial fraction in nuclei, where most barcodes have none): the
-  MAD rule cannot be applied. The absolute threshold ``max_mito_fraction`` is used if given
-  (project value justified by tissue and assay); otherwise the metric is reported as
-  ``not_evaluated_mad_zero`` and a warning is logged.
+* **Minimum MAD** for the fraction metrics (mitochondrial, top-20, nuclear): when the scaled MAD
+  is below ``MIN_SCALED_MAD`` (1.5 percentage points), the minimum is used and the report says
+  ``mad_floor_applied``; with a MAD of 0 (mitochondrial fraction in nuclei) the threshold would
+  otherwise sit on the median and flag every cell above it. For the mitochondrial fraction the
+  upper threshold is at least the median fraction plus ``n`` x the minimum. A MAD of 0 in log
+  total counts or log genes is reported as ``not_evaluated_mad_zero`` with a warning: inspect the
+  capture.
 * ``max_mito_fraction``, when given, is applied in every capture in addition to the MAD rule.
 * Without ``mito_floor`` the mitochondrial rule uses the MAD threshold alone, and the report says
   ``evaluated_no_floor``: the guide asks the project to state a floor.
@@ -57,6 +60,7 @@ import numpy as np
 import polars as pl
 import scipy.sparse as sp
 
+from recipes.common.gene_groups import default_gene_group
 from recipes.common.gene_ids import MITOCHONDRIAL_CHROMOSOMES
 
 logger = logging.getLogger(__name__)
@@ -66,6 +70,8 @@ N_MADS_TOP20 = 5
 N_MADS_MITO = 3
 N_MADS_NUCLEAR = 3
 MAD_SCALE = 1.4826  # makes the MAD a consistent estimator of the SD for normal data
+MIN_SCALED_MAD = 0.015  # 1.5 percentage points: minimum MAD of fraction metrics (SC-QC-003)
+FRACTION_METRICS = ("mito_fraction", "top20_fraction", "nuclear_fraction")
 MITO_LOGIT_EPS = (
     1e-4  # pseudocount of the logit transform: fractions are clipped to [eps, 1 - eps]
 )
@@ -103,6 +109,7 @@ def flag_gene_groups(
     ribosomal_ids: list[str] | None = None,
     haemoglobin_ids: list[str] | None = None,
     require_mito: bool = True,
+    species: str | None = None,
 ) -> dict[str, int]:
     """Add boolean ``var`` columns ``mt``, ``ribo`` and ``hb`` (in place).
 
@@ -113,15 +120,19 @@ def flag_gene_groups(
     annotation : pl.DataFrame
         Annotation table with ``gene_id`` and ``chromosome``.
     ribosomal_ids, haemoglobin_ids : list[str] | None
-        Explicit ID lists stored in the project; None leaves the column all False.
+        ID lists of the project. When None and ``species`` is given, the lists shipped with the
+        recipes are used (``recipes.common.gene_groups``, ``SC-QC-006``).
     require_mito : bool
         Raise if no mitochondrial gene is present (whole-transcriptome data); False for targeted
         panels.
+    species : str | None
+        ``"human"`` or ``"mouse"``, for the default ribosomal and haemoglobin lists.
 
     Returns
     -------
     dict[str, int]
-        Number of genes flagged per group (to record in the QC report).
+        Number of genes flagged per group (``mt``, ``ribo``, ``hb``) and, for ``ribo`` and ``hb``,
+        the number of listed genes absent from the matrix (``ribo_missing``, ``hb_missing``).
 
     Raises
     ------
@@ -134,10 +145,28 @@ def flag_gene_groups(
             "gene_id"
         ].to_list()
     )
+    if species is not None:
+        if ribosomal_ids is None:
+            ribosomal_ids = default_gene_group(species, "ribosomal")
+        if haemoglobin_ids is None:
+            haemoglobin_ids = default_gene_group(species, "haemoglobin")
     adata.var["mt"] = adata.var_names.isin(mito_ids)
-    adata.var["ribo"] = adata.var_names.isin(set(ribosomal_ids or []))
-    adata.var["hb"] = adata.var_names.isin(set(haemoglobin_ids or []))
-    counts = {group: int(adata.var[group].sum()) for group in ("mt", "ribo", "hb")}
+    counts = {"mt": int(adata.var["mt"].sum())}
+    present = set(adata.var_names)
+    for group, ids in (("ribo", ribosomal_ids), ("hb", haemoglobin_ids)):
+        listed = set(ids or [])
+        adata.var[group] = adata.var_names.isin(listed)
+        counts[group] = int(adata.var[group].sum())
+        missing = sorted(listed - present)
+        counts[f"{group}_missing"] = len(missing)
+        if not listed:
+            logger.warning(f"no {group} gene list given; its fraction is not evaluated")
+        elif counts[group] == 0:
+            logger.warning(f"no {group} gene of the list is in the matrix; fraction not evaluated")
+        if missing:
+            logger.info(
+                f"{len(missing)} {group} genes of the list absent from the matrix: {missing}"
+            )
     if counts["mt"] == 0 and require_mito:
         raise ValueError(
             f"no mitochondrial genes found on chromosomes {MITOCHONDRIAL_CHROMOSOMES}"
@@ -161,8 +190,10 @@ def qc_metrics(adata: ad.AnnData, layer: str = "counts") -> None:
     """Add ``obs`` QC columns (in place).
 
     ``log1p_total_counts``, ``log1p_n_genes``, ``top20_fraction`` (fraction of the cell's counts in
-    its ``TOP_N_GENES`` most expressed genes) and, if mitochondrial genes exist, ``mito_fraction``.
-    Fractions of cells with no counts are NaN.
+    its ``TOP_N_GENES`` most expressed genes), ``ribo_fraction`` and ``hb_fraction`` when
+    ``flag_gene_groups`` has run (NaN if the group has no gene in the matrix: not evaluated, not 0;
+    diagnostics, not filters) and, if mitochondrial genes exist, ``mito_fraction``. Fractions of
+    cells with no counts are NaN.
     """
     x = adata.layers[layer]
     x = x.tocsr() if sp.issparse(x) else np.asarray(x)
@@ -173,6 +204,16 @@ def qc_metrics(adata: ad.AnnData, layer: str = "counts") -> None:
     top = _top_n_counts(x, TOP_N_GENES)
     with np.errstate(invalid="ignore", divide="ignore"):
         adata.obs["top20_fraction"] = np.where(total > 0, top / total, np.nan)
+    for group in ("ribo", "hb"):
+        # diagnostics (SC-QC-006): NaN, never 0, when the group has no gene in the matrix
+        if group in adata.var:
+            columns = np.flatnonzero(adata.var[group].to_numpy())
+            fraction = np.full(adata.n_obs, np.nan)
+            if columns.size:
+                counts = np.asarray(x[:, columns].sum(axis=1)).ravel().astype(float)
+                with np.errstate(invalid="ignore", divide="ignore"):
+                    fraction = np.where(total > 0, counts / total, np.nan)
+            adata.obs[f"{group}_fraction"] = fraction
     if "mt" in adata.var and adata.var["mt"].any():
         mito = (
             np.asarray(x[:, np.flatnonzero(adata.var["mt"].to_numpy())].sum(axis=1))
@@ -225,6 +266,7 @@ def mad_outlier_flags(
     max_mito_fraction: float | None = None,
     mito_floor: float | None = None,
     n_mads_top20: float | None = N_MADS_TOP20,
+    min_scaled_mad: float = MIN_SCALED_MAD,
 ) -> pl.DataFrame:
     """Flag per-capture outliers and non-evaluable values (in place).
 
@@ -249,6 +291,9 @@ def mad_outlier_flags(
     mito_floor : float | None
         Fixed floor of the mitochondrial rule (project value for its tissue and assay): a cell is
         flagged on the MAD rule only if its fraction is also above the floor.
+    min_scaled_mad : float
+        Minimum scaled MAD of the fraction metrics (``FRACTION_METRICS``), as a proportion; the
+        mitochondrial upper threshold is at least the median fraction plus ``n`` x this value.
 
     Returns
     -------
@@ -256,8 +301,9 @@ def mad_outlier_flags(
         One row per capture x metric (schema ``REPORT_SCHEMA``). ``median``, ``lower`` and
         ``upper`` are on the scale of the ``obs`` column (the mitochondrial threshold is
         back-transformed from the logit scale); ``scaled_mad`` is on ``scale``. ``status`` is
-        ``evaluated``, ``evaluated_no_floor``, ``absolute_threshold_only`` or
-        ``not_evaluated_mad_zero``.
+        ``evaluated``, ``evaluated_no_floor``, ``mad_floor_applied`` (fraction metrics whose MAD is
+        below ``min_scaled_mad``), ``not_evaluated_mad_zero`` (log metrics with MAD 0) or
+        ``not_evaluated_no_values`` (no finite value in the capture).
     """
     rules = [
         ("log1p_total_counts", n_mads_counts, True, True),
@@ -279,36 +325,54 @@ def mad_outlier_flags(
             values = adata.obs[metric].to_numpy(dtype=float)[in_capture]
             finite = np.isfinite(values)
             is_mito = metric == "mito_fraction"
+            is_fraction = metric in FRACTION_METRICS
             scale = "logit" if is_mito else ("log1p" if metric.startswith("log1p") else "linear")
             scaled = _logit(values) if is_mito else values
             median, mad = _median_scaled_mad(scaled)
-            lower = median - n_mads * mad if use_lower else None
-            upper = median + n_mads * mad if use_upper else None
             status = "evaluated"
-            if not mad > 0:
-                lower = upper = None
+            lower = upper = None
+            if not finite.any():
+                status = "not_evaluated_no_values"
+            elif is_mito:
+                median_fraction, _ = _median_scaled_mad(values)
+                if np.isfinite(median_fraction):
+                    # fraction scale: logit MAD rule, at least median + n x minimum MAD
+                    from_logit = _expit(median + n_mads * mad) if mad > 0 else -np.inf
+                    minimum = median_fraction + n_mads * min_scaled_mad
+                    upper = max(from_logit, minimum)
+                    if upper == minimum and minimum > from_logit:
+                        status = "mad_floor_applied"
+                median = median_fraction
+            elif is_fraction and np.isfinite(median):
+                if not mad >= min_scaled_mad:
+                    mad = min_scaled_mad
+                    status = "mad_floor_applied"
+                lower = median - n_mads * mad if use_lower else None
+                upper = median + n_mads * mad if use_upper else None
+            elif mad > 0:
+                lower = median - n_mads * mad if use_lower else None
+                upper = median + n_mads * mad if use_upper else None
+            else:
                 status = "not_evaluated_mad_zero"
             flagged = np.zeros(values.size, dtype=bool)
             if lower is not None:
-                flagged |= finite & (scaled < lower)
+                flagged |= finite & (values < lower)
             if upper is not None:
-                flagged |= finite & (scaled > upper)
+                flagged |= finite & (values > upper)
             if is_mito:
                 if mito_floor is not None:
                     flagged &= values > mito_floor
+                    if upper is not None:
+                        upper = max(upper, mito_floor)
                 elif status == "evaluated":
                     status = "evaluated_no_floor"
-                median = _expit(median) if np.isfinite(median) else median
-                upper = None if upper is None else _expit(upper)
-                if mito_floor is not None and upper is not None:
-                    upper = max(upper, mito_floor)
                 if max_mito_fraction is not None:
                     flagged |= finite & (values > max_mito_fraction)
-                    if status == "not_evaluated_mad_zero":
-                        status = "absolute_threshold_only"
                     upper = max_mito_fraction if upper is None else min(upper, max_mito_fraction)
             if status == "not_evaluated_mad_zero":
                 logger.warning(f"capture {capture}: MAD of {metric} is 0; metric not evaluated")
+            elif status == "mad_floor_applied":
+                logger.info(f"capture {capture}: MAD of {metric} below the minimum; minimum used")
             outlier[metric][in_capture] = flagged
             invalid[metric][in_capture] = ~finite
             rows.append(
@@ -327,6 +391,7 @@ def mad_outlier_flags(
                     "n_cells": int(in_capture.sum()),
                 }
             )
+
     any_outlier = np.zeros(adata.n_obs, dtype=bool)
     any_invalid = np.zeros(adata.n_obs, dtype=bool)
     for metric in outlier:

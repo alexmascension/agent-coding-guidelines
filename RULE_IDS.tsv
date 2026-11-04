@@ -265,6 +265,11 @@ CODE-PERF-001	active	CODING_GUIDELINES.md	Prioritize correctness and readability
 CODE-PERF-002	active	CODING_GUIDELINES.md	Avoid repeated expensive conversions, allocations, I/O and computations.
 CODE-PERF-003	active	CODING_GUIDELINES.md	Keep optimized code understandable and document non-obvious performance decision
 CODE-PERF-004	active	CODING_GUIDELINES.md	Parallelize only independent, expensive workloads where the benefit justifies th
+CODE-PIPE-001	active	CODING_GUIDELINES.md	Run a processing stage with an established pipeline when the domain guide names 
+CODE-PIPE-002	active	CODING_GUIDELINES.md	Domain rules fix what is computed; implement each at the lowest level that can e
+CODE-PIPE-003	active	CODING_GUIDELINES.md	A modified or replaced step mirrors the original step: same tool version and con
+CODE-PIPE-004	active	CODING_GUIDELINES.md	Record every deviation in the pipeline_deviations YAML block of Overrides: pipel
+CODE-PIPE-005	active	CODING_GUIDELINES.md	When the release or pinned commit changes, check every recorded deviation agains
 CODE-PRIN-001	active	CODING_GUIDELINES.md	Write clean, readable and maintainable code.
 CODE-PRIN-002	active	CODING_GUIDELINES.md	Prefer simple, explicit solutions over clever or unnecessarily complex ones.
 CODE-PRIN-003	active	CODING_GUIDELINES.md	Give each function one clear responsibility; split large or deeply nested logic 
@@ -287,7 +292,7 @@ CODE-PROV-005	active	CODING_GUIDELINES.md	Scripts MUST NOT overwrite existing ou
 CODE-PROV-006	active	CODING_GUIDELINES.md	Results that must no longer be used are marked and refused. A run found to be br
 CODE-RCP-001	active	CODING_GUIDELINES.md	Non-obvious procedures of the domain guidelines MAY have a reference implementat
 CODE-RCP-002	active	CODING_GUIDELINES.md	When a guideline links a recipe, use it instead of re-implementing the procedure
-CODE-RCP-003	active	CODING_GUIDELINES.md	Adapt a recipe through its parameters and named constants. A change to its logic
+CODE-RCP-003	retired	CODING_GUIDELINES.md	Adapt a recipe through its parameters and named constants. A change to its logic
 CODE-RCP-004	active	CODING_GUIDELINES.md	If a recipe and its guideline disagree, the guideline wins; report the discrepan
 CODE-REPRO-001	active	CODING_GUIDELINES.md	Expose random seeds as parameters and use local generators
 CODE-REPRO-002	active	CODING_GUIDELINES.md	Results MUST NOT depend on the number of workers, parallel execution order, file
@@ -606,7 +611,8 @@ SC-QC-012	active	SCRNASEQ_GUIDELINES.md	Doublets are detected on counts without 
 SC-QC-013	active	SCRNASEQ_GUIDELINES.md	Check the Scrublet threshold of every capture. scanpy places it at the minimum b
 SC-QC-014	active	SCRNASEQ_GUIDELINES.md	Pooled captures (SAMPLE_IDENTITY_GUIDELINES.md §6): remove the doublets called b
 SC-QC-015	active	SCRNASEQ_GUIDELINES.md	Check what the filters remove from each population before removing it. After the
-SC-QUANT-001	active	SCRNASEQ_GUIDELINES.md	Default: STARsolo [Kaminow 2021], gene-level counts, with these features in one 
+SC-QC-016	active	SCRNASEQ_GUIDELINES.md	From matrix to clustered object, run nf-core/scdownstream (<https://github.com/n
+SC-QUANT-001	active	SCRNASEQ_GUIDELINES.md	Default: STARsolo [Kaminow 2021] through nf-core/scrnaseq (--aligner star) [Ewel
 SC-QUANT-002	active	SCRNASEQ_GUIDELINES.md	Isoform-level questions need full-length (e.g. Smart-seq) or long-read protocols
 SC-QUANT-003	active	SCRNASEQ_GUIDELINES.md	Record STAR version, all --solo parameters, chemistry and whitelist, reference g
 SC-QUANT-004	active	SCRNASEQ_GUIDELINES.md	Default references can miss reads from genes with incomplete 3' annotation; opti
@@ -696,7 +702,7 @@ SP-REP-005	active	SPATIAL_GUIDELINES.md	QC thresholds and cells or spots retaine
 SP-REP-006	active	SPATIAL_GUIDELINES.md	Normalization choice, deconvolution or label-transfer reference, and methods for
 SP-SECT-001	active	SPATIAL_GUIDELINES.md	Each section keeps its own coordinate system; integration of expression across s
 SP-SECT-002	active	SPATIAL_GUIDELINES.md	Batch variables for spatial data: slide, run, section, and processing date.
-SP-SEG-001	active	SPATIAL_GUIDELINES.md	Treat the platform segmentation as a baseline, not as ground truth. Alternatives
+SP-SEG-001	active	SPATIAL_GUIDELINES.md	Segment through nf-core/sopa [Blampey 2024], pinned to a release, and treat the 
 SP-SEG-002	active	SPATIAL_GUIDELINES.md	Evaluate segmentation before downstream analysis:
 SP-SEG-003	active	SPATIAL_GUIDELINES.md	The expansion distance around nuclei trades sensitivity against contamination fr
 SP-SEG-004	active	SPATIAL_GUIDELINES.md	For Xenium, transcript spillover between neighbouring cells can be estimated and

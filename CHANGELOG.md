@@ -6,6 +6,112 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-04 (established pipelines: CODING 4.0.0, SCRNASEQ 5.0.0)
+
+### CODING_GUIDELINES.md [4.0.0]
+
+#### Added
+
+- §12 *Established pipelines*: `CODE-PIPE-001` (run a processing stage with the established pipeline the domain guide
+  names; what counts as established; unreleased pipelines pinned to a tested commit), `CODE-PIPE-002` (domain rules fix
+  what is computed; five implementation levels, from parameters to an external implementation, for pipelines and
+  recipes; levels 4 and 5 need confirmation), `CODE-PIPE-003` (a modified step mirrors the original; `ext.args` in a
+  `withName` block replaces the pipeline's string), `CODE-PIPE-004` (`pipeline_deviations` YAML block with typed return
+  conditions), `CODE-PIPE-005` (check the deviations at each release change).
+
+#### Changed
+
+- `CODE-PROJ-008`: deviations from a pipeline or recipe go in the `pipeline_deviations` block.
+- `CODE-RCP-002`: adapting a recipe follows the levels of `CODE-PIPE-002`.
+
+#### Removed
+
+- `CODE-RCP-003` (retired): merged into `CODE-PIPE-002` (level 4) and `CODE-PIPE-004`.
+
+### SCRNASEQ_GUIDELINES.md [5.0.0]
+
+#### Added
+
+- `SC-QC-016`: from matrix to clustered object, `nf-core/scdownstream` pinned to a commit of `dev` until its first
+  release, in two passes with the review of the recipes between them.
+- §16: *Baseline parameters for `nf-core/scdownstream`* (read at commit `0048567`) and its differences from this guide.
+- `SC-QC-003`: minimum scaled MAD of 1.5 percentage points for fraction metrics; a scaled MAD of 0 in log counts or
+  log genes is not evaluated.
+
+#### Changed
+
+- `SC-QUANT-001`: STARsolo through `nf-core/scrnaseq`; one gene feature plus `Velocyto` per run (`Gene` for cells,
+  `GeneFull_Ex50pAS` for nuclei, through a pinned fork while the schema does not accept it); extra STAR options and
+  `EmptyDrops_CR` in `ext.args`; `GeneFull` in a separate run.
+- `SC-QC-006`: default ribosomal and haemoglobin lists of Ensembl IDs ship with the recipes; an empty group is not
+  evaluated, never 0.
+- §16 *Implementation*: quantification and matrix-to-object rows name the pipelines.
+- [Curion 2024] is now [Curion 2024a].
+
+#### Removed
+
+- `SC-QC-003`: the absolute threshold as the way out of a MAD of 0 (replaced by the minimum MAD).
+
+### SAMPLE_IDENTITY_GUIDELINES.md [3.0.0]
+
+#### Changed
+
+- `ID-POOL-001`: without donor genotypes, `nf-core/hadge` [Curion 2024b]; with genotypes, Demuxalot and Dropulation
+  from the Demuxafy image combined with `Combine_Results.R` (level 5, until hadge includes them); hashtags through
+  hadge; demuxlet runs inside hadge.
+- §9 *Implementation*: demultiplexing row.
+
+### SPATIAL_GUIDELINES.md [3.0.0]
+
+#### Changed
+
+- `SP-SEG-001`: segmentation through `nf-core/sopa` [Blampey 2024]; Mesmer through sopa's `custom_staining_based`
+  (level 3).
+- `SP-SEG-004`: SPLIT runs on the SpatialData output of sopa. `SP-SEG-005`: with nf-core/sopa, the release and its
+  parameters file record the segmentation.
+- §13 *Implementation*: segmentation row.
+
+### META_ANALYSIS_GUIDELINES.md [2.2.0]
+
+#### Changed
+
+- `META-DATA-001`: propose the reprocessing pipeline to the user, checking at that moment the latest release, other
+  nf-core pipelines and uniformly processed resources.
+
+### HPC_GUIDELINES.md [1.4.0]
+
+#### Changed
+
+- `HPC-WF-003`: three tracked configuration files (site, parameters, project configuration of each pipeline); a
+  patched pipeline runs from a pinned fork, never from an edited copy in `$NXF_HOME/assets`.
+
+### recipes/ [0.6.0]
+
+#### Added
+
+- `common/gene_groups`: reader of the default gene lists (`recipes/common/data/gene_groups/`, human and mouse,
+  ribosomal and haemoglobin; Ensembl ID, symbol, source, download date, Ensembl release, SHA-256 of the HGNC file) and
+  of the symbols the guide excludes.
+- `common/build_gene_groups`: builds the lists from the HGNC REST API (human gene groups) and, for mouse, from the MGI
+  orthologues that HGNC records, mapped to Ensembl protein-coding genes with BioMart (Ensembl Compara lacks one-to-one
+  orthologues for several core ribosomal proteins); fails when a group is empty or an excluded symbol remains.
+
+#### Changed
+
+- `scrnaseq/qc`: minimum scaled MAD for fraction metrics (`MIN_SCALED_MAD` = 0.015, `min_scaled_mad`); report
+  statuses `mad_floor_applied` and `not_evaluated_no_values`; `absolute_threshold_only` removed.
+- `scrnaseq/qc`: `flag_gene_groups(..., species=...)` uses the default lists and reports the genes of the list absent
+  from the matrix; `qc_metrics` adds `ribo_fraction` and `hb_fraction`, missing when the group has no gene in the matrix.
+
+### Repository
+
+#### Added
+
+- `references/OMICS_REFERENCES.md` and `.bib`: [Curion 2024b] (hadge) and [Blampey 2024] (sopa).
+- `RULE_IDS.tsv`: `CODE-PIPE-001` to `CODE-PIPE-005`, `SC-QC-016`; `CODE-RCP-003` retired.
+- `tools/rule_ids.py`: subtopic `PIPE` for *Established pipelines*.
+- `TODO.md`: script to check the `pipeline_deviations` block; items for the next round.
+
 ## 2026-11-03 (SCRNASEQ 4.1.0: library QC and cell filters)
 
 ### SCRNASEQ_GUIDELINES.md [4.1.0]

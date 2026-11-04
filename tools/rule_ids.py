@@ -206,6 +206,7 @@ TOPIC = {
 SUBTOPIC = {
     ("CODE", "Recipes (reference implementations)"): "RCP",
     ("CODE", "Downloads from public archives"): "DL",
+    ("CODE", "Established pipelines"): "PIPE",
     ("HPC", "Datasets larger than the work area"): "BATCH",
 }
 

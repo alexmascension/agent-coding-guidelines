@@ -145,7 +145,7 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
 
 ### Reviews, workflows and ecosystems
 
-- **[Curion 2024]** Curion et al. (2024). Panpipes: a pipeline for multiomic single-cell and spatial transcriptomic data analysis. *Genome Biology*. [doi:10.1186/s13059-024-03322-7](https://doi.org/10.1186/s13059-024-03322-7)  
+- **[Curion 2024a]** Curion et al. (2024). Panpipes: a pipeline for multiomic single-cell and spatial transcriptomic data analysis. *Genome Biology*. [doi:10.1186/s13059-024-03322-7](https://doi.org/10.1186/s13059-024-03322-7)  
   Panpipes: cgat-core workflows for QC, preprocessing, integration, clustering, reference mapping and spatial deconvolution of multimodal single-cell and spatial data, built on scverse tools.
 - **[Wolf 2018]** Wolf et al. (2018). SCANPY: large-scale single-cell gene expression data analysis. *Genome Biology*. [doi:10.1186/s13059-017-1382-0](https://doi.org/10.1186/s13059-017-1382-0)  
   SCANPY is a scalable Python toolkit—supporting preprocessing, visualization, clustering, pseudotime/trajectory inference, differential expression, and gene regulatory network simulation—that efficiently analyzes single-cell gene expression datasets exceeding one million cells, using the accompanying AnnData data structure.
@@ -398,6 +398,8 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
 
 ### Cell segmentation
 
+- **[Blampey 2024]** Blampey et al. (2024). Sopa: a technology-invariant pipeline for analyses of image-based spatial omics. *Nature Communications*. [doi:10.1038/s41467-024-48981-z](https://doi.org/10.1038/s41467-024-48981-z)  
+  Sopa: segmentation (Cellpose, Baysor and others), aggregation and visualization of image-based spatial omics on SpatialData, run as a Nextflow pipeline (nf-core/sopa) or a Python API.
 - **[Stringer 2020]** Stringer et al. (2020). Cellpose: a generalist algorithm for cellular segmentation. *Nature Methods*. [doi:10.1038/s41592-020-01018-x](https://doi.org/10.1038/s41592-020-01018-x)  
   Cellpose is a generalist deep-learning algorithm that accurately segments cells, membranes, and nuclei across diverse microscopy image types without requiring retraining or parameter adjustment, including a 3D extension.
 - **[Greenwald 2021]** Greenwald et al. (2021). Whole-cell segmentation of tissue images with human-level performance using large-scale data annotation and deep learning. *Nature Biotechnology*. [doi:10.1038/s41587-021-01094-0](https://doi.org/10.1038/s41587-021-01094-0)  
@@ -481,6 +483,8 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
 
 ### Fingerprinting, mix-ups, contamination and demultiplexing
 
+- **[Curion 2024b]** Curion et al. (2024). hadge: a comprehensive pipeline for donor deconvolution in single-cell studies. *Genome Biology*. [doi:10.1186/s13059-024-03249-z](https://doi.org/10.1186/s13059-024-03249-z)  
+  hadge: Nextflow pipeline (nf-core/hadge) running hashing- and genotype-based demultiplexing methods together, with donor matching.
 - **[Westra 2011]** Westra et al. (2011). MixupMapper: correcting sample mix-ups in genome-wide datasets increases power to detect small genetic effects. *Bioinformatics*. [doi:10.1093/bioinformatics/btr323](https://doi.org/10.1093/bioinformatics/btr323)  
   MixupMapper detected sample mix-ups averaging 3% of samples across five datasets (up to 23% in one), and correcting them increased significant cis-eQTL detection by an average of 15% (up to 3-fold in one dataset); uncorrected mix-ups can also underestimate heritability estimates in GWAS data.
 - **[Jun 2012]** Jun et al. (2012). Detecting and Estimating Contamination of Human DNA Samples in Sequencing and Array-Based Genotype Data. *The American Journal of Human Genetics*. [doi:10.1016/j.ajhg.2012.09.004](https://doi.org/10.1016/j.ajhg.2012.09.004)  

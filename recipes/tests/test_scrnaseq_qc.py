@@ -38,7 +38,9 @@ def _mito_adata(extra):
 def test_mito_rule_is_upper_tail_on_logit_scale_and_needs_the_floor():
     # 0.0: low mito is not a bad cell; 0.07: beyond the MAD threshold but below the floor; 0.3: damaged
     adata = _mito_adata([0.0, 0.07, 0.3])
-    report = mad_outlier_flags(adata, "capture", n_mads_nuclear=None, mito_floor=0.08)
+    report = mad_outlier_flags(
+        adata, "capture", n_mads_nuclear=None, mito_floor=0.08, min_scaled_mad=0.005
+    )
     flags = adata.obs["qc_outlier_mito_fraction"].to_numpy()
     assert flags[-3:].tolist() == [False, False, True]
     row = report.filter(pl.col("metric") == "mito_fraction").row(0, named=True)
@@ -50,7 +52,7 @@ def test_mito_rule_is_upper_tail_on_logit_scale_and_needs_the_floor():
 
 def test_mito_rule_without_floor_is_reported():
     adata = _mito_adata([0.0, 0.07, 0.3])
-    report = mad_outlier_flags(adata, "capture", n_mads_nuclear=None)
+    report = mad_outlier_flags(adata, "capture", n_mads_nuclear=None, min_scaled_mad=0.005)
     flags = adata.obs["qc_outlier_mito_fraction"].to_numpy()
     assert flags[-3:].tolist() == [False, True, True]
     status = report.filter(pl.col("metric") == "mito_fraction")["status"][0]
@@ -118,3 +120,39 @@ def test_flagged_fraction_requires_flags():
     )
     with pytest.raises(ValueError, match="mad_outlier_flags"):
         flagged_fraction_by_cluster(adata, "leiden")
+
+
+def test_minimum_mad_for_fraction_metrics_in_nuclei():
+    # nuclei: almost no mitochondrial reads, MAD 0; without a minimum, every nucleus with one read would be flagged
+    mito = np.array([0.0] * 190 + [0.01] * 5 + [0.03, 0.2, 0.0, 0.0, 0.0])
+    n = mito.size
+    rng = np.random.default_rng(3)
+    adata = _obs_adata(
+        log1p_total_counts=np.log1p(np.full(n, 1000.0)) + rng.normal(0, 0.05, n),
+        log1p_n_genes=np.log1p(np.full(n, 500.0)) + rng.normal(0, 0.05, n),
+        mito_fraction=mito,
+    )
+    report = mad_outlier_flags(adata, "capture", n_mads_nuclear=None, n_mads_top20=None)
+    row = report.filter(pl.col("metric") == "mito_fraction").row(0, named=True)
+    assert row["status"] == "mad_floor_applied"
+    assert row["upper"] == pytest.approx(3 * 0.015)
+    flagged = adata.obs["qc_outlier_mito_fraction"].to_numpy()
+    assert flagged.sum() == 1 and flagged[196]  # only the 20 % nucleus
+
+
+def test_minimum_mad_on_linear_fraction_and_not_on_log_metrics(caplog):
+    n = 50
+    adata = _obs_adata(
+        log1p_total_counts=np.full(n, np.log1p(1000.0)),  # MAD 0 on a log metric: not evaluated
+        log1p_n_genes=np.log1p(np.full(n, 500.0)) + np.linspace(-0.1, 0.1, n),
+        top20_fraction=np.full(n, 0.3),
+    )
+    adata.obs.iloc[-1, adata.obs.columns.get_loc("top20_fraction")] = 0.5
+    with caplog.at_level(logging.WARNING):
+        report = mad_outlier_flags(adata, "capture", n_mads_nuclear=None)
+    status = dict(zip(report["metric"], report["status"], strict=True))
+    assert status["log1p_total_counts"] == "not_evaluated_mad_zero"
+    assert status["top20_fraction"] == "mad_floor_applied"
+    top = adata.obs["qc_outlier_top20_fraction"].to_numpy()
+    assert top[-1] and not top[:-1].any()  # 0.5 > 0.3 + 5 x 0.015
+    assert "MAD of log1p_total_counts is 0" in caplog.text
