@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.0.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.1.0 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -89,12 +89,13 @@
 
 ## 2. Design
 
-* `SC-DES-001` **The experimental unit is the donor or animal, not the cell** [Squair 2021†; Zimmerman 2021†].
+* `SC-DES-001` **The experimental unit is the donor or animal, not the cell** [Squair 2021†; Zimmerman 2021a†].
   * *Why:* cells of one donor share genotype, environment and processing; treating them as independent replicates
     makes every donor-level difference look significant. Thousands of cells from three mice are $n = 3$.
 * `SC-DES-002` Plan **at least 3, preferably 5 or more, donors per condition**. These are planning minimums for a pseudobulk
   analysis to be possible, not a justification of power or precision; the sample size of a study is justified as in
-  `STATISTICS_GUIDELINES.md` §1 (design).
+  `STATISTICS_GUIDELINES.md` §1 (design) and `SC-DES-007`. Cohorts of this size are powered only for large effects
+  [Crampton 2026†].
 * `SC-DES-003` **Do not confound capture with condition**: multiplex samples (genetic or hashtag demultiplexing,
   `SAMPLE_IDENTITY_GUIDELINES.md` §6) or spread conditions across capture days.
 * `SC-DES-004` **Single-donor studies** support only descriptive conclusions about that donor:
@@ -113,6 +114,23 @@
   * *Trade-off:* nuclei lose cytoplasmic transcripts and have more ambient RNA.
   * *Deviate when:* fresh tissue with a validated cold dissociation protocol with transcription and translation
     inhibitors [Marsh 2022].
+* `SC-DES-007` **Justify the number of donors against the smallest effect of interest and the expression of the genes
+  of interest**, as `STATISTICS_GUIDELINES.md` §1 requires (`STAT-DES-005`, `STAT-DES-012`):
+  1. state the smallest log fold change of interest and the genes or gene classes the question is about;
+  2. estimate power with a simulation tool whose parameters come from a large external dataset of the same tissue and
+     cell type rather than from a small pilot (scPower [Schmid 2021†], hierarchicell [Zimmerman 2021b†], powsimR
+     [Vieth 2017†]), or read it from empirical benchmarks [Crampton 2026†];
+  3. when donors are limited, raise the cells per donor of the cell type of interest (sorting or enrichment of rare
+     types) before raising the depth per cell, and plan the budget in UMIs per donor of that cell type.
+  * *Why:* in an empirical benchmark on more than a thousand human brain donors, large effects were detected with small
+    cohorts, but small effects, in the range most studies report, stayed under-detected even with hundreds of donors.
+    Detection depended mainly on the effect size, the number of donors and the expression of the gene, and fewer cells
+    per donor cost more detections than lower depth per cell [Crampton 2026†], as power models also predict
+    [Schmid 2021†]. With cell-level tests, more cells add false discoveries; with pseudobulk, they improve each donor's
+    estimate but do not add replicates [Squair 2021†].
+  * *Trade-off:* the benchmark covers one contrast (sex), one tissue and one cohort, and its authors consider it
+    optimistic because its reference set is itself incomplete; use it for orders of magnitude, not thresholds.
+  * *Note:* one preprint (2026).
 
 ## 3. Quantification
 
@@ -514,18 +532,88 @@ cells that remain, and its layer from normalization (§5) onwards.
 ## 10. Differential expression between conditions
 
 * `SC-DE-001` **MUST use pseudobulk or mixed models; MUST NOT use cell-level tests** to compare conditions [Squair 2021†;
-  Crowell 2020†; Junttila 2022†; Murphy 2023†].
-  * *Why:* cell-level tests treat cells as replicates and report hundreds of false DE genes.
+  Crowell 2020†; Junttila 2022†; Murphy 2023†]. This includes marker functions called with the condition as the grouping
+  variable (`scanpy.tl.rank_genes_groups`, Seurat `FindMarkers`), which run cell-level tests (`SC-ANNOT-005`).
+  * *Why:* donors of the same condition differ in expression, for biological and technical reasons. A test that treats
+    cells as replicates sees only the variance within donors, so it underestimates the variance of each gene and
+    attributes the differences between donors to the condition. The underestimate is largest for the genes that vary
+    most between donors, which are the highly expressed ones, so cell-level tests favour them and report hundreds of DE
+    genes even between random groups of control donors. Pseudobulk keeps the donor as the replicate, and with it that
+    variance; it agreed best with matched bulk RNA-seq and its calls were confirmed in situ more often [Squair 2021†].
+  * *Note:* more cells per donor make cell-level tests worse, not better; more donors help. Human tissue varies more
+    between donors than mouse models and is the most exposed [Squair 2021†].
 * `SC-DE-002` **Pseudobulk procedure**:
   1. Sum counts per aggregation unit and cell type. The unit is the experimental unit of the comparison: the
      sample, or the donor only when each donor contributes to one level of every compared factor (§2).
-  2. Drop pseudobulk samples with fewer than a minimum number of cells (e.g. 10–20) and record the threshold.
+  2. Drop pseudobulk samples with fewer than a minimum number of cells (e.g. 10–20) and record the threshold. Check it
+     on the data: plot the first principal components of the pseudobulk samples of each cell type against the log
+     number of cells; when samples below some count drift away from the rest, raise the threshold to that count. Fix
+     it before the DE results are seen, apply it to all groups (`STATISTICS_GUIDELINES.md`, `STAT-EXPL-004`) and
+     report the units removed per group.
+     * *Why:* in 1,494 snRNA-seq donors, the first principal component of the pseudobulk profiles followed the number
+       of cells per donor, and donors with fewer than about 30 cells deviated progressively from the rest
+       [Crampton 2026†].
+     * *Trade-off:* a higher threshold removes donors, and donors carry most of the power (`SC-DES-007`).
   3. Filter genes and run DE per cell type as in `RNASEQ_BULK_GUIDELINES.md` §5–8, with batch and other covariates in
      the design (§2 for several samples per donor).
 * `SC-DE-003` Recipe: `recipes/scrnaseq/pseudobulk.py` (aggregation with cell counts per pseudobulk sample; DE per cell type
   through `recipes/bulk/deseq2.py`; per-cell-type and global adjusted p-values).
-* `SC-DE-004` Mixed models with a random effect for donor are an alternative [Zimmerman 2021†].
+* `SC-DE-006` **MUST NOT create replicates by partitioning the cells of one sample** (random or arbitrary groups of
+  cells, each summed as a pseudobulk sample). Pseudobulk samples come from distinct experimental units (§2); with one
+  unit per condition, follow `SC-DES-004`.
+  * *Why:* summing random groups of cells into "pseudo-replicates", or running pseudobulk tools on individual cells,
+    removed the advantage of pseudobulk methods and brought back both the bias towards highly expressed genes and the
+    false discoveries in data without any difference between groups; shuffling cells between replicates lowered the
+    variance of 98.2% of genes in one dataset, and the mean variance in all 46 datasets examined [Squair 2021†]. The
+    groups look like replicates but carry only within-sample variance.
+* `SC-DE-004` Mixed models with a random effect for donor are an alternative [Zimmerman 2021a†].
+  * *Trade-off:* against matched bulk data, a linear mixed model performed worse than pseudobulk, and Poisson or
+    negative binomial GLMMs matched pseudobulk from about 500 cells on, at hours per cell type against minutes
+    [Squair 2021†].
+  * *Deviate when:* the question needs within-donor structure that aggregation discards [Crampton 2026†].
 * `SC-DE-005` State whether multiple-testing correction is per cell type or across all tests (`STATISTICS_GUIDELINES.md` §7).
+* `SC-DE-007` **Run a global-null diagnostic when the control group has enough donors** (e.g. 6 or more): split the
+  control donors at random into two groups, or permute the condition labels of donors as in
+  `RNASEQ_BULK_GUIDELINES.md` (`BULK-DE-005`), and re-run the whole pseudobulk pipeline per cell type. Report the
+  scheme, the number of splits and the discoveries per split and cell type.
+  * *Why:* random splits of control donors gave hundreds of DE genes with pipelines that ignore donor variance and
+    almost none with pseudobulk [Squair 2021†]; the diagnostic catches unmodelled donor structure (a wrong aggregation
+    unit, pooled captures, donors with many samples) that the design table does not show.
+  * *Trade-off:* one full DE run per split; halving the controls lowers power, so passing shows that the pipeline does
+    not create discoveries from nothing, not that it controls the FDR (`BULK-DE-005`). The exchangeability caveats of
+    `STATISTICS_GUIDELINES.md` §10 apply.
+  * Recipe: `recipes/bulk/fdr_calibration.py`, with the pseudobulk DE of one cell type as the pipeline.
+* `SC-DE-008` **The number of DE genes per cell type is not a measure of how strongly each cell type responds.** It
+  depends on the number of donors with that cell type, the cells per donor and the UMIs per cell. Before comparing
+  cell types (or studies) by their number of DE genes, report these three quantities per cell type, and compare at
+  matched depth (cells subsampled per donor and UMIs downsampled multinomially to the shallowest cell type) or compare
+  effect-size estimates with their intervals.
+  * *Why:* reducing astrocyte data to the cells per donor and UMIs per cell of microglia removed about 55% of the DE
+    genes found by DESeq2 and edgeR, while limma-voom became unstable and reported more than five times as many; and a
+    cell type with less data yields a smaller list of strong effects that can look more reproducible [Crampton 2026†].
+  * *Trade-off:* matching depth discards data from the deeper cell types; it serves the comparison, not the main
+    analysis.
+  * *Note:* one preprint (2026).
+* `SC-DE-009` **A gene or gene set absent from a DE list is not evidence that it does not change**
+  (`STATISTICS_GUIDELINES.md`, `STAT-EFF-003`). For the genes or pathways the question is about, report the pseudobulk
+  mean expression, the log fold change with its interval and the donors and cells per donor behind the test; call the
+  result inconclusive when the interval includes effects of interest.
+  * *Why:* at a fixed design (50 donors, 1,000 oligodendrocytes per donor), predicted power at |log2 FC| = 2 exceeded
+    0.8 for 89–96% of chromatin regulators, ubiquitin ligases and loss-of-function-intolerant genes but for 30–38% of
+    intermediate filaments, forkhead transcription factors and cytokines, which are expressed at lower levels; at
+    |log2 FC| = 0.2 no gene reached it [Crampton 2026†].
+  * *Trade-off:* that power model is reliable at its extremes and poor between 0.2 and 0.8 [Crampton 2026†]; use such
+    models to flag genes as practically undetectable, not to compute exact power.
+  * *Note:* one preprint (2026).
+* `SC-DE-010` **Treat DE genes near the FDR cut-off as the least reproducible part of the list.** Report each gene's
+  rank and adjusted p-value; choose genes for validation, or for claims about single genes, from the most significant
+  ones or with family-wise control (`STATISTICS_GUIDELINES.md`, `STAT-MT-003`); state that the list is a lower bound
+  of the true changes, enriched for large effects and highly expressed genes.
+  * *Why:* in a held-out benchmark, all reference genes passed BH-adjusted p < 0.05, but recall fell sharply from the
+    most to the least significant quartile, and only the top quartile was recovered reliably [Crampton 2026†]; with
+    low power, significant results are less likely to be true and their effects are exaggerated
+    (`STATISTICS_GUIDELINES.md`, `STAT-DES-008`).
+  * *Note:* one preprint (2026).
 
 ## 11. Differential abundance
 
@@ -593,7 +681,8 @@ Following minSCe [Füllgrabe 2020] and `STATISTICS_GUIDELINES.md` §12:
    Scrublet threshold and whether it was set by hand (`SC-QC-013`).
 4. `SC-REP-004` Normalization, gene selection, PCs and criteria, integration method and metrics, clustering resolution and stability.
 5. `SC-REP-005` Annotation method, references or dictionaries, unmatched markers.
-6. `SC-REP-006` DE, abundance, communication and trajectory methods with parameters, pseudobulk thresholds and designs.
+6. `SC-REP-006` DE, abundance, communication and trajectory methods with parameters, pseudobulk thresholds and designs, and
+   per cell type the donors tested, cells per donor and UMIs per cell (`SC-DE-008`).
 
 ## 16. Implementation
 

@@ -105,8 +105,8 @@ general sources come first.
 ### D. Pseudoreplication and single-cell differential expression
 
 - **[Squair 2021]** Squair et al. (2021). Confronting false discoveries in single-cell differential expression. *Nature Communications*. [doi:10.1038/s41467-021-25960-2](https://doi.org/10.1038/s41467-021-25960-2)  
-  Single-cell DE methods that ignore variation between biological replicates produce hundreds of false DE genes; pseudobulk methods perform best.
-- **[Zimmerman 2021]** Zimmerman et al. (2021). A practical solution to pseudoreplication bias in single-cell studies. *Nature Communications*. [doi:10.1038/s41467-021-21038-1](https://doi.org/10.1038/s41467-021-21038-1)  
+  Single-cell DE methods that ignore variation between biological replicates underestimate the variance of each gene, most for highly expressed genes, and report hundreds of DE genes even between random groups of controls; pseudobulk methods agreed best with matched bulk data. Summing random groups of cells (pseudo-replicates) brings the problem back.
+- **[Zimmerman 2021a]** Zimmerman et al. (2021). A practical solution to pseudoreplication bias in single-cell studies. *Nature Communications*. [doi:10.1038/s41467-021-21038-1](https://doi.org/10.1038/s41467-021-21038-1)  
   Mixed models with a random effect for individual correct pseudoreplication in single-cell data.
 - **[Crowell 2020]** Crowell et al. (2020). muscat detects subpopulation-specific state transitions from multi-sample multi-condition single-cell transcriptomics data. *Nature Communications*. [doi:10.1038/s41467-020-19894-4](https://doi.org/10.1038/s41467-020-19894-4)  
   muscat: framework and benchmark for multi-sample, multi-condition single-cell DE; aggregation (pseudobulk) is competitive and fast.
@@ -116,6 +116,14 @@ general sources come first.
   Re-analysis of a landmark Alzheimer snRNA-seq study: correct QC and pseudobulk DE change the reported DE genes substantially.
 - **[Soneson 2018]** Soneson & Robinson (2018). Bias, robustness and scalability in single-cell differential expression analysis. *Nature Methods*. [doi:10.1038/nmeth.4612](https://doi.org/10.1038/nmeth.4612)  
   Benchmark of single-cell DE methods: results depend strongly on method and filtering; methods developed for bulk perform comparably or better.
+- **[Crampton 2026]** Crampton et al. (2026). Single-Cell Study Designs Are Systematically Underpowered for Small-Effect Genes. *(preprint)* [doi:10.64898/2026.09.17.752063](https://doi.org/10.64898/2026.09.17.752063)  
+  Empirical power of pseudobulk DE from sex differences in 1,494 human brain donors, with the reference set from a held-out half: small effects in the range many studies report are not detected reliably even with 600 donors; lower depth and fewer cells per donor lose over half the DE genes; only the most significant genes reproduce; effect size, donor count and gene expression drive detection.
+- **[Schmid 2021]** Schmid et al. (2021). scPower accelerates and optimizes the design of multi-sample single cell transcriptomic studies. *Nature Communications*. [doi:10.1038/s41467-021-26779-7](https://doi.org/10.1038/s41467-021-26779-7)  
+  scPower: power of multi-sample single-cell DE and eQTL designs as a function of sample size, cells per individual and sequencing depth, for a fixed budget; shallow sequencing of many cells generally gives more power than deep sequencing of few.
+- **[Zimmerman 2021b]** Zimmerman & Langefeld (2021). Hierarchicell: an R-package for estimating power for tests of differential expression with single-cell data. *BMC Genomics*. [doi:10.1186/s12864-021-07635-w](https://doi.org/10.1186/s12864-021-07635-w)  
+  Simulates hierarchical single-cell data, with the within-individual correlation estimated from real data, to estimate DE power; calculators that count cells instead of individuals grossly overestimate power.
+- **[Vieth 2017]** Vieth et al. (2017). powsimR: power analysis for bulk and single cell RNA-seq experiments. *Bioinformatics*. [doi:10.1093/bioinformatics/btx435](https://doi.org/10.1093/bioinformatics/btx435)  
+  Simulation framework to evaluate DE power for bulk and single-cell RNA-seq, before an experiment or from existing data.
 - **[Ahlmann-Eltze 2023]** Ahlmann-Eltze & Huber (2023). Comparison of transformations for single-cell RNA-seq data. *Nature Methods*. [doi:10.1038/s41592-023-01814-1](https://doi.org/10.1038/s41592-023-01814-1)  
   Comparison of single-cell transformations: a shifted log with a sensible pseudocount followed by PCA performs as well as more complex methods.
 

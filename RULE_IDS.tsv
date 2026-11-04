@@ -570,14 +570,20 @@ SC-DATA-011	active	SCRNASEQ_GUIDELINES.md	Library-level metrics live in adata.un
 SC-DE-001	active	SCRNASEQ_GUIDELINES.md	MUST use pseudobulk or mixed models; MUST NOT use cell-level tests to compare co
 SC-DE-002	active	SCRNASEQ_GUIDELINES.md	Pseudobulk procedure:
 SC-DE-003	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/scrnaseq/pseudobulk.py (aggregation with cell counts per pseudob
-SC-DE-004	active	SCRNASEQ_GUIDELINES.md	Mixed models with a random effect for donor are an alternative [Zimmerman 2021†]
+SC-DE-004	active	SCRNASEQ_GUIDELINES.md	Mixed models with a random effect for donor are an alternative [Zimmerman 2021a†
 SC-DE-005	active	SCRNASEQ_GUIDELINES.md	State whether multiple-testing correction is per cell type or across all tests (
+SC-DE-006	active	SCRNASEQ_GUIDELINES.md	MUST NOT create replicates by partitioning the cells of one sample (random or ar
+SC-DE-007	active	SCRNASEQ_GUIDELINES.md	Run a global-null diagnostic when the control group has enough donors (e.g. 6 or
+SC-DE-008	active	SCRNASEQ_GUIDELINES.md	The number of DE genes per cell type is not a measure of how strongly each cell 
+SC-DE-009	active	SCRNASEQ_GUIDELINES.md	A gene or gene set absent from a DE list is not evidence that it does not change
+SC-DE-010	active	SCRNASEQ_GUIDELINES.md	Treat DE genes near the FDR cut-off as the least reproducible part of the list. 
 SC-DES-001	active	SCRNASEQ_GUIDELINES.md	The experimental unit is the donor or animal, not the cell [Squair 2021†; Zimmer
 SC-DES-002	active	SCRNASEQ_GUIDELINES.md	Plan at least 3, preferably 5 or more, donors per condition. These are planning 
 SC-DES-003	active	SCRNASEQ_GUIDELINES.md	Do not confound capture with condition: multiplex samples (genetic or hashtag de
 SC-DES-004	active	SCRNASEQ_GUIDELINES.md	Single-donor studies support only descriptive conclusions about that donor:
 SC-DES-005	active	SCRNASEQ_GUIDELINES.md	Several samples per donor and several donors: pseudobulk per sample with the don
 SC-DES-006	active	SCRNASEQ_GUIDELINES.md	Cells or nuclei: nuclei suit frozen and hard-to-dissociate tissue (brain, spinal
+SC-DES-007	active	SCRNASEQ_GUIDELINES.md	Justify the number of donors against the smallest effect of interest and the exp
 SC-INT-001	active	SCRNASEQ_GUIDELINES.md	Integrate only when samples separate by technical factors that would otherwise d
 SC-INT-002	active	SCRNASEQ_GUIDELINES.md	Default: Harmony [Korsunsky 2019].
 SC-INT-003	active	SCRNASEQ_GUIDELINES.md	Second opinion: scVI or scANVI [Lopez 2018], also the choice for complex atlas-l
@@ -749,6 +755,7 @@ STAT-ENR-002	active	STATISTICS_GUIDELINES.md	Correct for multiple testing across
 STAT-ENR-003	active	STATISTICS_GUIDELINES.md	Be aware of detection biases: long or highly expressed genes are more often dete
 STAT-ENR-004	active	STATISTICS_GUIDELINES.md	State the null hypothesis of the test [Goeman 2007]:
 STAT-ENR-005	active	STATISTICS_GUIDELINES.md	Report the tool, its version, the gene-set database and its release, and the bac
+STAT-ENR-006	active	STATISTICS_GUIDELINES.md	A coherent enrichment result does not validate the gene list it was computed fro
 STAT-EXPL-001	active	STATISTICS_GUIDELINES.md	Plot the raw data before modelling: distributions per sample, scatter plots of k
 STAT-EXPL-002	active	STATISTICS_GUIDELINES.md	Missing is not zero. Decide for every variable what a missing value means (not m
 STAT-EXPL-003	active	STATISTICS_GUIDELINES.md	Zeros must be explicit. When counting events per group (e.g. cells of a type per
@@ -796,6 +803,7 @@ STAT-RES-004	active	STATISTICS_GUIDELINES.md	The number of permutations limits t
 STAT-RES-005	active	STATISTICS_GUIDELINES.md	Bootstrap MUST resample experimental units, not measurements within them. Prefer
 STAT-RES-006	active	STATISTICS_GUIDELINES.md	Simulation studies state their data-generating model and include the null scenar
 STAT-RES-007	active	STATISTICS_GUIDELINES.md	Seeds and determinism follow CODING_GUIDELINES.md §15 (reproducibility).
+STAT-RES-008	active	STATISTICS_GUIDELINES.md	Empirical power or replication estimated by subsampling a large dataset MUST def
 STAT-USE-001	active	STATISTICS_GUIDELINES.md	Audience: coding agents and people with introductory statistics (one or two univ
 STAT-USE-002	active	STATISTICS_GUIDELINES.md	Copy this file and STATISTICS_REFERENCES.md verbatim into the project root when 
 STAT-USE-003	active	STATISTICS_GUIDELINES.md	This file covers principles that apply to any data type. Tool-specific procedure

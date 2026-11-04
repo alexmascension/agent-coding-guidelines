@@ -1,6 +1,6 @@
 # Bulk RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.2.0 (2026-10-18)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.3.0 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Conesa 2016]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Schurch 2016†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -189,6 +189,9 @@
   languages and tooling).
 * `BULK-DE-003` **Shrunken log fold changes** for ranking and plots [Zhu 2018†]; keep unshrunken estimates and standard errors in the
   results table.
+  * When log fold changes from different DE tools are compared, shrink them with one common estimator (e.g. ashr, from
+    each tool's estimate and standard error) so that differences reflect the tests, not the shrinkage
+    [Crampton 2026†; Stephens 2016†].
 * `BULK-DE-004` **Minimum effect**: test against a threshold (`lfcThreshold`, TREAT) rather than filtering by fold change afterwards
   [McCarthy 2009†; Ebrahimpoor 2021†].
 * `BULK-DE-005` **Large human cohorts**: run a global-null diagnostic by repeating the whole analysis with permuted condition

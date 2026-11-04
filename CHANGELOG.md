@@ -6,6 +6,77 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-04 (single-cell DE: power and pseudoreplication; SCRNASEQ 5.1.0, STATISTICS 2.2.0, RNASEQ_BULK 3.3.0)
+
+Rules from [Crampton 2026] (preprint: empirical power of pseudobulk DE in 1,494 human brain donors, with a held-out
+reference set) and from a full reading of [Squair 2021] (why cell-level tests produce false discoveries).
+
+### SCRNASEQ_GUIDELINES.md [5.1.0]
+
+#### Added
+
+- `SC-DES-007`: justify the number of donors against the smallest effect of interest and the expression of the genes of
+  interest; simulation tools with parameters from large external data, not from a pilot; cells per donor of the cell
+  type of interest before depth per cell; budget in UMIs per donor.
+- `SC-DE-006`: no replicates made by partitioning the cells of one sample (pseudo-replicates).
+- `SC-DE-007`: global-null diagnostic (random split of control donors, or permuted donor labels) with
+  `recipes/bulk/fdr_calibration.py`.
+- `SC-DE-008`: the number of DE genes per cell type is not a measure of response; report donors, cells per donor and
+  UMIs per cell; compare at matched depth or by effect sizes.
+- `SC-DE-009`: a gene absent from a DE list is not evidence of no change; report its expression and the interval of its
+  log fold change.
+- `SC-DE-010`: DE genes near the FDR cut-off are the least reproducible; ranks and adjusted p-values reported, genes for
+  validation chosen from the most significant.
+
+#### Changed
+
+- `SC-DE-001`: names the marker functions that run cell-level tests (`scanpy.tl.rank_genes_groups`, Seurat
+  `FindMarkers`); *Why* states the mechanism (variance between donors ignored, underestimated most for highly
+  expressed genes).
+- `SC-DE-002`: the minimum number of cells per pseudobulk sample is checked on the data (principal components against
+  the number of cells), fixed before the results and applied to all groups.
+- `SC-DE-004`: *Trade-off* and *Deviate when* for mixed models.
+- `SC-DES-002`: points to `SC-DES-007`; cohorts of 3–5 donors are powered only for large effects.
+- `SC-REP-006`: donors tested, cells per donor and UMIs per cell reported per cell type.
+- Citation key [Zimmerman 2021†] renamed [Zimmerman 2021a†].
+
+### STATISTICS_GUIDELINES.md [2.2.0]
+
+#### Added
+
+- `STAT-RES-008`: empirical power or replication estimated by subsampling defines the reference on disjoint units,
+  stratified and repeated; the estimates are upper bounds.
+- `STAT-ENR-006`: a coherent enrichment result does not validate the gene list it was computed from.
+
+#### Changed
+
+- `STAT-HIER-002`: citation key [Zimmerman 2021] renamed [Zimmerman 2021a].
+
+### RNASEQ_BULK_GUIDELINES.md [3.3.0]
+
+#### Changed
+
+- `BULK-DE-003`: log fold changes compared across DE tools are shrunk with one common estimator.
+
+### SPATIAL_GUIDELINES.md [3.0.1]
+
+#### Changed
+
+- Citation key [Zimmerman 2021†] renamed [Zimmerman 2021a†].
+
+### STATISTICS_REFERENCES.md
+
+#### Added
+
+- [Crampton 2026] (preprint), [Schmid 2021] (scPower), [Zimmerman 2021b] (hierarchicell) and [Vieth 2017] (powsimR);
+  metadata and BibTeX from Crossref, months as BibTeX macros, notes from the abstracts.
+
+#### Changed
+
+- [Squair 2021]: the note states the mechanism and the pseudo-replicate result.
+- [Zimmerman 2021] renamed [Zimmerman 2021a] (`.bib` key `Zimmerman_2021a`), to tell it from [Zimmerman 2021b].
+
+
 ## 2026-11-04 (established pipelines: CODING 4.0.0, SCRNASEQ 5.0.0)
 
 ### CODING_GUIDELINES.md [4.0.0]
