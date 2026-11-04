@@ -1,6 +1,6 @@
 # Sample identity and duplicate detection guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.3.0 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.0 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys point to `OMICS_REFERENCES.md`; keys with a
 > dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by ***Why***, ***Trade-off*** and
@@ -108,10 +108,14 @@
 ## 6. Single-cell pools
 
 * `ID-POOL-001` **Pooled designs (cells of several donors in one capture) MUST be demultiplexed by genotype**, also when hashtags are used (hashtag calls are then checked against genotype):
+  * without donor genotypes: `nf-core/hadge` [Curion 2024b], pinned to a release, genetic mode: vireo [Huang 2019]
+    with more than 20 donors per pool or when only one tool can be run; souporcell [Heaton 2020] and vireo combined
+    with up to 20 donors, when more than one tool can be run;
   * with donor genotypes: Demuxalot with refined genotypes; Demuxalot and Dropulation combined when more than one tool
-    can be run;
-  * without genotypes: vireo [Huang 2019] with more than 20 donors per pool or when only one tool can be run; souporcell
-    [Heaton 2020] and vireo combined with up to 20 donors, when more than one tool can be run;
+    can be run. Neither is in `nf-core/hadge` (1.0.0): run them from the Demuxafy image [Neavin 2024], pinned by
+    version and checksum (`CODING_GUIDELINES.md`, `CODE-DL-001`), and combine them with its `Combine_Results.R`
+    (level 5 of `CODE-PIPE-002`; return condition: a hadge release with both methods, `CODE-PIPE-004`);
+  * hashtags, when used, go through the hashing mode of `nf-core/hadge`;
   * combined calls: a droplet is a singlet only if more than half of the tools call it a singlet, and its donor is the
     one most tools assign; ties are left unassigned [Neavin 2024];
   * *Why:* on in silico pools of 2–128 donors with known doublets, Demuxalot and Dropulation reached a higher MCC than
@@ -119,8 +123,11 @@
     without genotypes, souporcell lost accuracy above 32 donors, vireo alone performed best in large pools, and
     souporcell with vireo was part of the recommended combinations for smaller pools [Neavin 2024]. The authors place
     the limit at 16 donors in the text and at about 20 in their decision tree.
-  * *Deviate when:* demuxlet [Kang 2017] MAY replace Demuxalot where it is already established; in its original
-    evaluation about 50 SNPs per cell sufficed for 97% singlet assignment in pools of up to 64.
+  * *Why a pipeline:* hadge runs the genotype-free methods and the hashing methods in one versioned, containerized
+    run; with donor genotypes the methods the evidence favours are outside it, and Demuxafy is their authors'
+    implementation of the combination.
+  * *Deviate when:* demuxlet [Kang 2017] MAY replace Demuxalot where it is already established; it runs inside hadge.
+    In its original evaluation about 50 SNPs per cell sufficed for 97% singlet assignment in pools of up to 64.
 * `ID-POOL-002` **Match demultiplexed clusters to donors** with the fingerprints of §4 (pseudobulk BAM per cluster against donor DNA
   or other samples).
 * `ID-POOL-003` Genotype demultiplexing also detects cross-donor doublets and estimates ambient RNA [Heaton 2020].
@@ -179,5 +186,5 @@
 | Alternatives | NGSCheckMate, Picard CrosscheckFingerprints, BAM-matcher | CLI |
 | Expression-based genotype prediction | R/lineup, MixupMapper | R, Java |
 | DNA contamination | VerifyBamID, Conpair | CLI |
-| Single-cell demultiplexing | Demuxalot, `vireoSNP` (Python); Dropulation (Drop-seq tools), souporcell, demuxlet | Python, CLI |
+| Single-cell demultiplexing | `nf-core/hadge` (vireo, souporcell, demuxlet, freemuxlet; hashing methods); Demuxafy image (Demuxalot, Dropulation, `Combine_Results.R`) | Nextflow, Singularity |
 | Hashing, correlations, tables | `hashlib`, `polars`, `numpy` | Python |

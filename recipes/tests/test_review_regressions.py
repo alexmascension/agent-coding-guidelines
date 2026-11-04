@@ -188,20 +188,21 @@ def _qc_adata(mito, nuclear):
 def test_mad_zero_and_nan_are_not_silently_passed():
     adata = _qc_adata([0.0] * 9 + [0.9], [0.3] * 9 + [np.nan])
     report = mad_outlier_flags(adata, "capture")
-    assert (
-        report.filter(pl.col("metric") == "mito_fraction")["status"][0] == "not_evaluated_mad_zero"
-    )
+    # MAD 0 on a fraction metric: the minimum MAD keeps the rule active (SC-QC-003)
+    assert report.filter(pl.col("metric") == "mito_fraction")["status"][0] == "mad_floor_applied"
+    assert adata.obs["qc_outlier_mito_fraction"].iloc[-1]
+    assert not adata.obs["qc_outlier_mito_fraction"].iloc[:-1].any()
     assert adata.obs["qc_invalid"].iloc[-1]
     assert adata.obs["qc_fail"].iloc[-1]
 
 
 def test_absolute_mito_threshold_applies_when_mad_is_zero():
-    adata = _qc_adata([0.0] * 9 + [0.9], [0.3] * 10)
-    report = mad_outlier_flags(adata, "capture", max_mito_fraction=0.05)
-    assert (
-        report.filter(pl.col("metric") == "mito_fraction")["status"][0]
-        == "absolute_threshold_only"
-    )
+    adata = _qc_adata([0.0] * 9 + [0.04], [0.3] * 10)
+    # 0.04 is below the minimum-MAD threshold (0 + 3 x 0.015) but above the absolute limit
+    report = mad_outlier_flags(adata, "capture", max_mito_fraction=0.03)
+    row = report.filter(pl.col("metric") == "mito_fraction").row(0, named=True)
+    assert row["status"] == "mad_floor_applied"
+    assert row["upper"] == pytest.approx(0.03)
     assert adata.obs["qc_outlier_mito_fraction"].iloc[-1]
 
 

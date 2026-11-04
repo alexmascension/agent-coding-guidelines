@@ -1,6 +1,6 @@
 # HPC guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.3.0 (2026-10-23)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.4.0 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -179,9 +179,12 @@
   run it as its own long, low-resource job, or in `tmux`/`screen` on a login node if the site allows it.
 * `HPC-WF-002` **Work directory, caches and outputs in `WORK`** (`-w $PROJECT_WORK/work/<pipeline>`); outputs then promoted as in
   §2 (data flow). Use `-resume` after failures instead of restarting from zero.
-* `HPC-WF-003` **Pin pipeline and engine versions** (`-r <release>` for nf-core pipelines, the module version of Nextflow) and keep the
-  site configuration (executor, partition, QoS, container settings) in a tracked config file, separate from the
-  pipeline parameters.
+* `HPC-WF-003` **Pin pipeline and engine versions** (`-r <release>` for nf-core pipelines, the module version of Nextflow). Keep
+  three tracked configuration files apart: the site configuration (executor, partition, QoS, container settings), the
+  pipeline parameters (`HPC-WF-005`), and the project's configuration of each pipeline (level 2 of
+  `CODING_GUIDELINES.md`, `CODE-PIPE-002`). A patched pipeline (level 4) runs from a pinned commit of a fork, never from
+  an edited copy in the Nextflow cache (`$NXF_HOME/assets`).
+  * *Why:* `nextflow pull` overwrites the cache without warning, and the edit is in no repository.
 * `HPC-WF-005` **Pipeline parameters go in a tracked parameters file** (`-params-file params.yaml`), not on the command line.
   * *Why:* the file is the record of the run; and with Nextflow 26, boolean and numeric parameters given on the
     command line reached nf-core schema validation as strings in at least one project, while a YAML file keeps

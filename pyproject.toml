@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-coding-guidelines-recipes"
-version = "0.5.0"
+version = "0.6.0"
 description = "Reference implementations (recipes) for the agent coding guidelines"
 requires-python = ">=3.11"
 license = {text = "MIT"}
@@ -33,6 +33,7 @@ include = ["recipes*"]
 [tool.setuptools.package-data]
 "recipes.scrnaseq" = ["*.R"]
 "recipes.bulk" = ["*.R"]
+"recipes.common" = ["data/gene_groups/*.tsv"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

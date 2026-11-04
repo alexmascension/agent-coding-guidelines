@@ -1,6 +1,6 @@
 # Meta-analysis guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-17)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.0 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Borenstein 2023]` point to
 > `OMICS_REFERENCES.md`; keys marked with a dagger point to `STATISTICS_REFERENCES.md`.
@@ -150,12 +150,17 @@ Decide, in the protocol, which of these strategies is used and why [Ramasamy 200
 ## 10. Data sources and harmonization
 
 * `META-DATA-001` **Reprocess raw data with one pipeline, genome build and annotation release** when possible
-  (`RNASEQ_BULK_GUIDELINES.md` §2–4, reference and quantification). Uniformly processed resources: recount3
-  [Wilks 2021], ARCHS4 [Lachmann 2018] for human and mouse RNA-seq; CZ CELLxGENE Discover and Census for single-cell
-  data [CZI 2024].
+  (`RNASEQ_BULK_GUIDELINES.md` §2–4, reference and quantification), **and propose the pipeline to the user before
+  reprocessing** (`CODING_GUIDELINES.md`, `CODE-AGENT-005`). Check at that moment, not from this guide: the latest
+  release of the pipeline named by the data-type guide and its changes since the release named there; other pipelines
+  for the data type in the nf-core catalogue; uniformly processed resources that make reprocessing unnecessary:
+  recount3 [Wilks 2021], ARCHS4 [Lachmann 2018] for human and mouse RNA-seq, CZ CELLxGENE Discover and Census for
+  single-cell data [CZI 2024]. The proposal lists the options found with release and date, and recommends one. Every
+  study then uses the same release and the same deviations (`CODE-PIPE-004`).
   * *Why:* differences in reference, annotation and quantifier produce study-specific gene-level differences
-    (`RNASEQ_BULK_GUIDELINES.md` §2) that a meta-analysis would interpret as heterogeneity. *Trade-off:*
-    reprocessing costs compute; when raw data are unavailable, record each study's pipeline as a study covariate.
+    (`RNASEQ_BULK_GUIDELINES.md` §2) that a meta-analysis would interpret as heterogeneity; the pipeline catalogue and
+    its releases change faster than this guide. *Trade-off:* reprocessing costs compute; when raw data are
+    unavailable, record each study's pipeline as a study covariate.
 * `META-DATA-002` Map genes to a common identifier set and report genes missing from each study; a gene absent from a study is
   missing, not zero.
 * `META-DATA-003` Curate study-level metadata into one table with controlled vocabulary (`CODING_GUIDELINES.md` §6).

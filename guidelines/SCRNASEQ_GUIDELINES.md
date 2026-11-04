@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.1.0 (2026-11-03)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.0.0 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -25,7 +25,7 @@
 * Upstream sources: some rules of version 4.1.0 adapt ideas, rewritten, from the single-cell best-practices book
   (<https://github.com/theislab/single-cell-best-practices>, Theis lab, Apache-2.0, commit `dd6eb86`), which
   accompanies [Heumos 2023], and from panpipes (<https://github.com/DendrouLab/panpipes>, Dendrou lab,
-  BSD-3-Clause, commit `81721cf`) [Curion 2024]. `references/SOURCE_REPOS.toml` records which files were followed.
+  BSD-3-Clause, commit `81721cf`) [Curion 2024a]. `references/SOURCE_REPOS.toml` records which files were followed.
 
 ## 1. Data conventions
 
@@ -116,12 +116,19 @@
 
 ## 3. Quantification
 
-* `SC-QUANT-001` **Default: STARsolo** [Kaminow 2021], gene-level counts, with these features in one run:
-  `--soloFeatures Gene GeneFull_Ex50pAS Velocyto` (add `SJ` if splice junctions are needed; STAR ≥ 2.7.10a).
+* `SC-QUANT-001` **Default: STARsolo** [Kaminow 2021] **through `nf-core/scrnaseq` (`--aligner star`)** [Ewels 2020],
+  pinned to a release, gene-level counts with one gene feature plus `Velocyto` per run: `Gene` for cells;
+  `GeneFull_Ex50pAS` for nuclei and for cells when intronic reads are counted (add `SJ` if splice junctions are needed;
+  STAR ≥ 2.7.10a).
   * `Gene` (exonic reads) is the main matrix for cells; `GeneFull_Ex50pAS` (exons and introns, exonic overlap
     prioritized) is the main matrix for nuclei, where most reads are unspliced, and for cells when intronic reads are
     counted; `Velocyto` gives spliced, unspliced and ambiguous counts, stored as `layers["spliced"]`,
     `layers["unspliced"]`, `layers["ambiguous"]`.
+  * In `nf-core/scrnaseq` 4.2.0 (levels of `CODING_GUIDELINES.md`, `CODE-PIPE-002`): for cells,
+    `--star_feature 'Gene Velocyto'` (level 1). For nuclei, the pipeline schema does not accept `GeneFull_Ex50pAS` and
+    the STARsolo module writes `--soloFeatures` itself, so the value cannot go in `ext.args`: add
+    `GeneFull_Ex50pAS Velocyto` to the values of `star_feature` in a pinned fork (level 4), propose it upstream, and
+    record it with the return condition of `CODE-PIPE-004`. Do not disable the pipeline's parameter validation instead.
   * *Why `GeneFull_Ex50pAS` rather than `GeneFull`:* `GeneFull` assigns a read to every gene whose locus (exons or
     introns) it overlaps, so a read from a gene nested inside an intron of another gene on the same strand is
     ambiguous and discarded. Genes nested in long introns then lose all or most of their counts; this is frequent in
@@ -130,16 +137,20 @@
     shared by both genes remain ambiguous, and reads entirely exonic in the antisense direction are not counted
     (STARsolo documentation). It is the option the STARsolo author recommends to approach Cell Ranger with introns,
     and the one used for single-nucleus data by the Broad/HCA Optimus pipeline.
+  * *Why one gene feature per run:* the pipeline collects the matrices of `Solo.out/Gene*/raw` and `filtered`; two
+    gene features in one run would send two matrices to a step that reads one.
   * *Trade-off:* counts differ from `GeneFull` for overlapping genes; matrices from the two options are not
     interchangeable within a project.
-  * *Deviate when:* `GeneFull` MAY be added as a further layer (e.g. `layers["counts_genefull"]`) to compare with
-    earlier analyses; it is not the input of downstream steps.
+  * *Deviate when:* `GeneFull` MAY be computed in a separate run (`--star_feature GeneFull`) and added as a further
+    layer (e.g. `layers["counts_genefull"]`) to compare with earlier analyses; it is not the input of downstream steps.
   * To match Cell Ranger 4 or later, add `--clipAdapterType CellRanger4 --outFilterScoreMin 30
     --soloCBmatchWLtype 1MM_multi_Nbase_pseudocounts --soloUMIfiltering MultiGeneUMI_CR --soloUMIdedup 1MM_CR`
-    (STARsolo documentation).
+    (STARsolo documentation) to the `ext.args` of the STARsolo process (level 2). A `withName` block replaces the
+    pipeline's `ext.args`, it does not extend it: start from the pipeline's value (`CODE-PIPE-003`).
   * Keep the unique-gene matrix as the main one. Multi-gene reads (overlapping genes, paralog families) MAY be
     recovered with `--soloMultiMappers EM` as an additional matrix, for questions about those gene classes.
-  * Cell calling: `--soloCellFilter EmptyDrops_CR` (EmptyDrops in the Cell Ranger flavour [Lun 2019]), combined with
+  * Cell calling: `--soloCellFilter EmptyDrops_CR` (EmptyDrops in the Cell Ranger flavour [Lun 2019]) in `ext.args`,
+    with no `expected_cells` in the samplesheet (the module then adds its own `--soloCellFilter`), combined with
     CellBender as described in §4.1.
   * *Why STARsolo:* it reproduces Cell Ranger results, is faster, was more accurate than pseudoalignment tools on
     realistic simulations, and handles multi-gene reads [Kaminow 2021]; in an independent comparison STARsolo, Cell
@@ -153,7 +164,8 @@
     velocity results [Soneson 2021]; the STARsolo documentation also notes that `Velocyto` quantification is under
     active development. Fix one STAR version per project.
   * *Deviate when:* alevin-fry/simpleaf [He 2022] or kallisto|bustools in `nac` mode [Melsted 2021; Sullivan 2024] are
-    acceptable alternatives when no BAM is needed.
+    acceptable alternatives when no BAM is needed; both run inside the same pipeline (`--aligner simpleaf`,
+    `--aligner kallisto`).
 * `SC-QUANT-002` **Isoform-level questions** need full-length (e.g. Smart-seq) or long-read protocols [Lebrigand 2020], or analysis of
   transcript compatibility counts [Ntranos 2019]. For full-length per-cell isoform quantification, use Salmon rather
   than alevin. Isoforms are not quantified from 3' tag data.
@@ -199,6 +211,25 @@ the doublet review and everything downstream on `counts_ambient_corrected` (`SC-
 calling (§4.1), §4.2 and the whole of §4.3, first clustering included, on `counts`; then the correction, applied to the
 cells that remain, and its layer from normalization (§5) onwards.
 
+* `SC-QC-016` **From matrix to clustered object, run `nf-core/scdownstream`** (<https://github.com/nf-core/scdownstream>), which
+  builds on panpipes [Curion 2024a], scFlow, scRAFIKI and YASCP; until its first release, pinned to a commit of `dev`
+  whose tests pass (`CODING_GUIDELINES.md`, `CODE-PIPE-001`). Baseline parameters and the known differences from this
+  guide are in §16. Steps it does not implement, or implements differently from §4–8, run at level 3 of `CODE-PIPE-002`
+  with the recipes of §16, in two passes:
+  1. first pass with filters that flag rather than remove (doublets kept, `doublet_removal: false`), through the first
+     clustering;
+  2. review with the recipes: what each filter removes per cluster (`SC-QC-015`), doublet clusters (`SC-QC-010`),
+     nuclear fraction (`SC-QC-002`), mitochondrial fraction on the logit scale with a floor (`SC-QC-003`), Scrublet
+     threshold per capture (`SC-QC-013`);
+  3. second pass on the cells kept, with the pipeline's filters disabled, through integration and clustering; then
+     principal components and clustering stability (§6, §8) on its output.
+
+  Convert the pipeline's object to the conventions of §1 at the boundary (`CODE-EXT-005`).
+  * *Why:* the pipeline brings tested, containerized implementations of most of §4–8 (CellBender, scDblFinder and
+    Scrublet, scran, Harmony and scVI, scib-metrics, Leiden) in one versioned run; the review steps of this guide are
+    the ones it lacks, and running them between two passes keeps the rest inside the pipeline.
+  * *Trade-off:* two passes cost a second integration; the first is cheap if run without scVI.
+
 ### 4.1 Cell calling and ambient RNA
 
 * `SC-QC-001` **CellBender is the default** for ambient RNA removal and cell calling on the raw (unfiltered) STARsolo matrix
@@ -236,9 +267,16 @@ cells that remain, and its layer from normalization (§5) onwards.
     cells with uniformly low fractions, a few MADs above the median is still a healthy cell.
   * **Fraction of counts in the 20 most expressed genes**, both tails: a dominant handful of transcripts marks
     degraded cells or over-amplification [Germain 2020]. It is recorded and flagged like the other metrics.
-  * Values that cannot be evaluated (non-finite metrics) are flagged, not passed. When the MAD is 0 (e.g.
-    mitochondrial fraction in nuclei), the MAD rule cannot be applied: use a project-justified absolute threshold
-    or report the metric as not evaluated.
+  * Values that cannot be evaluated (non-finite metrics) are flagged, not passed.
+  * **Minimum MAD for fraction metrics** (mitochondrial, top-20 genes, nuclear fraction): when the scaled MAD is below
+    1.5 percentage points (0.015 as a proportion), use that minimum and record that it was applied, per capture and
+    metric. For the mitochondrial fraction, measured on the logit scale, the upper threshold is at least the median
+    fraction plus `n` × 1.5 points; the floor of the AND rule still applies. A scaled MAD of 0 in log total counts or
+    log genes is not evaluated: inspect the capture.
+    * *Why:* with a MAD of 0 the threshold sits on the median, so every cell above it is flagged (in nuclei, any
+      nucleus with one mitochondrial read); the minimum keeps the filter active and limited to cells clearly beyond
+      the bulk.
+    * *Trade-off:* a default not derived from the data; a project MAY change it under *Overrides*.
   * Targeted panels (imaging, `SPATIAL_GUIDELINES.md`) may contain no mitochondrial genes and no intronic signal; the
     mitochondrial and nuclear-fraction filters then do not apply.
   * *Why:* depth and quality differ between captures; one fixed threshold removes good cells in one capture and keeps
@@ -259,10 +297,17 @@ cells that remain, and its layer from normalization (§5) onwards.
 * `SC-QC-005` **Mitochondrial thresholds depend on species, tissue and assay**: the common 5% cut-off is often unsuitable for
   human tissues [Osorio 2020]; model-based alternatives exist [Hippen 2021]. In nuclei, mitochondrial reads should be
   near zero.
-* `SC-QC-006` Ribosomal and haemoglobin genes, which have no dedicated chromosome, are defined by explicit species-specific lists
-  stored in the project. **Their fractions are diagnostics, not filters**: a high haemoglobin fraction points to red
-  blood cell contamination (or to erythroid cells, in blood and bone marrow), and the ribosomal fraction varies with
-  cell state and helps explain what separates clusters. Cells are removed on them only for a recorded reason.
+* `SC-QC-006` Ribosomal and haemoglobin genes, which have no dedicated chromosome, are defined by explicit lists of stable
+  Ensembl IDs. **Default lists ship with the recipes** (`recipes/common/data/gene_groups/`, human and mouse):
+  cytoplasmic ribosomal proteins of the RPL and RPS families, without mitochondrial ribosomal proteins (MRPL, MRPS) or
+  the RPS6K kinases; haemoglobin subunits, without HBEGF or HBS1L; each list with its source and annotation release. A
+  project MAY replace them under *Overrides*. A group with no gene in the matrix is reported as not evaluated, never as
+  a fraction of 0; genes of the list absent from the matrix are listed. **Their fractions are diagnostics, not
+  filters**: a high haemoglobin fraction points to red blood cell contamination (or to erythroid cells, in blood and
+  bone marrow), and the ribosomal fraction varies with cell state and helps explain what separates clusters. Cells are
+  removed on them only for a recorded reason.
+  * *Why lists, not prefixes:* prefixes on symbols also match unrelated genes (RPS6KA1, HBEGF), and with Ensembl IDs
+    as index (`SC-DATA-006`) a prefix on `var_names` matches nothing and gives 0 for every cell, with no warning.
 * `SC-QC-007` MUST NOT filter cells by the expression of markers of the hypothesis being tested.
 
 * `SC-QC-008` Recipe for §4.1–4.2: `recipes/scrnaseq/qc.py` (gene groups from the GTF chromosome, nuclear fraction, per-capture
@@ -554,7 +599,8 @@ Following minSCe [Füllgrabe 2020] and `STATISTICS_GUIDELINES.md` §12:
 
 | Task | Python | R reference (via script) |
 |---|---|---|
-| Quantification | STARsolo (CLI); alternatives `simpleaf`/alevin-fry, `kb-python` | — |
+| Quantification | `nf-core/scrnaseq` (STARsolo); alternatives in the same pipeline: `simpleaf`/alevin-fry, kallisto\|bustools | — |
+| Matrix to clustered object | `nf-core/scdownstream` (pinned commit; parameters below) | — |
 | Data structure | `anndata` | — |
 | QC, normalization, HVG (highly variable genes), PCA, Leiden, UMAP, PAGA | `scanpy` | — |
 | Cell calling and ambient RNA | STARsolo `EmptyDrops_CR`, `cellbender` (CLI) | SoupX, DropletUtils (EmptyDrops) |
@@ -568,3 +614,37 @@ Following minSCe [Füllgrabe 2020] and `STATISTICS_GUIDELINES.md` §12:
 | Cell-cell communication | `liana` | — |
 | Pseudotime and fate | `scanpy` (DPT, diffusion pseudotime), `palantir`, `cellrank` | slingshot, tradeSeq, Lamian |
 | RNA velocity | `scvelo`, `velovi` | — |
+
+### Baseline parameters for `nf-core/scdownstream`
+
+Level 1 of `CODE-PIPE-002`, read against the code of `dev` at commit `0048567` (2026-10-28); re-check at each pinned
+commit (`CODE-PIPE-005`).
+
+```yaml
+ambient_correction: cellbender          # SC-QC-001
+use_ambient_corrected_counts: true      # SC-DATA-004; doublets on CellBender counts: SC-QC-012, Deviate when
+doublet_detection: scrublet,scdblfinder # SC-QC-009
+doublet_removal: false                  # SC-QC-010 (flag first)
+normalization_method: scran             # SC-NORM-001
+feature_selection: hvgs                 # SC-NORM-003
+integration_n_features: 2000            # SC-NORM-003
+integration_methods: symphony,scvi      # SC-INT-002 (Harmony via symphonypy), SC-INT-003 (scVI)
+scib: true                              # SC-INT-004
+clustering_resolutions: '0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4,1.6,1.8,2.0'  # SC-CLUST-002 grid
+mito_genes: mito_genes_from_gtf.txt     # SC-QC-004: symbols of the MT/chrM genes of the GTF
+```
+
+* Samplesheet: only `unfiltered`, so that CellBender calls the cells (`SC-QC-001`); with `filtered`, the pipeline
+  keeps those calls and skips empty-droplet removal. Give `symbol_col` and `batch_col`. In nuclei, set
+  `pct_counts_mt_nmads` to 0.
+* Differences from this guide at that commit, handled in the review between the two passes:
+  * the cell filter removes cells before any clustering (`SC-QC-015` asks to flag first);
+  * MADs are unscaled (5 unscaled ≈ 3.4 scaled) and used on both tails of the raw mitochondrial percentage, with
+    `max_mito_percentage` as a separate cut-off, not a floor (`SC-QC-003`);
+  * a MAD of 0 is not handled: every cell above the median is removed (the reason for `pct_counts_mt_nmads` 0 in
+    nuclei);
+  * ribosomal and haemoglobin fractions use prefixes on `var_names`, which give 0 with Ensembl IDs (`SC-QC-006`);
+  * Scrublet keeps only its calls, not its scores, so its threshold cannot be checked (`SC-QC-013`);
+  * one switch (`use_ambient_corrected_counts`) sets the input of doublet detection and of normalization; with SoupX
+    or decontX, `SC-QC-012` cannot be met inside the pipeline;
+  * Harmony runs on 30 principal components fixed in the module (§6 chooses the number).
