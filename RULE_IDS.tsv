@@ -577,6 +577,10 @@ SC-DE-007	active	SCRNASEQ_GUIDELINES.md	Run a global-null diagnostic when the co
 SC-DE-008	active	SCRNASEQ_GUIDELINES.md	The number of DE genes per cell type is not a measure of how strongly each cell 
 SC-DE-009	active	SCRNASEQ_GUIDELINES.md	A gene or gene set absent from a DE list is not evidence that it does not change
 SC-DE-010	active	SCRNASEQ_GUIDELINES.md	Treat DE genes near the FDR cut-off as the least reproducible part of the list. 
+SC-DE-011	active	SCRNASEQ_GUIDELINES.md	Other aggregation functions are not the default input for DE between conditions.
+SC-DE-012	active	SCRNASEQ_GUIDELINES.md	Differential detection (DD) MAY complement DE when the question is whether the f
+SC-DE-013	active	SCRNASEQ_GUIDELINES.md	Test changes in variability or in the shape of the distribution with methods tha
+SC-DE-014	active	SCRNASEQ_GUIDELINES.md	Model UMI counts without zero inflation. Poisson or negative binomial models acc
 SC-DES-001	active	SCRNASEQ_GUIDELINES.md	The experimental unit is the donor or animal, not the cell [Squair 2021†; Zimmer
 SC-DES-002	active	SCRNASEQ_GUIDELINES.md	Plan at least 3, preferably 5 or more, donors per condition. These are planning 
 SC-DES-003	active	SCRNASEQ_GUIDELINES.md	Do not confound capture with condition: multiplex samples (genetic or hashtag de

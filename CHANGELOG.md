@@ -6,6 +6,59 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-04 (pseudobulk aggregation function, detection, distribution and variability; SCRNASEQ 5.2.0)
+
+Which aggregation function to use for pseudobulk (`scanpy.get.aggregate`: `sum`, `mean`, `median`, `count_nonzero`,
+`var`) and whether percentiles, per-donor models (ZINB) or Gini and skewness indices are alternatives. Full texts read:
+[Crowell 2020], [Zimmerman 2021a], [Squair 2021], [Junttila 2022], [Murphy 2022], [Gilis 2025], [Bouland 2023],
+[Hoffman 2026]; the other new references from abstracts.
+
+### SCRNASEQ_GUIDELINES.md [5.2.0]
+
+#### Added
+
+- `SC-DE-011`: `mean`, `median` and `var` are not the default input for DE between conditions; mean of log-normalized
+  values only with limma-trend, with log fold changes from summed counts; `median` not for DE.
+- `SC-DE-012`: differential detection on binarized pseudobulk counts (`count_nonzero`), with cell numbers as trials and
+  a normalization offset, combined with DE by stage-wise testing.
+- `SC-DE-013`: changes in variability or distribution shape tested with methods that separate them from mean and depth
+  (distinct, IDEAS, memento, BASiCS); no comparison of raw Gini indices, skewness, percentiles or fractions detected.
+- `SC-DE-014`: UMI counts modelled without zero inflation; zero-inflated or hurdle models for read counts without UMIs.
+
+#### Changed
+
+- `SC-DE-002`: step 1 sums raw counts from the counts layer, never `X` after normalization (`sc.get.aggregate` uses `X`
+  by default), and normalizes after aggregation; *Why* cites the benchmarks that compared sum and mean.
+- `SC-DE-004`: precision-weighted pseudobulk (dreamlet) for unequal cell numbers or repeated measures.
+- `SC-ANNOT-005`: specificity across cell types summarized with tau.
+- `SC-REP-006`: the aggregation function and its layer are reported.
+- §16 tools table: dreamlet; new row for differential detection, distribution and variability.
+
+### STATISTICS_REFERENCES.md
+
+#### Added
+
+- [Murphy 2022], [Thurman 2021], [Gilis 2025], [Bouland 2021], [Bouland 2023], [Hoffman 2026], [Kim 2024],
+  [Lun 2018] (preprint), [Svensson 2020], [Kim 2020], [Jiang 2022], [Tiberi 2023], [Zhang 2022], [Hafner 2025],
+  [Eling 2018], [Jiang 2016]; metadata and BibTeX from Crossref, months as BibTeX macros.
+
+#### Changed
+
+- [Crowell 2020], [Junttila 2022]: notes state the result of the comparison of aggregation functions.
+
+### OMICS_REFERENCES.md
+
+#### Added
+
+- [Kryuchkova-Mostacci 2017]; BibTeX from Crossref, year, month, volume and pages of the journal issue.
+
+### Repository
+
+#### Changed
+
+- `references/SOURCE_REPOS.toml`: the deferred differential-expression chapter of the single-cell best-practices book
+  notes that the aggregation function is settled (`SC-DE-002`, `SC-DE-011`).
+
 ## 2026-11-04 (single-cell DE: power and pseudoreplication; SCRNASEQ 5.1.0, STATISTICS 2.2.0, RNASEQ_BULK 3.3.0)
 
 Rules from [Crampton 2026] (preprint: empirical power of pseudobulk DE in 1,494 human brain donors, with a held-out
