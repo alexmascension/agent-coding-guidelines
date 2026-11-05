@@ -1,6 +1,6 @@
 # Statistics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.1 (2026-11-05)
 >
 > Key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** follow RFC 2119, as in
 > `CODING_GUIDELINES.md`. Bracketed keys such as `[Squair 2021]` point to entries in
@@ -387,6 +387,8 @@
     [Crampton 2026].
   * *Trade-off:* units held out for the reference are not available for the design grid; the split ratio trades the
     completeness of the reference against the range of designs tested, and should be reported [Crampton 2026].
+  * Recipe: `recipes/stats/heldout.py` (disjoint, stratified, reproducible splits); its use for single-cell DE is
+    `recipes/scrnaseq/empirical_power.py`.
 * `STAT-RES-007` Seeds and determinism follow `CODING_GUIDELINES.md` §15 (reproducibility).
 
 ## 11. Bayesian analysis (optional)

@@ -6,6 +6,47 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-05 (recipes 0.7.0 for single-cell DE power and pseudoreplication; SCRNASEQ 5.2.1, STATISTICS 2.2.1)
+
+Recipes for the rules added in SCRNASEQ 5.1.0 and STATISTICS 2.2.0 (`SC-DES-007`, `SC-DE-002`, `SC-DE-006` to
+`SC-DE-010`, `STAT-RES-008`).
+
+### SCRNASEQ_GUIDELINES.md [5.2.1]
+
+#### Changed
+
+- `SC-DES-007`, `SC-DE-002`, `SC-DE-003`, `SC-DE-006` to `SC-DE-010`: *Recipe* lines for the new functions and modules.
+
+### STATISTICS_GUIDELINES.md [2.2.1]
+
+#### Changed
+
+- `STAT-RES-008`: *Recipe* line (`recipes/stats/heldout.py`).
+
+### recipes/ [0.7.0]
+
+#### Added
+
+- `scrnaseq/pseudobulk`: `check_no_pseudo_replicates` and `aggregate_counts(..., sample_keys=...)`, which raise when
+  the cells of one sample (of one donor, in pooled captures) fall in several aggregation units (`SC-DE-006`);
+  `detectability_report`, status per gene of interest and cell type, with "no change of interest" only from an
+  equivalence test (TOST, Holm-adjusted) against a margin fixed in advance (`SC-DE-009`); `null_split_de`, random
+  splits of the control units or permuted labels per cell type through `bulk/fdr_calibration` (`SC-DE-007`);
+  `min_cells_diagnostic`, principal components of pseudobulk samples against their number of cells, by bins
+  (`SC-DE-002`); `power_inputs`, units, cells per unit and UMIs per cell per cell type and group (`SC-DE-008`).
+- `scrnaseq/depth_matching`: `match_depth`, cells per unit subsampled and UMIs thinned binomially to a reference cell
+  type, for comparisons between cell types (`SC-DE-008`).
+- `scrnaseq/empirical_power`: recall and precision per effect-size bin over a grid of donors and cells per donor,
+  against a held-out reference (`SC-DES-007`).
+- `stats/heldout`: disjoint, stratified, seeded reference and validation splits (`STAT-RES-008`).
+- `tests/test_scrnaseq_de_power.py`.
+
+#### Changed
+
+- `scrnaseq/pseudobulk`: `pseudobulk_de` adds `lfc_ci_low`, `lfc_ci_high` (Wald interval of the unshrunken log fold
+  change), `rank` (by p-value within the cell type) and `significance_quartile` (`SC-DE-010`), and accepts `alpha` and
+  `shrink`.
+
 ## 2026-11-04 (pseudobulk aggregation function, detection, distribution and variability; SCRNASEQ 5.2.0)
 
 Which aggregation function to use for pseudobulk (`scanpy.get.aggregate`: `sum`, `mean`, `median`, `count_nonzero`,

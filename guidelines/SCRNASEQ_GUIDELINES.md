@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.2.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.2.1 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -131,6 +131,9 @@
   * *Trade-off:* the benchmark covers one contrast (sex), one tissue and one cohort, and its authors consider it
     optimistic because its reference set is itself incomplete; use it for orders of magnitude, not thresholds.
   * *Note:* one preprint (2026).
+  * Recipe: `recipes/scrnaseq/empirical_power.py` (recall and precision per effect-size bin over a grid of donors and
+    cells per donor, against a held-out reference, for a project with a large dataset of its own); every design is a
+    full DE run.
 
 ## 3. Quantification
 
@@ -563,10 +566,13 @@ cells that remain, and its layer from normalization (§5) onwards.
        of cells per donor, and donors with fewer than about 30 cells deviated progressively from the rest
        [Crampton 2026†].
      * *Trade-off:* a higher threshold removes donors, and donors carry most of the power (`SC-DES-007`).
+     * Recipe: `min_cells_diagnostic` in `recipes/scrnaseq/pseudobulk.py`, on an aggregation with `min_cells=1`.
   3. Filter genes and run DE per cell type as in `RNASEQ_BULK_GUIDELINES.md` §5–8, with batch and other covariates in
      the design (§2 for several samples per donor).
 * `SC-DE-003` Recipe: `recipes/scrnaseq/pseudobulk.py` (aggregation with cell counts per pseudobulk sample; DE per cell type
-  through `recipes/bulk/deseq2.py`; per-cell-type and global adjusted p-values).
+  through `recipes/bulk/deseq2.py`; per-cell-type and global adjusted p-values; interval of each log fold change, rank
+  and quartile of significance; detectability of genes of interest, global-null diagnostic, minimum-cells diagnostic,
+  and units, cells per unit and UMIs per cell per cell type).
 * `SC-DE-006` **MUST NOT create replicates by partitioning the cells of one sample** (random or arbitrary groups of
   cells, each summed as a pseudobulk sample). Pseudobulk samples come from distinct experimental units (§2); with one
   unit per condition, follow `SC-DES-004`.
@@ -575,6 +581,8 @@ cells that remain, and its layer from normalization (§5) onwards.
     false discoveries in data without any difference between groups; shuffling cells between replicates lowered the
     variance of 98.2% of genes in one dataset, and the mean variance in all 46 datasets examined [Squair 2021†]. The
     groups look like replicates but carry only within-sample variance.
+  * Recipe: `aggregate_counts(..., sample_keys=[...])` in `recipes/scrnaseq/pseudobulk.py` raises when the cells of one
+    sample (of one donor, in pooled captures) fall in more than one aggregation unit.
 * `SC-DE-004` Mixed models with a random effect for donor are an alternative [Zimmerman 2021a†].
   * *Trade-off:* against matched bulk data, a linear mixed model performed worse than pseudobulk, and Poisson or
     negative binomial GLMMs matched pseudobulk from about 500 cells on, at hours per cell type against minutes
@@ -594,7 +602,8 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Trade-off:* one full DE run per split; halving the controls lowers power, so passing shows that the pipeline does
     not create discoveries from nothing, not that it controls the FDR (`BULK-DE-005`). The exchangeability caveats of
     `STATISTICS_GUIDELINES.md` §10 apply.
-  * Recipe: `recipes/bulk/fdr_calibration.py`, with the pseudobulk DE of one cell type as the pipeline.
+  * Recipe: `null_split_de` in `recipes/scrnaseq/pseudobulk.py` (random splits of the control units or permuted labels,
+    per cell type), built on `recipes/bulk/fdr_calibration.py`.
 * `SC-DE-008` **The number of DE genes per cell type is not a measure of how strongly each cell type responds.** It
   depends on the number of donors with that cell type, the cells per donor and the UMIs per cell. Before comparing
   cell types (or studies) by their number of DE genes, report these three quantities per cell type, and compare at
@@ -606,6 +615,9 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Trade-off:* matching depth discards data from the deeper cell types; it serves the comparison, not the main
     analysis.
   * *Note:* one preprint (2026).
+  * Recipe: `power_inputs` in `recipes/scrnaseq/pseudobulk.py` (units, cells per unit and UMIs per cell, per cell type
+    and group) and `recipes/scrnaseq/depth_matching.py` (cells per unit subsampled and UMIs thinned to the reference
+    cell type).
 * `SC-DE-009` **A gene or gene set absent from a DE list is not evidence that it does not change**
   (`STATISTICS_GUIDELINES.md`, `STAT-EFF-003`). For the genes or pathways the question is about, report the pseudobulk
   mean expression, the log fold change with its interval and the donors and cells per donor behind the test; call the
@@ -617,6 +629,8 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Trade-off:* that power model is reliable at its extremes and poor between 0.2 and 0.8 [Crampton 2026†]; use such
     models to flag genes as practically undetectable, not to compute exact power.
   * *Note:* one preprint (2026).
+  * Recipe: `detectability_report` in `recipes/scrnaseq/pseudobulk.py` (status per gene and cell type; "no change of
+    interest" only from an equivalence test against a margin fixed in advance, Holm-adjusted across the genes).
 * `SC-DE-010` **Treat DE genes near the FDR cut-off as the least reproducible part of the list.** Report each gene's
   rank and adjusted p-value; choose genes for validation, or for claims about single genes, from the most significant
   ones or with family-wise control (`STATISTICS_GUIDELINES.md`, `STAT-MT-003`); state that the list is a lower bound
@@ -626,6 +640,7 @@ cells that remain, and its layer from normalization (§5) onwards.
     low power, significant results are less likely to be true and their effects are exaggerated
     (`STATISTICS_GUIDELINES.md`, `STAT-DES-008`).
   * *Note:* one preprint (2026).
+  * Recipe: columns `rank` and `significance_quartile` of `pseudobulk_de` in `recipes/scrnaseq/pseudobulk.py`.
 * `SC-DE-011` **Other aggregation functions are not the default input for DE between conditions.**
   * `mean` of log-normalized values MAY be tested with limma-trend; it detected DE almost as well as summed counts
     but estimated log fold changes less accurately [Crowell 2020†], consistent with the mean of logs not being the log
