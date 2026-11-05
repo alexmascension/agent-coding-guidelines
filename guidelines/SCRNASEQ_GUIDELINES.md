@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.1.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.2.0 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -528,6 +528,8 @@ cells that remain, and its layer from normalization (§5) onwards.
   evidence of differences between clusters**, because clusters were defined on the same data
   (`STATISTICS_GUIDELINES.md` §6, circular analysis); report effect sizes (log fold change, fraction of expressing
   cells).
+  * Specificity of a gene across cell types is summarized with tau on log pseudobulk means per cell type; tau was the
+    most robust of nine tissue-specificity metrics, with Gini close behind [Kryuchkova-Mostacci 2017].
 
 ## 10. Differential expression between conditions
 
@@ -543,8 +545,15 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Note:* more cells per donor make cell-level tests worse, not better; more donors help. Human tissue varies more
     between donors than mouse models and is the most exposed [Squair 2021†].
 * `SC-DE-002` **Pseudobulk procedure**:
-  1. Sum counts per aggregation unit and cell type. The unit is the experimental unit of the comparison: the
-     sample, or the donor only when each donor contributes to one level of every compared factor (§2).
+  1. Sum raw counts per aggregation unit and cell type. The unit is the experimental unit of the comparison: the
+     sample, or the donor only when each donor contributes to one level of every compared factor (§2). Sum the counts
+     layer of §1.1, never `X` after normalization or log-transformation (e.g.
+     `sc.get.aggregate(adata, by=[unit_key, celltype_key], func="sum", layer="counts")`; `X` is used when no layer is
+     given), and normalize after aggregation with the DE tool (size factors, TMM).
+     * *Why:* summed counts followed by bulk normalization performed systematically better than the mean of
+       single-cell-normalized values [Junttila 2022†], ranked first overall in [Crowell 2020†] and were recommended with
+       DESeq2 [Thurman 2021†]. The one benchmark in which the mean did better had simulated data without
+       normalization, which penalizes the sum when cell numbers are unbalanced [Murphy 2022†].
   2. Drop pseudobulk samples with fewer than a minimum number of cells (e.g. 10–20) and record the threshold. Check it
      on the data: plot the first principal components of the pseudobulk samples of each cell type against the log
      number of cells; when samples below some count drift away from the rest, raise the threshold to that count. Fix
@@ -571,6 +580,9 @@ cells that remain, and its layer from normalization (§5) onwards.
     negative binomial GLMMs matched pseudobulk from about 500 cells on, at hours per cell type against minutes
     [Squair 2021†].
   * *Deviate when:* the question needs within-donor structure that aggregation discards [Crampton 2026†].
+  * Precision-weighted pseudobulk (dreamlet) models the number of cells and reads per sample with precision weights
+    and the donor with a random effect, and controlled the false positive rate in large cohorts [Hoffman 2026†]. Use it
+    when the number of cells per pseudobulk sample varies widely or the design has repeated measures (§2).
 * `SC-DE-005` State whether multiple-testing correction is per cell type or across all tests (`STATISTICS_GUIDELINES.md` §7).
 * `SC-DE-007` **Run a global-null diagnostic when the control group has enough donors** (e.g. 6 or more): split the
   control donors at random into two groups, or permute the condition labels of donors as in
@@ -614,6 +626,47 @@ cells that remain, and its layer from normalization (§5) onwards.
     low power, significant results are less likely to be true and their effects are exaggerated
     (`STATISTICS_GUIDELINES.md`, `STAT-DES-008`).
   * *Note:* one preprint (2026).
+* `SC-DE-011` **Other aggregation functions are not the default input for DE between conditions.**
+  * `mean` of log-normalized values MAY be tested with limma-trend; it detected DE almost as well as summed counts
+    but estimated log fold changes less accurately [Crowell 2020†], consistent with the mean of logs not being the log
+    of the mean, with a difference that depends on depth [Lun 2018†]. Report log fold changes from summed counts.
+  * `mean` of normalized (linear-scale) values is for display and reference profiles (dot plots, deconvolution
+    signatures), not for count-based DE tools.
+  * `median` MUST NOT be used for DE: with sparse counts it is zero for most genes and is not a count. No benchmark
+    supports it.
+  * `var` is not a DE input; within-sample variance across cells MAY serve to build precision weights (`SC-DE-004`)
+    or as a diagnostic.
+  * *Why:* the benchmarks that compared aggregation functions favour the sum [Junttila 2022†; Crowell 2020†]; the
+    apparent advantage of the mean in [Zimmerman 2021a†] came from a simulation without normalization and does not
+    show that the mean is better [Murphy 2022†].
+* `SC-DE-012` **Differential detection (DD) MAY complement DE** when the question is whether the fraction of cells
+  expressing a gene changes, or for lowly expressed genes. Aggregate binarized counts per unit and cell type
+  (`func="count_nonzero"` on the counts layer, or muscat `fun = "num.detected"`), keep the number of cells per unit as
+  the number of trials, and test with the number of cells and a normalization offset in the model; among eight DD
+  workflows, the edgeR-based one of muscat (edgeR_NB_optim) had good type I error control and generally the highest
+  sensitivity [Gilis 2025†]. Combine DD and DE with stage-wise testing and report them as separate hypotheses.
+  * *Why:* the detection rate tracks mean expression in sparse data, and pseudobulk DE on detection rates gave F1
+    scores similar to counts [Bouland 2021†; Bouland 2023†].
+  * *Trade-off:* DD misses changes in genes detected in more than about 90% of cells and loses power with few cells
+    per unit [Bouland 2023†]; a plain binomial GLM is anti-conservative [Gilis 2025†].
+  * *Note:* when the cellular detection rate is confounded with the condition, DD p-values are not uniform under the
+    null [Gilis 2025†]; check the detection rate per unit during QC.
+* `SC-DE-013` **Test changes in variability or in the shape of the distribution with methods that separate them from
+  changes in mean and sequencing depth, with donors as replicates.**
+  * MUST NOT compare Gini indices (equivalently, areas under Lorenz curves), skewness, percentiles or fractions
+    detected computed per donor on counts or normalized counts as measures of heterogeneity: with sparse counts they
+    follow mean expression and depth [Eling 2018†]. GiniClust uses the Gini index only after normalizing it against
+    expression [Jiang 2016†].
+  * Options: per-sample empirical distribution functions compared by hierarchical permutation (distinct)
+    [Tiberi 2023†]; per-donor distributions and distances between donors tested with PERMANOVA (IDEAS)
+    [Zhang 2022†]; method-of-moments estimates of mean, residual variance and correlation (memento) [Kim 2024†];
+    residual over-dispersion (BASiCS) [Eling 2018†].
+  * *Note:* for changes in mean, pseudobulk remains the default (`SC-DE-001`); distinct used to compare means did not
+    beat a random baseline in one benchmark [Hafner 2025†].
+* `SC-DE-014` **Model UMI counts without zero inflation.** Poisson or negative binomial models account for the zeros of
+  droplet UMI data [Svensson 2020†; Kim 2020†; Jiang 2022†]; zero-inflated or hurdle models are for read counts
+  without UMIs (e.g. Smart-seq2), where they fit about half of the genes [Jiang 2022†]. A per-donor model fit does not
+  replace summed counts for changes in mean (`SC-DE-002`).
 
 ## 11. Differential abundance
 
@@ -681,8 +734,9 @@ Following minSCe [Füllgrabe 2020] and `STATISTICS_GUIDELINES.md` §12:
    Scrublet threshold and whether it was set by hand (`SC-QC-013`).
 4. `SC-REP-004` Normalization, gene selection, PCs and criteria, integration method and metrics, clustering resolution and stability.
 5. `SC-REP-005` Annotation method, references or dictionaries, unmatched markers.
-6. `SC-REP-006` DE, abundance, communication and trajectory methods with parameters, pseudobulk thresholds and designs, and
-   per cell type the donors tested, cells per donor and UMIs per cell (`SC-DE-008`).
+6. `SC-REP-006` DE, abundance, communication and trajectory methods with parameters, pseudobulk thresholds and designs, the
+   aggregation function and the layer it was applied to, and per cell type the donors tested, cells per donor and UMIs
+   per cell (`SC-DE-008`).
 
 ## 16. Implementation
 
@@ -698,7 +752,8 @@ Following minSCe [Füllgrabe 2020] and `STATISTICS_GUIDELINES.md` §12:
 | Integration | `harmonypy` (or `scanpy.external`), `scvi-tools` | — |
 | Integration metrics | `scib-metrics` | — |
 | Annotation | `celltypist`, `scvi-tools` (scANVI, CellAssign), `decoupler` | scType, Garnett |
-| Pseudobulk and condition DE | `decoupler`, `pydeseq2` | muscat, DESeq2, edgeR, limma |
+| Pseudobulk and condition DE | `decoupler`, `pydeseq2` | muscat, DESeq2, edgeR, limma, dreamlet |
+| Differential detection, distribution and variability | memento | muscat (detection), distinct, IDEAS, BASiCS |
 | Differential abundance | `pertpy` (scCODA, Milo) | speckle (propeller), sccomp, miloR |
 | Cell-cell communication | `liana` | — |
 | Pseudotime and fate | `scanpy` (DPT, diffusion pseudotime), `palantir`, `cellrank` | slingshot, tradeSeq, Lamian |

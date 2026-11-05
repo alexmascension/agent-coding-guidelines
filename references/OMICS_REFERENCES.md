@@ -301,6 +301,8 @@ Bracketed keys in the guides, e.g. `[Heumos 2023]`, refer to the bold key at the
 
 - **[Pullin 2024]** Pullin & McCarthy (2024). A comparison of marker gene selection methods for single-cell RNA sequencing data. *Genome Biology*. [doi:10.1186/s13059-024-03183-0](https://doi.org/10.1186/s13059-024-03183-0)  
   Benchmarking of 59 marker-gene selection methods across 14 real and 170+ simulated scRNA-seq datasets shows simple approaches—the Wilcoxon rank-sum test, Student's t-test, and logistic regression—perform best and are recommended.
+- **[Kryuchkova-Mostacci 2017]** Kryuchkova-Mostacci & Robinson-Rechavi (2017). A benchmark of gene expression tissue-specificity metrics. *Briefings in Bioinformatics*. [doi:10.1093/bib/bbw008](https://doi.org/10.1093/bib/bbw008)  
+  Benchmark of nine tissue-specificity metrics on RNA-seq and microarray data: tau is the most robust; Gini and simple counts also work well.
 
 ### Differential abundance
 
