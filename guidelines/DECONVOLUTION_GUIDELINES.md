@@ -1,6 +1,6 @@
 # Cell-type deconvolution guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.0.0 (2026-10-15)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.0.1 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys point to `OMICS_REFERENCES.md`; keys with a
 > dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by ***Why***, ***Trade-off*** and
@@ -29,6 +29,8 @@
     cell fractions require mRNA-content renormalization [Racle 2017; Monaco 2019].
   * *Consequence:* name the estimand in results ("estimated RNA fraction", "estimated cell proportion"), treat
     absolute values as uncertain unless validated against cell counts (§5), and prefer comparisons between groups.
+    A comparison between groups cancels only a bias common to the groups; a bias that differs between groups (e.g.
+    RNA content per cell that changes with the condition) does not cancel.
 * `DECON-EST-002` **Method contract table**: for each method used, the project records the input scale of bulk and reference (as
   documented by the method), the genes used, whether cell size or RNA content is modelled, the estimand, the
   constraints (non-negative, sum to 1) and the validation result. Examples, to be checked against the documentation of
@@ -84,8 +86,11 @@
     [Chu 2022; Hu 2024];
   * non-negative least squares (NNLS) on marker genes as a baseline.
   * *Why:* disagreement across methods with different assumptions shows that the estimate depends on the model.
-    Agreement is necessary but not sufficient: methods can share a bias (e.g. RNA content, an incomplete reference). In spatial benchmarks a simple regression baseline outperformed almost half of dedicated methods
-    [Sang-aram 2024], so a method that does not beat NNLS adds nothing.
+    Agreement is neither necessary nor sufficient for correctness: a correct method can disagree with a biased one,
+    and methods can share a bias (e.g. RNA content, an incomplete reference); correctness is judged by validation
+    (§5). In spatial benchmarks a simple regression baseline outperformed almost half of dedicated methods
+    [Sang-aram 2024], so a method that does not beat NNLS adds no accuracy on the validation criteria; keep it only for
+    what else it gives (cell-type-specific expression, uncertainty).
 * `DECON-METH-003` Other methods: CIBERSORTx [Newman 2019] (successor of CIBERSORT [Newman 2015]), DWLS [Tsoucas 2019], SCDC [Dong 2020], SQUID [Avila Cobos 2023], deep
   learning (Scaden, TAPE; Python) [Menden 2020; Chen 2022]. Use them when a benchmark on comparable data supports them.
 * `DECON-METH-004` Cross-platform settings (reference and bulk from different technologies) change rankings: SpatialDecon and
@@ -117,6 +122,8 @@
     state which question each answers.
   * *Collinearity:* proportions sum to 1; include all but one cell type, or transform (e.g. isometric log-ratio), and
     avoid including many highly correlated types.
+  * *Note:* estimated proportions carry estimation error (§5) that is not propagated when they enter a model as fixed
+    covariates.
 * `DECON-DOWN-002` **Comparing proportions between groups**: treat them as compositional data (an increase in one type lowers the
   others) and use the donor as the unit (`STATISTICS_GUIDELINES.md` §3.2, data type to model).
 * `DECON-DOWN-003` **Cell-type-specific expression** inferred from bulk (BayesPrism, CIBERSORTx) is a model estimate with large

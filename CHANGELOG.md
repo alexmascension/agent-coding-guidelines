@@ -6,6 +6,405 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-05 (external audit of c981ac89; recipes 0.8.0; CODING 4.1.0, AGENTIC 1.2.0, MANUSCRIPT 1.2.0, STATISTICS 2.3.0, SCRNASEQ 5.3.0, RNASEQ_BULK 3.4.0, SEX_INFERENCE 2.2.0, SAMPLE_IDENTITY 3.1.0, DECONVOLUTION 2.0.1, SPATIAL 3.1.0, META_ANALYSIS 2.3.0, HPC 1.5.0)
+
+An external audit of commit `c981ac89` raised 99 observations on the guides and 23 on the recipes and tooling. Each
+item was checked against the rule text or the code before it was adopted (`AGT-REV-004`, `AGT-REV-006`); the items
+not adopted are listed at the end. The reproduced recipe failures have regression tests that fail on `c981ac89`.
+Reference notes state whether they rest on the full text or on the abstract.
+
+### CODING_GUIDELINES.md [4.1.0]
+
+#### Changed
+
+- `CODE-PROV-001`: the copy of record of a raw input is read-only and MUST NOT be modified, overwritten or deleted; a
+  replica (a copy staged on `WORK` or `NODE`, a cache) MAY be deleted once the copy of record has been verified to
+  exist and to match its recorded checksum (`HPC-FLOW-001`, `HPC_GUIDELINES.md` §2). *Why* added.
+- `CODE-DL-003`: a streamed head is a partial extract: validated record by record, recorded as a partial extract in the
+  provenance file and never recorded as a checksum-verified file (`CODE-DL-001`).
+- `CODE-PIPE-001`: *Why* no longer says that the outputs of a hand-built equivalent are not comparable; they match the
+  pipeline's only if every tool, version, parameter and reference matches, which the project would have to show and a
+  pinned release with tracked parameters fixes.
+- `CODE-LANG-007`: the `conda-lock` lock file is the reproducible record; an export with `--no-builds` records package
+  versions, not builds, and still lists platform-specific dependencies.
+
+### AGENTIC_GUIDELINES.md [1.2.0]
+
+#### Changed
+
+- `AGT-DEL-003`: do not assume that a subagent sees the project's instructions; unless the harness documents what it
+  inherits, the brief names the rules that apply.
+- `AGT-USER-001`: scoped to questions about the work; a request phrased as a question ("can you fix X?") is a request
+  from the user; a request relayed from a co-author or reviewer stays the user's to decide (`MS-RESP-001`).
+- `AGT-USER-005`: the fix for the task at hand goes ahead; the generalised rule is confirmed before it is recorded
+  beyond the task.
+- `AGT-REV-004`: an unclear item blocks itself and the items that depend on it or touch the same code, data or text;
+  clear independent items may proceed.
+- `AGT-EVID-006`: a figure, or a table or equation the conversion may have garbled, is checked on the page image when a
+  claim depends on it.
+- `AGT-CLAIM-003`: the source of a regenerated number is the stored result file of the run (`CODE-PROV-003`), not a
+  re-run of the analysis.
+- `AGT-INTENT-005`: playback length scales with the part (about 200 to 300 words for a complex part, fewer for a simple
+  one).
+- `AGT-LOOP-006`: an attempt is a fix based on a hypothesis about the cause; automatic retries of a transient failure
+  (`CODE-DL-002`, `CODE-DL-005`) are not attempts.
+- `AGT-LOOP-002`: three or more framings of unchanged results are a signal to examine the evidence, the argument and
+  the audience, not a diagnosis that the data are the bottleneck (consistent with `MS-RESP-004`).
+- `AGT-INSTR-002`, `AGT-INSTR-003`: *Note* on the evidence (superpowers' wording tests: one model, one test harness,
+  five samples per variant); the table is a set of heuristics to check against the failures observed.
+
+### MANUSCRIPT_GUIDELINES.md [1.2.0]
+
+#### Changed
+
+- `MS-TRACE-001`: *Deviate when* for hand-drawn schematics and acquired images: keep the source file and record in the
+  sidecar the source and, for an image, the acquisition and every processing step.
+- `MS-RESP-004`: the reframing count is a prompt to examine the evidence, the argument and the audience, not a
+  diagnosis that the bottleneck is the data or the question.
+
+### STATISTICS_GUIDELINES.md [2.3.0]
+
+#### Changed
+
+- `STAT-MOD-006`: statistic, hypothesis and assumptions separated. Mann-Whitney $U$ estimates
+  $\theta = P(X > Y) + \tfrac{1}{2}P(X = Y)$ but is a valid test of $\theta = 1/2$ only when the groups have the same
+  distribution under the null (e.g. shift model); Brunner-Munzel (`scipy.stats.brunnermunzel`) when spread or shape may
+  differ; Kruskal-Wallis and Friedman stated as tests of identical distributions; MUST NOT on medians kept. *Why* and
+  *Note* (Brunner-Munzel is an approximation; group sizes) added [Fay 2010; Brunner 2000; Divine 2018]. §13 table:
+  `scipy.stats.brunnermunzel`; the equal-medians wording of the `kruskal` docstring holds only under a shift model;
+  `brunnermunzel` returns `nan` (`0.0` with `distribution="normal"`) for non-overlapping groups.
+- `STAT-RES-003`: $(b+1)/(m+1)$ scoped to $m$ random permutations; with complete enumeration the exact p-value is $b/M$,
+  the observed arrangement counted among the $M$. Both two-sided conventions (doubling the smaller one-sided p,
+  comparing $|T|$) give valid tests under exchangeability; $|T|$ matches a two-sided alternative only when the null
+  of $T$ is centred at 0 and roughly symmetric, so the recipe doubles; state the convention used. Replaces "comparing
+  absolute values is valid only for statistics centred at 0 under the null". §13 table: `permutation_test` enumerates
+  when `n_resamples` reaches the number of distinct permutations.
+- `STAT-RES-004`: smallest attainable p-value $1/(m+1)$ one-sided and $2/(m+1)$ for the doubled two-sided p ($1/M$ and
+  $2/M$ with complete enumeration).
+- `STAT-RES-005`: units MUST be resampled; a two-stage bootstrap MAY additionally resample measurements within each
+  resampled unit; resampling only the measurements is what is prohibited.
+- `STAT-RES-008`: "so the estimates are upper bounds" replaced: recall and precision against the held-out reference
+  measure agreement with an imperfect reference, not true power or precision (recall tends to be optimistic,
+  precision pessimistic, neither a guaranteed bound).
+- `STAT-DES-002`: observational studies: the unit is the unit of sampling and inference (the smallest entity sampled
+  independently, e.g. a donor); repeated samples of one donor are dependent. Glossary entry *Experimental unit*
+  aligned.
+- `STAT-EXPL-005`: the prohibition covers choosing a transformation or deleting data after looking at the results (to
+  pass a normality test or reach significance); a transformation chosen in advance for the estimand and data type is
+  part of the model; *Why* added (`STAT-DES-010`).
+- `STAT-MT-002`: *Trade-off* gives the FDR level as an average; one list can contain more.
+- `STAT-MT-009`: name the column after the procedure; a Storey q-value and the BH-adjusted p of the same p-values are
+  different numbers [Storey 2003].
+- `STAT-EFF-005`: values near the point estimate, not the centre (intervals can be asymmetric).
+- `STAT-USE-002`: installation follows `CODE-USE-001` (this file into `guidelines/`, the reference files into
+  `guidelines/references/`) instead of "into the project root".
+- `STAT-USE-003`, `STAT-REP-007`: `FIGURE_GUIDELINES.md` marked as planned.
+
+### SCRNASEQ_GUIDELINES.md [5.3.0]
+
+#### Changed
+
+- `SC-DATA-004`: pseudobulk row extended to depth matching and empirical power (`counts_ambient_corrected` if it
+  exists, else `counts`); recipes resolve the layer with one function, `layer=None` in normalization and pseudobulk
+  recipes meaning the table's row; a non-integer corrected layer MUST NOT be rounded silently for count-based DE
+  (explicit rounding recorded in `PROJECT_CONTEXT.md`, e.g. SoupX `adjustCounts(roundToInt = TRUE)` with its seed, or
+  `layer="counts"`); *Recipe* line (`recipes/scrnaseq/layers.py`, `input_layer`).
+- `SC-DE-001`, `SC-DES-004`: the prohibition is on tests that treat cells as independent replicates; mixed models
+  with the donor (and the sample) as random effects remain allowed.
+- `SC-DE-010`: the DE list is incomplete, enriched for large effects and highly expressed genes, and contains false
+  discoveries at the controlled rate (was "a lower bound of the true changes"); genes for validation from the most
+  significant, claims about single genes need family-wise control.
+- `SC-DE-011`: `median` MUST NOT be the input of count-based DE tools (was "used for DE"); "No benchmark supports it"
+  removed.
+- `SC-DE-014`: zero-inflated mixtures (read counts without UMIs) distinguished from hurdle models, which separate
+  detection from level (`SC-DE-012`) and, fitted to cells, need the donor as a random effect; Poisson or negative
+  binomial remains the default for UMI counts; cites [Finak 2015] (MAST).
+- `SC-QC-003`: MADs on logit(clip(f, ε, 1 − ε)), after checking that f lies in [0, 1] (was logit(f + ε)); ε = 10⁻⁴ in
+  the recipe.
+- `SC-QC-016`, §16: the first pass removes no cells (not only doublets): samplesheet values that disable each cell
+  filter at commit `0048567`, the filters that cannot be disabled there, and a per-capture check that every barcode
+  leaving cell calling reaches the first-pass object.
+- `SC-QC-014`: *Deviate when* requires roughly equal donor proportions; same-donor doublet share under random pairing is
+  the sum of squared donor fractions.
+- `SC-PC-002`: when the full singular-value spectrum cannot be computed, the elbow alone, recording that Gavish–Donoho
+  was not evaluated; `SC-PC-008` records the criteria evaluated.
+- `SC-PC-004`: embeddings not ordered by variance (scVI latent space) vary the number of latent dimensions by
+  refitting, not by truncation. `SC-PC-006`: a clustering that changes with one or two more PCs may depend on noise or
+  on a weak signal (e.g. a rare population); check which.
+- `SC-QUANT-002`: full-length isoforms are not quantified from 3' tag data; poly(A)-site usage (APA) can be studied
+  with dedicated methods [Wu 2020; Bi 2026].
+- `SC-QC-001`: *Why* and *Trade-off* cite a seven-tool decontamination benchmark with no single best tool [Nie 2026].
+- `SC-DES-007` (*Trade-off*), `SC-DE-008`, `SC-DE-009`, `SC-DE-010` (*Note*): scope of [Crampton 2026†] (sex
+  differences, three brain cell types, one cohort of 1,494 donors).
+- `SC-DES-007` (*Trade-off*): recall and precision of the benchmark are read as `STATISTICS_GUIDELINES.md`
+  `STAT-RES-008` describes.
+
+### RNASEQ_BULK_GUIDELINES.md [3.4.0]
+
+#### Changed
+
+- `BULK-DES-001`: samples that share a donor (tissues, time points, aliquots, pools containing the same donor) are
+  dependent; the donor is modelled (`STAT-DES-002`) with the designs of `SC-DES-005`.
+- `BULK-HF-002`: *Note* separating PCA of expression from residual principal components with the design protected
+  (`recipes/bulk/hidden_factors.py`), which are exploratory and not a substitute for qSVA, SVA or RUV.
+- `BULK-HF-004`: MUST NOT kept; batch is modelled as a covariate on the original counts. *Why* from [Nygaard 2015†];
+  [Zhang 2020†] now cited for what it proposes (adjusted counts for DE software, with its simulation results) instead
+  of as support for the prohibition.
+
+### SEX_INFERENCE_GUIDELINES.md [2.2.0]
+
+#### Changed
+
+- `SEX-MARK-003`: pairs with X + Y = 0 are left out of the median; the project states a minimum number of informative
+  pairs, below which the sample is `LOW_SIGNAL`; "most sensitive signal" and "without a cohort-level threshold"
+  replaced by statements consistent with `SEX-THR-002`, `SEX-THR-004` and `SEX-THR-006`.
+- `SEX-COUNT-001`: introns counted for nuclei including 3' single-nucleus libraries; exonic counts for whole-cell
+  poly(A) or 3' libraries; "about half of the reads are intronic" replaced by a hedged statement.
+- `SEX-COUNT-002`: the log scale separates the modes and compresses the range ("stabilizes Poisson noise" removed).
+- `SEX-COUNT-003`: calls from a streamed head only when it reaches the informative reads of `SEX-COUNT-004`; otherwise
+  `LOW_SIGNAL`.
+- `SEX-DEC-002`: RNA genotype evidence is partly independent of expression (shares reads, mapping and coverage), not
+  orthogonal.
+- `SEX-LOY-002`: genotype evidence suggests the explanation of `XIST+Y+`; a karyotype is confirmed only with DNA.
+- `SEX-REP-001`: the table states that the call is an expression-based screening result; labels unchanged.
+
+### SAMPLE_IDENTITY_GUIDELINES.md [3.1.0]
+
+#### Changed
+
+- `ID-DUP-001`: identical file hashes mean byte-identical files (compare decompressed content for recompressed files);
+  identical count vectors flag a probable duplicate to confirm, empty or very sparse vectors excluded; flagged pairs
+  MUST NOT be deleted automatically.
+- `ID-GENO-002`: renaming contigs presupposes the same assembly; genome build and REF/ALT alleles of the sites are
+  checked against the BAMs' reference.
+- `ID-GENO-004`: two modes are expected only with same-individual pairs in the cohort; otherwise calibrate with known
+  pairs, controls and expected relatedness.
+- `ID-POOL-001`: the MUST applies to donors that differ genetically at the covered sites; *Scope* for pools of one
+  inbred strain (hashtags or design, limit stated).
+- `ID-POOL-004`: animals of one inbred strain cannot be distinguished by genotype; pooling different strains has been
+  reported to work [Cardiello 2023].
+- `ID-POOL-005`: conflicts between sources are recorded and checked for provenance and fingerprint quality, not
+  resolved by the order; unresolved clusters stay unnamed.
+
+### DECONVOLUTION_GUIDELINES.md [2.0.1]
+
+#### Changed
+
+- `DECON-EST-001`: comparisons between groups cancel only a bias common to the groups.
+- `DECON-METH-002`: agreement between methods is neither necessary nor sufficient for correctness; a method that does
+  not beat NNLS adds no accuracy on the validation criteria and is kept only for its other outputs.
+- `DECON-DOWN-001`: *Note* that the estimation error of proportions is not propagated when they enter a model as
+  fixed covariates.
+
+### SPATIAL_GUIDELINES.md [3.1.0]
+
+#### Added
+
+- §1: table of which `SCRNASEQ_GUIDELINES.md` QC and normalization rules apply to Visium spots, imaging panels and
+  whole-transcriptome data with segmented cells, with the spatial rule that replaces each; §0 points to it.
+
+#### Changed
+
+- `SP-DES-001`: sections from one block are nested in the donor; they can differ anatomically but add no independent
+  donors (were "technical replicates").
+- `SP-NORM-001`: comparing normalized and unnormalized results is a sensitivity analysis, judged with histology,
+  technical controls and replicate sections.
+- `SP-NBH-002`: donors are the units (title fixed); sections are aggregated to the donor or modelled as nested in it,
+  and the aggregation or model is stated.
+
+### META_ANALYSIS_GUIDELINES.md [2.3.0]
+
+#### Changed
+
+- `META-MOD-003`: DerSimonian-Laird can underestimate $\tau^2$.
+- `META-PUB-001`: asymmetry tests only with at least 10 studies; with fewer, a funnel plot MAY be shown as a
+  description and is not interpreted.
+- `META-STRAT-001`: *Note* that an effect-size threshold used to select is prioritization (`STAT-MT-007`).
+- `META-STRAT-002`: the two one-sided analyses form one family, corrected across both directions; a combined p-value
+  shows an effect in at least one study, not replication.
+- `META-SC-001`: *Why* corrected (pooling ignores study and donor; confounding when conditions are unbalanced across
+  studies); *Deviate when* for a joint pseudobulk model when every study contains every compared condition.
+
+### HPC_GUIDELINES.md [1.5.0]
+
+#### Changed
+
+- `HPC-FLOW-001`: staging is verified against checksums of the source (`HPC-FLOW-005`). *Trade-off*: a staged copy
+  is a replica, which `CODE-PROV-001` lets be deleted, or overwritten with the source, once the copy of record in
+  `ARCHIVE/data/raw` has been verified to exist and match its checksum; the copy of record is never modified or
+  deleted.
+- `HPC-FLOW-002`: the promotion manifest holds checksums computed on the run before the copy and checked on the copy.
+- `HPC-FLOW-005`: verification compares content (`rsync --checksum`, or SHA-256 checksums of the source checked on
+  the copy). *Why* added (by default rsync skips files whose size and modification time match), and *Trade-off*
+  (checksums read every file on both sides).
+- `HPC-FLOW-006`: an equal record count no longer suffices before the BAM is deleted. `samtools checksum -a` of the
+  BAM and of the CRAM (samtools 1.22 or later, the same version for both; mate checksums changed in 1.24) MUST match
+  in every column, except `+aux` and `combined` when tags were removed on purpose; the checksum reports go into
+  provenance.
+- `HPC-BATCH-001`: the inputs a batch deletes are replicas (`CODE-PROV-001`), whose copy of record stays in
+  `ARCHIVE/data/raw` or is the public archive (`CODE-DL-001`).
+- `HPC-JOB-001`: *Why* refers to the submission environment. *Note* added: with `--export=NONE`, only `SLURM_*` and
+  SPANK variables come from the submitting shell, and Slurm then loads the user's login environment on the node, as
+  with `--get-user-env` (`--export=NIL` does not). `srun` steps inherit `NONE` unless `SLURM_EXPORT_ENV=ALL` (or
+  `srun --export=ALL`) is set. `--export=NONE` stays the default.
+- `HPC-JOB-004`: *Why* corrected: an array is submitted, monitored and cancelled as one unit, but each task counts as
+  a job toward per-user limits (`MaxJobs`, `MaxSubmitJobs`), and the throttle bounds the running tasks. This replaces
+  "accounted as one job".
+- `HPC-IO-001`: zarr is no longer listed as a single-file container. A zarr directory store writes one file per
+  chunk, so zarr is used with sharding (zarr format 3, `shards=`) or in a zip store (`zarr.storage.ZipStore`), with
+  chunk and shard shapes matched to access; *Why* added.
+- §10 (implementation): the staging and promotion rows describe the checksum verification.
+
+### STATISTICS_REFERENCES.md
+
+#### Added
+
+- [Fay 2010], [Brunner 2000]; metadata and BibTeX from Crossref (the `number={none}` field of the Crossref export
+  dropped from [Fay 2010]).
+
+#### Changed
+
+- [Divine 2018]: note names the quantity tested (from the abstract) and the paper's remark on unequal variances and
+  the Brunner-Munzel variant, instead of "it tests stochastic dominance".
+- [Zhang 2020]: note rewritten from the full text (adjusted integer counts for DE software; power and false-positive
+  rates in the authors' simulations, against batch as a covariate); it described the corrected data as being for
+  visualisation, which the paper does not say.
+
+### OMICS_REFERENCES.md
+
+#### Added
+
+- [Wu 2020] (scAPAtrap), [Bi 2026] (benchmark of poly(A)-site methods for 3' tag scRNA-seq), [Nie 2026] (benchmark of
+  seven ambient-RNA tools), [Finak 2015] (MAST); DOIs verified against Crossref, BibTeX from Crossref (month of
+  [Nie 2026] written as the macro `Sep`).
+
+#### Changed
+
+- [Sosina 2021]: truncated note completed from the abstract (DNA-methylation reference; RNA composition, not cellular
+  composition).
+- [Cardiello 2023]: note adds the inbred-strain result cited by `ID-POOL-004` (from the full text).
+
+### recipes/ [0.8.0]
+
+#### Added
+
+- `scrnaseq/layers`: `input_layer(adata, step)`, the table of `SC-DATA-004` (steps `qc` and `doublets` read
+  `counts`; `normalization` and `pseudobulk` read `counts_ambient_corrected` if it exists, else `counts`; an unknown
+  step, or a resolved layer absent from `adata.layers`, raises; the choice is logged); `require_integer_counts`, which
+  rejects a non-integer layer for count-based DE with an error naming the layer and the remedies (round explicitly and
+  record it in `PROJECT_CONTEXT.md`, e.g. SoupX `adjustCounts(roundToInt = TRUE)`, or pass `layer="counts"`), never
+  rounding silently; `check_output_layer` and `PROTECTED_LAYERS` (`counts`, `counts_ambient_corrected`, `spliced`,
+  `unspliced`, `ambiguous`; `SC-DATA-003`).
+- `scrnaseq/units`: `unit_ids` (missing identifiers, and distinct values that become the same string such as `1` and
+  `"1"`, raise before any conversion), `unit_metadata` (moved from `scrnaseq/pseudobulk`, which still exports it) and
+  `conflicting_values`.
+- `scrnaseq/abundance`: `cell_count_table(..., subcomposition=False)` and output column `denominator`
+  (`all_cell_types` or `listed_cell_types`).
+- `scrnaseq/pc_robustness`: `propose_n_pcs` returns `criteria` (the criteria evaluated) and logs a warning when
+  Gavish-Donoho is not evaluated (`SC-PC-002`).
+- `scrnaseq/empirical_power`: run status `reference_not_testable` and summary column `n_reference_not_testable`.
+- `tests/test_audit_regressions.py`.
+- `common/build_gene_groups`: every response a build uses is saved byte for byte in a snapshot directory (default
+  `build/gene_groups_sources/<date>`, gitignored), with `SOURCES.json` (URL, parameters, size, SHA-256, download
+  date) and `SHA256SUMS`. `--from-snapshot DIR` rebuilds the lists offline after checking every checksum, and the
+  result is identical to the original build. The lists record `sources_sha256`.
+- `tests/test_build_gene_groups.py` (offline, with responses written by hand).
+
+#### Changed
+
+- Default input layer (behaviour change): `scrnaseq/normalization` (`median_size_factors`, `scranpy_size_factors`,
+  `scran_size_factors`, `log_normalize`), `scrnaseq/pseudobulk.aggregate_counts`, `scrnaseq/depth_matching.match_depth`
+  and `scrnaseq/empirical_power.empirical_power` take `layer=None`, resolved with `input_layer`: they now read
+  `counts_ambient_corrected` when it exists (0.7.0 read `counts`). An explicit layer is honoured; the QC and doublet
+  recipes keep `layer="counts"`.
+- `stats/permutation.permute_within_strata`: strata are visited in order of first appearance instead of set order, so
+  a seed gives the same permutations whatever `PYTHONHASHSEED` (`CODE-REPRO-002`). For the same seed the permutation
+  stream differs from 0.7.0, also in `bulk/fdr_calibration` and `scrnaseq/pseudobulk.null_split_de`, which use it.
+  `stats/heldout`: ties in the order of strata are broken by first appearance (splits unchanged otherwise).
+- `stats/permutation`, `stats/heldout`, `scrnaseq/empirical_power` docstrings and `recipes/README.md`, worded as
+  `STAT-RES-003` and `STAT-RES-008`: both two-sided conventions are valid under exchangeability; comparing |T| matches
+  a two-sided alternative only when the null distribution of T is centred at 0 and roughly symmetric, so the recipe
+  doubles the smaller one-sided p; recall and precision against a held-out reference measure agreement with an
+  imperfect reference (recall tends to be optimistic, precision pessimistic), not upper bounds.
+- `scrnaseq/doublets.run_scdblfinder`, called directly, applies `ambient_method_of_layer` as `detect_doublets` does
+  (`SC-QC-012`).
+- `scrnaseq/abundance` imports `scrnaseq/units` instead of `scrnaseq/pseudobulk`, so it no longer needs `pydeseq2`.
+- `common/build_gene_groups`: existing lists and a non-empty snapshot are replaced only with `--overwrite`, so a
+  rebuild into the shipped directory now needs the flag. Lists are written atomically (temporary file +
+  `os.replace`) after every source has been read. `mouse_genes(human, sources=None, file=...)` takes the snapshot.
+- `hpc/stage.sh`: `logs/staging.tsv` gains two columns (number of files, `sha256-verified`); `--help` documents that
+  a staged replica differing from the source is overwritten with it, and that files present only in the replica
+  are left in place.
+- `hpc/job.slurm`: comment on `--export=NONE` and on `SLURM_EXPORT_ENV=ALL` before `srun` steps.
+
+#### Fixed
+
+- `bulk/deseq2.validated_counts`: the integer check is exact (`np.allclose` let `100000.4` through and returned
+  `100000`); counts at or above 2**63 raise. `run_deseq2` raises a clear error when there are no genes.
+- `scrnaseq/pseudobulk`: missing unit or sample identifiers, and identifiers that collide as strings, raise (they
+  became a `"nan"` unit or were merged); a cell type with no gene passing the filter is reported in `not_testable`
+  (pydeseq2 failed with an unrelated error).
+- `scrnaseq/abundance.cell_count_table`: a `cell_types` list that omits observed types raises unless
+  `subcomposition=True` (it changed the denominator silently: 1 A and 3 B gave A = 100%); manifest covariates that
+  contradict `obs` raise (they overwrote them); the manifest index is validated (missing, repeated or colliding IDs).
+- `scrnaseq/pc_robustness`: `elbow_index` raises on constant, non-finite, unordered or too short spectra (a constant
+  spectrum returned 1 after a 0/0); `robustness_verdict` raises on clusters of interest absent from the reference, or
+  on an empty list (an empty selection was read as robust).
+- `scrnaseq/normalization.log_normalize` refuses `key_added` in `PROTECTED_LAYERS` or equal to the input layer
+  (`key_added="counts"` overwrote the raw counts; `SC-DATA-003`).
+- `scrnaseq/qc.mad_outlier_flags`: fraction metrics with finite values outside [0, 1] (e.g. percentages) raise before
+  the logit clip (`SC-QC-003`).
+- `scrnaseq/empirical_power`: a split whose reference has no unit with `min_cells` cells, or whose reference DE is not
+  testable, is marked `reference_not_testable` (it crashed in `np.vstack`, or reported `ok` against an empty
+  reference).
+- `hpc/stage.sh`: a staged file with the size and modification time of the source but different content was kept,
+  and the script exited 0. The script now copies with `rsync -a --checksum` and checks every file against SHA-256
+  checksums computed on the source before the copy (exit 6 and no log line on mismatch). `--dry-run` creates,
+  copies and logs nothing. Absolute paths, `.`/`..` components and destinations that resolve outside
+  `WORK/data/raw` are refused.
+- `hpc/promote.sh`: a run argument such as `../outside` copied and made read-only a directory outside the results
+  roots. The run must now be one directory name, and source and destination must resolve directly under
+  `WORK/results` and `ARCHIVE/results` before any copy or `chmod`. Checksums are computed on the source before the
+  copy (the manifest was computed on the destination), and the copy is checked against them and against the file
+  count. `PROMOTION.yaml` is appended to `MANIFEST.sha256`. Runs that already contain `MANIFEST.sha256` or
+  `PROMOTION.yaml`, or that hold no files, are refused.
+- `hpc/load_site.sh`, `hpc/sites/local.env`, `hpc/sites/hyperion.env`: the scripts failed when `USER` was unset,
+  after copying in the case of `stage.sh`. The user is now resolved as `${USER:-$(id -un)}` before any side effect,
+  with an early error when neither gives a name. `tests/test_hpc_scripts.py` runs the scripts without `USER` and
+  adds regressions for each of these fixes.
+
+### Tools
+
+- `tools/check_sources.py`: a compare whose file list reached the API limit (`COMPARE_FILE_LIMIT`, 300 files) now
+  needs review (`needs_review()` is true). `review_reasons()` lists why, and the report shows a "Review needed: ..."
+  line. The unused `REVIEW_STATUSES` constant is removed. Tests in `tools/tests/test_check_sources.py`.
+
+### Repository
+
+#### Fixed
+
+- `README.md`: recipes version 0.8.0 (the table said 0.6.0 while `pyproject.toml` said 0.7.0).
+- `TODO.md`: follow-ups of this round (reference notes, gene-list snapshot, versioning text, checker coverage).
+
+### Not adopted
+
+- G-C04 (a named constant for every literal): `CODE-NAME-006` already applies only to controlled vocabulary.
+- G-C06, G-W02 (moving CODING §§24–25, AGENTIC §§13–16 or writing for funders to other documents): organisation, not
+  correctness; not in this round.
+- G-B04 (moving the sex and reference rules out of `RNASEQ_BULK_GUIDELINES.md`): the bulk guide keeps the decision
+  point and links to `SEX_INFERENCE_GUIDELINES.md`.
+- G-SC13 (linear scale for τ): withdrawn by the audit; the cited benchmark evaluates the log scale.
+- G-X06 (renaming the `XX`/`XY` labels): labels kept for compatibility; `SEX-REP-001` now states that they are
+  expression-based screening results.
+- G-I06 (one-to-one donor matching), G-D03 (moving the cross-platform rule to SPATIAL), G-M06 (prediction interval
+  for $k \ge 3$): no error found.
+- G-A09 (confidential review material, `AGT-PRIV-003`): the policy is kept.
+- G-H06 (command and output for each observation of `hpc_sites/DIPC_HYPERION.md`): needs a session on the cluster;
+  in `TODO.md`.
+- C19 (`n_evaluated` in `scrnaseq/library_qc`): the any-flag column is correct for its contract.
+- C22 (citation checks for `CODING_GUIDELINES.md` in `tools/check_guides.py`): in `TODO.md`.
+
+
 ## 2026-11-05 (recipes 0.7.0 for single-cell DE power and pseudoreplication; SCRNASEQ 5.2.1, STATISTICS 2.2.1)
 
 Recipes for the rules added in SCRNASEQ 5.1.0 and STATISTICS 2.2.0 (`SC-DES-007`, `SC-DE-002`, `SC-DE-006` to

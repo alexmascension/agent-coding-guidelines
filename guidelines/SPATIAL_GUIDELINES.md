@@ -1,6 +1,6 @@
 # Spatial transcriptomics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.1 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.1.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Palla 2022b]` point to
 > `OMICS_REFERENCES.md`; keys marked with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`.
@@ -12,7 +12,7 @@
 * Audience: coding agents and people with introductory statistics. Each rule is followed by its rationale (*Why*, *Trade-off*, *Deviate when*) where it applies.
 * Copy this file with `SCRNASEQ_GUIDELINES.md`, `OMICS_REFERENCES.md`, `STATISTICS_GUIDELINES.md` and
   `STATISTICS_REFERENCES.md`. Once a cell- or spot-by-gene matrix exists, QC (quality control), normalization, clustering and annotation
-  follow `SCRNASEQ_GUIDELINES.md` except where this file says otherwise.
+  follow `SCRNASEQ_GUIDELINES.md` except where this file says otherwise (summary by kind of data in §1).
 * Platforms covered: 10x **Visium** (spot-based sequencing), 10x **Xenium** and **MERFISH (multiplexed error-robust fluorescence in situ hybridization)** (Vizgen MERSCOPE)
   (imaging-based, single-cell resolution). Human and mouse.
 * Ecosystem: `spatialdata` and `spatialdata-io` for data and readers [Marconato 2024], `squidpy` for spatial
@@ -28,6 +28,19 @@
 | Key processing step | Deconvolution of cell types per spot (§7) | Cell segmentation (§5) |
 | Main error sources | Mixed cell types per spot, tissue-dependent library size | Segmentation errors, transcript spillover, off-target signal |
 
+Which QC and normalization rules of `SCRNASEQ_GUIDELINES.md` apply. The last column (whole-transcriptome data with
+cells from segmentation) is not a platform of §0; it states only what follows from the rules of this guide.
+
+| `SCRNASEQ_GUIDELINES.md` rule | Visium (spots) | Imaging panels (Xenium, MERFISH) | Whole transcriptome, segmented cells |
+|---|---|---|---|
+| Droplet cell calling and ambient correction (`SC-QC-001`) | No: spots under tissue (`SP-QC-007`) | No: transcript quality and negative controls (`SP-QC-001`, `SP-QC-002`) | No: segmentation evaluation (`SP-SEG-002`) |
+| Adaptive thresholds on counts and genes (`SC-QC-003`) | Per section, after checking where low-count spots lie (`SP-QC-008`) | Per section, with lower minimum counts (`SP-QC-003`) | Per section (`SP-QC-003`) |
+| Mitochondrial and nuclear-fraction filters (`SC-QC-002`, `SC-QC-003`) | Not as per-cell filters: a spot holds several cells (§1, `SP-QC-008`) | Not without mitochondrial or intronic probes (`SP-QC-004`) | Only if the chemistry measures mitochondrial genes and introns |
+| Doublet detection (`SC-QC-009` to `SC-QC-014`) | No: a spot holds several cells by design; cell types per spot by deconvolution (`SP-TYPE-002`) | No: segmentation errors and spillover instead (`SP-SEG-002`, `SP-SEG-004`) | No: segmentation errors instead (`SP-SEG-002`) |
+| Library-size normalization (`SC-NORM-001`) | Compared with no normalization when domains or clusters are a goal (`SP-NORM-001`, `SP-NORM-002`) | Total counts depend on the panel; MAY be compared with cell area (`SP-NORM-003`) | Compared with no normalization when domains or clusters are a goal (`SP-NORM-002`) |
+| About 2,000 highly variable genes (`SC-NORM-003`) | Applies | All panel genes or a selection justified for the panel (`SP-QC-004`) | Applies |
+| Marker sets and annotation (`SC-ANNOT-001` to `SC-ANNOT-005`) | Not per spot: deconvolution (`SP-TYPE-002`) | Panel markers only; no subtypes the panel cannot distinguish (`SP-TYPE-001`) | Applies (`SP-TYPE-001`) |
+
 * `SP-PLAT-001` **For imaging platforms the gene panel is the upper bound of the universe**: genes not in the panel cannot be
   detected, and enrichment analyses MUST use as background the panel genes that remained eligible after filtering and
   mapping (never the genome) (`STATISTICS_GUIDELINES.md` §9, enrichment). Record the panel name and
@@ -37,8 +50,9 @@
 
 ## 2. Design
 
-* `SP-DES-001` **The experimental unit is the donor or animal.** Spots or cells of one section are not replicates, and several
-  sections from one block are technical replicates [Squair 2021†; Zimmerman 2021a†].
+* `SP-DES-001` **The experimental unit is the donor or animal.** Spots or cells of one section are not replicates, and
+  sections from one block are nested in the donor: they can differ anatomically (depth, region, composition), but they
+  add no independent donors [Squair 2021†; Zimmerman 2021a†].
   * *Why:* spots and cells of one section share donor, tissue processing and slide; treating them as replicates
     turns every donor difference into a significant result. *Trade-off:* spatial studies often have few donors; the
     remedy is more donors or descriptive claims, not counting spots.
@@ -117,7 +131,9 @@
 * `SP-NORM-001` **Library size in spatial data partly reflects biology**: it correlates with tissue structure, and standard
   scRNA-seq library-size normalization can impair the detection of spatial domains [Bhuva 2024].
   * *Trade-off:* not normalizing leaves technical depth differences between spots; normalizing can remove real
-    differences between regions. Comparing both is the only way to know which dominates in a dataset.
+    differences between regions. Comparing both is a sensitivity analysis: a pattern that changes with normalization
+    can reflect either, and the comparison alone does not say which. Judge it with histology, technical controls and
+    replicate sections.
 * `SP-NORM-002` Keep raw counts in `layers["counts"]`. When domains or clusters are a goal, compare results with and without
   library-size normalization and report which was used and why.
 * `SP-NORM-003` For imaging panels, total counts depend on panel composition; normalization by cell area MAY be compared with
@@ -162,10 +178,13 @@
 * `SP-NBH-001` Neighbourhood enrichment and co-occurrence statistics (`squidpy`) use permutations of cell labels within a section.
   The permutation null assumes that labels are exchangeable inside the tissue; strong tissue structure makes many
   pairs "significant".
-* `SP-NBH-002` **Inference across conditions uses sections or donors as units**: compute the statistic per section, then compare
-  per-donor values between conditions (`STATISTICS_GUIDELINES.md` §4, hierarchical data).
+* `SP-NBH-002` **Inference across conditions uses donors as units**: compute the statistic per section, aggregate the sections of
+  each donor to one value (or model sections nested in donors), then compare donors between conditions
+  (`STATISTICS_GUIDELINES.md` §4, hierarchical data). State the aggregation or the model.
   * *Why:* a neighbourhood statistic computed on pooled cells from several donors reflects the donors with most
-    cells; per-section statistics weight donors correctly and give a valid between-condition test.
+    cells, and sections of one donor are not independent (`SP-DES-001`). The per-section step avoids the first
+    problem and the per-donor step the second; how much each donor weighs then depends on the aggregation or the
+    model, which is why it is stated.
 * `SP-NBH-003` **Differential expression between conditions:** pseudobulk per donor and cell type (imaging) or per donor and domain
   (Visium), then DE (differential expression) as in `SCRNASEQ_GUIDELINES.md` §10 (condition DE). Cells or spots MUST NOT be used as replicates.
 * `SP-NBH-004` Neighbouring cells and spots are correlated (spatial autocorrelation), which violates the independence assumption

@@ -16,7 +16,10 @@ are compared at matched depth, or by effect sizes.
    composition, ambient RNA or capture efficiency, which also differ between cell types.
 
 Matching serves the comparison between cell types; the main analysis uses all the data. Counts
-MUST be integers (raw or CellBender counts); SoupX- or decontX-corrected layers are not.
+MUST be integers (raw or CellBender counts); SoupX- or decontX-corrected layers are not, unless
+they were rounded explicitly and the rounding recorded. The default layer is resolved with
+``recipes/scrnaseq/layers.py`` (``SC-DATA-004``, step ``"pseudobulk"``); a non-integer layer
+raises an error that names it.
 """
 
 import logging
@@ -26,6 +29,8 @@ import numpy as np
 import pandas as pd
 import polars as pl
 import scipy.sparse as sp
+
+from recipes.scrnaseq.layers import input_layer, require_integer_counts
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +54,7 @@ def match_depth(
     celltype_key: str,
     target: str,
     reference: str,
-    layer: str = "counts",
+    layer: str | None = None,
     match: tuple[str, ...] = MATCH_MODES,
     seed: int = 0,
 ) -> tuple[ad.AnnData, pl.DataFrame, dict[str, float]]:
@@ -67,8 +72,8 @@ def match_depth(
         Cell type to reduce.
     reference : str
         Cell type whose depth is matched (the shallower one).
-    layer : str
-        Counts layer.
+    layer : str | None
+        Integer counts layer; None resolves it with ``input_layer(adata, "pseudobulk")``.
     match : tuple[str, ...]
         What to match: ``"cells"``, ``"umis"`` or both.
     seed : int
@@ -97,6 +102,8 @@ def match_depth(
     for cell_type in (target, reference):
         if not (cell_types == cell_type).any():
             raise ValueError(f"cell type {cell_type!r} not in {celltype_key!r}")
+    layer = input_layer(adata, "pseudobulk") if layer is None else layer
+    require_integer_counts(adata, layer)
     rng = np.random.default_rng(seed)
     counts = _integer_csr(adata.layers[layer])
     units = adata.obs[unit_key].astype(str).to_numpy()

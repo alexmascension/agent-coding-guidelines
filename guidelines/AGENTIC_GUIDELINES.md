@@ -1,6 +1,6 @@
 # Agentic guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.2.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -90,9 +90,12 @@
   the job queue, the results folder, the sent mail), newest first.
 * `AGT-EVID-006` **Read papers and long documents as text converted on the machine** (the LaTeX source of a
   preprint, or Markdown converted locally from the PDF, with tables as separate files), section by section, and
-  search them, rather than reading page images.
+  search them, rather than reading page images. When a claim depends on a figure, or on a table or equation that
+  the conversion may have garbled, check it on the page image.
   * *Why:* converted text can be searched, quoted exactly and re-read in a later session without converting it
-    again; tables converted separately keep their columns.
+    again; tables converted separately keep their columns. A figure's content is not in the text (two plots with
+    the same labels convert to the same text), and a conversion can misplace table cells or drop the symbols of an
+    equation.
 * `AGT-EVID-007` **Read the current text of an instruction before applying it**: the guideline section, the brief,
   the plan task or the skill, not the version remembered from earlier in the session or from another project.
   * *Why:* a remembered rule is a paraphrase of an older version, and the details that make it binding
@@ -163,9 +166,10 @@
   same. Report "not found in X by searching Y", and check an absence that matters a second way: another query,
   another source, or a positive control showing that the search finds what it should.
 * `AGT-CLAIM-003` **Regenerate each reported number from its source when writing it**; MUST NOT copy it from
-  earlier in the conversation or from a previous report. Compute bounds, ranges and agreements ("equal to six
-  decimals") from stored values, not from rounded printed output, and recompute a statistic for the exact
-  comparison being reported.
+  earlier in the conversation or from a previous report. The source is the stored result file of the run
+  (`CODE-PROV-003`, run provenance), read again when writing, not a re-run of the analysis. Compute bounds, ranges
+  and agreements ("equal to six decimals") from stored values, not from rounded printed output, and recompute a
+  statistic for the exact comparison being reported.
 * `AGT-CLAIM-004` **State which kind of evidence a result provides**: reproducibility (the recorded procedure gives
   the same result), numerical convergence (stable as numerical settings change), statistical uncertainty
   (variation under the stated sampling assumptions), accuracy (closeness to a justified reference) or scientific
@@ -189,9 +193,11 @@
 
 ## 7. Working with the user
 
-* `AGT-USER-001` **A question is not a change request.** When the user asks a question, or relays one from a
-  co-author or reviewer, answer it and change nothing: no edits to files, documents or figures, however obvious the
-  fix. Propose the change in the answer and wait to be asked.
+* `AGT-USER-001` **A question about the work is not a change request.** When the user asks a question about the
+  work (why a result looks as it does, whether a choice is right), or relays one from a co-author or reviewer,
+  answer it and change nothing: no edits to files, documents or figures, however obvious the fix. Propose the
+  change in the answer and wait to be asked. A request phrased as a question ("can you fix X?") is a request from
+  the user; a request relayed from a co-author or reviewer is still the user's to decide (`MS-RESP-001`).
   * *Why:* a question is how the user checks understanding before deciding; an edit made in reply pre-empts the
     decision and mixes unrequested changes into the history.
 * `AGT-USER-002` **Do the work before handing a step to the user.** Before asking for a file, search the project
@@ -205,11 +211,12 @@
   * After long work, start with where things stand and what awaits the user's decision; give the detail on request.
 * `AGT-USER-004` **Record each substantive decision in the decisions log when it is made**: the date, the decision
   quoting the user's words, the reason, and the files or evidence used (`CODE-PROJ-009`, decisions log).
-* `AGT-USER-005` **Turn a correction into a rule at the narrowest scope where it applies.** Restate the rule the
-  correction asserts and confirm it before editing anything. Then record it where it applies: the task at hand only
-  (just do it); the project (`PROJECT_CONTEXT.md`, under *Overrides* if it departs from a guideline); every project
-  (a proposed change to the guideline, reported upstream). Choose the scope by where the lesson applies, not where
-  it was learned. Prefer editing an existing rule to adding a note, and report in one line what changed and where.
+* `AGT-USER-005` **Turn a correction into a rule at the narrowest scope where it applies.** The fix for the task at
+  hand goes ahead (just do it). Before recording the correction beyond the task, restate the rule it asserts and
+  confirm it; then record it where it applies: the project (`PROJECT_CONTEXT.md`, under *Overrides* if it departs
+  from a guideline); every project (a proposed change to the guideline, reported upstream). Choose the scope by
+  where the lesson applies, not where it was learned. Prefer editing an existing rule to adding a note, and report
+  in one line what changed and where.
   * *Why:* a correction that stays in the conversation is repeated in the next session, and a note added next to a
     rule that says otherwise leaves two rules in conflict.
 
@@ -267,10 +274,11 @@
 * `AGT-DEL-002` **A delegation brief carries its own authority**: the question, the sources, what the worker may
   change, the acceptance criteria, the budget, and what to do if it finishes early. Routine repairs inside these
   bounds are the worker's call; changes to the question, thresholds, data access or resources come back.
-* `AGT-DEL-003` **A subagent does not see the project's instructions unless it is given them.** The brief names
-  the rules that apply, by identifier or path (e.g. "follow `CODE-DOC-007`; read `PROJECT_CONTEXT.md` §4 (domain
-  vocabulary)"), and a brief that asks for prose states the writing requirements in full. Naming a file is not the
-  same as the subagent having read it.
+* `AGT-DEL-003` **Do not assume that a subagent sees the project's instructions.** What a subagent inherits (the
+  instruction files, the conversation, the tools) depends on the harness and its configuration. Unless the harness
+  documents what it inherits, the brief names the rules that apply, by identifier or path (e.g. "follow
+  `CODE-DOC-007`; read `PROJECT_CONTEXT.md` §4 (domain vocabulary)"), and a brief that asks for prose states the
+  writing requirements in full. Naming a file is not the same as the subagent having read it.
 * `AGT-DEL-004` **Judge a subagent by what it produced, not by its report that it finished.** Check its output
   against the acceptance criteria and verify at the strongest tier anything a conclusion rests on. The orchestrator
   owns the final wording of delegated prose.
@@ -360,9 +368,10 @@
 * `AGT-LOOP-002` **After two or three rounds of revision, check whether the loop converges** (rounds of a draft,
   an analysis, a review, a fix). Converging rounds raise finer versions of the same issues; escalating rounds raise
   a new kind of issue each time, which points to a wrong setup rather than to unfinished polish. Three or more
-  framings of unchanged results mean that the data, not the wording, is the bottleneck. Report the verdict with the
-  rounds as evidence and offer concrete paths (a narrower claim the data support, a different question, writing up
-  what is already durable) instead of another round.
+  framings of unchanged results are a signal to stop rewording and examine the evidence, the argument and the
+  audience: the bottleneck may be the data or the question, or the argument may not fit its readers. Report the
+  verdict with the rounds as evidence and offer concrete paths (a narrower claim the data support, a different
+  question, writing up what is already durable) instead of another round.
 * `AGT-LOOP-003` **Check for drift from the original motivation**: complete the sentence "this version still
   answers the original question by …". If it cannot be completed honestly, re-anchor the work, or record the new
   direction as a decision (`AGT-USER-004`, decisions log).
@@ -384,7 +393,8 @@
 * `AGT-LOOP-006` **After three failed attempts at the same problem, stop and question the approach.** When each
   fix reveals a new problem elsewhere, or needs ever larger changes, the setup (the design, the data model, the
   structure of the pipeline) is the likely fault; say so, with the attempts as evidence, and discuss it with the
-  user before a fourth attempt.
+  user before a fourth attempt. An attempt is a fix based on a hypothesis about the cause; automatic retries of a
+  transient failure (a dropped connection, an archive incident: `CODE-DL-002`, `CODE-DL-005`) are not attempts.
   * *Example:* a third adjustment of normalization that still leaves clusters driven by batch points at the design
     (batch confounded with condition, `STAT-DES-004`), not at the normalization.
 
@@ -420,9 +430,9 @@ document) and what they want, or why, is not settled. Disambiguating a defined t
   * *Example:* "If the gene list is for wet-lab validation I would favour precision and a short list; if it feeds
     a screen, recall. Which is it for?"
 * `AGT-INTENT-005` **Play back what you understood, in parts.** As soon as one part is understood (its purpose, who
-  uses it, how one piece behaves), describe it back in about 200 to 300 words and ask what is wrong or missing.
-  Only what the user said goes in as theirs; anything the agent filled in goes in as a proposal with its reason,
-  and defaults are stated out loud.
+  uses it, how one piece behaves), describe it back and ask what is wrong or missing: about 200 to 300 words for a
+  complex part, fewer for a simple one (`AGT-PROP-001`). Only what the user said goes in as theirs; anything the
+  agent filled in goes in as a proposal with its reason, and defaults are stated out loud.
   * *Why:* a default the user never heard is one they could not reject.
 * `AGT-INTENT-006` **Lay out the approaches before writing anything up.** Generate several real ways of doing it,
   drop the weak ones (including any that work against why the user wants it, or that the existing work rules out),
@@ -497,8 +507,9 @@ A plan turns an approved design into tasks that another agent, or a later sessio
   * *Why:* such phrases are usually written to avoid another round of review, which is what the review is for.
 * `AGT-REV-004` **Receive feedback by checking it.** Read all of it; restate each requirement; check it against the
   actual code, data or text; decide whether it is right for this project; then reply with a technical
-  acknowledgment or a reasoned objection, and implement one item at a time, each with its check. If any item is
-  unclear, ask about it before implementing any: items may be related. This applies to feedback from the user,
+  acknowledgment or a reasoned objection, and implement one item at a time, each with its check. If an item is
+  unclear, ask about it before implementing it or any item that depends on it or touches the same code, data or
+  text: items may be related. Clear items independent of it may proceed. This applies to feedback from the user,
   from reviewers (human or agent) and from co-authors.
 * `AGT-REV-005` **Reply with the fix or the objection, not with agreement or thanks** ("You're absolutely right",
   "Great point"). State what was changed ("Fixed: …") or why not. When an objection turns out wrong, say so in one
@@ -535,13 +546,17 @@ This section applies to instructions written for agents: briefs and prompts, rul
     requirements in dispatch prompts produced more restated content than no guidance at all, while a positive
     recipe produced the least, with no variation; a prohibition of a discrete action that the agent had no
     incentive to take worked as well as a recipe.
+  * *Note:* that evidence is small: wording tests with one model and one test harness (one call per sample, five
+    samples per variant, scored by pattern matching), covering the second row and discrete prohibitions; the other
+    rows adapt superpowers' `writing-skills` guidance. Treat the table as heuristics and check the form chosen
+    against the failures observed (`AGT-INSTR-004`).
 * `AGT-INSTR-003` **Keep a working instruction short and unqualified.** Do not append nuance clauses ("unless it
   matters"): express a real exception as its own conditional. An exemption clause does not limit a rule ("this
   limit does not apply to code blocks" still suppresses code blocks): restructure so that the rule cannot reach the
   exempt part. Between two wordings that work equally well, choose the shorter: instructions that are always
   loaded are re-read on every turn.
-  * *Why:* in the same tests, appending one nuance clause to a winning recipe turned consistent output into noisy
-    output.
+  * *Why:* in the same small tests (`AGT-INSTR-002`, *Note*), appending one nuance clause to a winning recipe
+    turned consistent output into noisy output.
 * `AGT-INSTR-004` **Test the wording against behaviour before relying on it.** Use fresh-context samples, with the
   instruction in its real surrounding context and a task that tempts the failure: at least five per variant, and
   a no-guidance control. Read every flagged output by hand rather than trusting automated counts, since quoted

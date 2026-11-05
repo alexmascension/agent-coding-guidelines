@@ -1,6 +1,6 @@
 # Sample identity and duplicate detection guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.1.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys point to `OMICS_REFERENCES.md`; keys with a
 > dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by ***Why***, ***Trade-off*** and
@@ -44,7 +44,11 @@
 
 ## 3. Duplicates from the data
 
-* `ID-DUP-001` **Exact duplicates:** hash the raw read files (checksum) and the count vectors; identical hashes are duplicates.
+* `ID-DUP-001` **Exact duplicates:** hash the raw read files (checksum) and the count vectors. Identical file hashes mean
+  byte-identical files; a recompressed file has another hash for the same reads, so compare a hash of the decompressed
+  content. Identical count vectors flag a probable duplicate, to be confirmed with metadata (`ID-DUP-003`) and genotype
+  (§4); empty or very sparse vectors are left out of this comparison, because they can coincide by chance. A flagged
+  pair MUST NOT be deleted automatically.
 * `ID-DUP-002` **Near-duplicates** (same library re-sequenced or re-deposited, possibly with different read subsets): compare
   count vectors with a correlation of log counts; pairs whose correlation is an outlier **relative to the distribution
   of same-tissue pairs** are candidates.
@@ -75,6 +79,9 @@
   * *Trade-off:* fingerprints need the aligned reads; extract them before BAMs are deleted (or later from the archived CRAM,
     `HPC_GUIDELINES.md` §2, `HPC-FLOW-006`), and keep them.
 * `ID-GENO-002` **Match site names to the reference**: rename contigs of the sites file (`chr1` versus `1`) to match the BAMs.
+  Renaming presupposes the same assembly: before comparing, check that the sites file and the BAMs' reference are the
+  same genome build, and that the REF allele of each site is the reference base at its position and its ALT allele
+  differs from it.
 * `ID-GENO-003` **Metrics per pair**: relatedness (about 1 for the same individual, about 0.5 for first-degree relatives, about 0
   for unrelated), IBS0 (number of sites where the two samples are opposite homozygotes, i.e. share no allele; near 0 for
   the same individual and for parent–child), IBS2 (number of sites with identical genotypes), and the number of
@@ -83,8 +90,11 @@
 * `ID-GENO-004` **Thresholds come from the cohort distribution, not from fixed values.**
   * *Why:* in RNA only expressed genes are covered, and allele-specific expression or RNA editing make heterozygous
     sites look homozygous in some tissues. Same-individual pairs across tissues therefore show relatedness below 1 and
-    tissue-dependent values. The expected structure is bimodal (same individual versus different); place the cut in
-    the gap and report pairs inside it.
+    tissue-dependent values. Two modes (same individual, different individuals) are expected only when the cohort
+    contains same-individual pairs (several samples per donor, duplicates); then place the cut in the gap and report
+    pairs inside it. Otherwise do not force two groups: calibrate with known pairs or controls (re-deposited pairs,
+    `ID-DUP-004`; RNA against the donor's DNA, `ID-GENO-005`) and with the relatedness expected in the cohort
+    (relatives give intermediate values).
   * *Deviate when:* with very few informative shared sites (e.g. low-expression tissues), treat the pair as
     undetermined rather than unrelated.
 * `ID-GENO-005` **RNA↔DNA**: extract the same sites from the DNA (VCF or CRAM) and compare. Each RNA sample MUST match its donor's
@@ -107,7 +117,9 @@
 
 ## 6. Single-cell pools
 
-* `ID-POOL-001` **Pooled designs (cells of several donors in one capture) MUST be demultiplexed by genotype**, also when hashtags are used (hashtag calls are then checked against genotype):
+* `ID-POOL-001` **Pooled designs (cells of several donors in one capture) MUST be demultiplexed by genotype** when the donors differ
+  genetically at the covered sites (humans, outbred animals, animals of different strains), also when hashtags are
+  used (hashtag calls are then checked against genotype):
   * without donor genotypes: `nf-core/hadge` [Curion 2024b], pinned to a release, genetic mode: vireo [Huang 2019]
     with more than 20 donors per pool or when only one tool can be run; souporcell [Heaton 2020] and vireo combined
     with up to 20 donors, when more than one tool can be run;
@@ -128,6 +140,9 @@
     implementation of the combination.
   * *Deviate when:* demuxlet [Kang 2017] MAY replace Demuxalot where it is already established; it runs inside hadge.
     In its original evaluation about 50 SNPs per cell sufficed for 97% singlet assignment in pools of up to 64.
+  * *Scope:* animals of one inbred strain share their genotype (`ID-POOL-004`); pools of them are identified with
+    hashtags or by design (e.g. one animal per capture), and the report states the limit: without such labels their
+    cells cannot be assigned to animals, and doublets of two of them are not detected by genotype.
 * `ID-POOL-002` **Match demultiplexed clusters to donors** with the fingerprints of §4 (pseudobulk BAM per cluster against donor DNA
   or other samples).
 * `ID-POOL-003` Genotype demultiplexing also detects cross-donor doublets and estimates ambient RNA [Heaton 2020].
@@ -139,6 +154,9 @@
   unnamed individuals of the pool.
   * *Why:* genotype-free demultiplexing returns anonymous clusters; donor attributes (condition, age, genotype) can
     only be attached through external evidence, and its strength differs between libraries.
+  * *Conflicts:* when two sources disagree on a cluster, do not resolve by this order. Record the conflict, check the
+    provenance of each source (how the labels were produced and linked to donors) and the quality of the fingerprints
+    (shared sites, relatedness, margin to the next donor, `ID-POOL-007`), and leave the cluster unnamed if unresolved.
 * `ID-POOL-006` **Before deleting a pooled library's BAM, MUST store one genotype fingerprint per cluster** (reads split by cell
   barcode) together with the barcode-to-cluster assignment, so that clusters can be labelled when a reference becomes
   available without re-mapping.
@@ -152,8 +170,9 @@
   when run on common population variants (e.g. allele frequency 0.1–0.9) in transcribed regions; the labelling
   rules above do not depend on the demultiplexer. For singlet and doublet calls they are not interchangeable
   (`ID-POOL-001`).
-* `ID-POOL-004` Reliability varies by species and depends on genetic diversity; inbred mouse strains cannot be demultiplexed by
-  genotype [Cardiello 2023].
+* `ID-POOL-004` Reliability varies by species and depends on genetic diversity. Animals of one inbred strain cannot be distinguished by
+  genotype: in silico pools of C57BL/6 or of DBA/1J mice left 99.7% of cells unassigned; pooling animals of different
+  strains has been reported to allow genotype demultiplexing [Cardiello 2023].
 
 ## 7. Resolving flags
 

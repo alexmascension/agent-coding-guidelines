@@ -1,24 +1,27 @@
 """Recipe: permutation of exchangeable units within strata, and permutation p-values.
 
 Guideline: ``STATISTICS_GUIDELINES.md`` §10 (resampling): permute the labels of experimental units
-(donors, samples),
-within strata (batch, pair) when the design has them; $p = (b + 1)/(m + 1)$.
+(donors, samples), within strata (batch, pair) when the design has them; with $m$ random
+permutations, $p = (b + 1)/(m + 1)$. (With complete enumeration of all $M$ arrangements the exact
+p-value is $b/M$, the observed arrangement counted among the $M$; this module draws random
+permutations.)
 
 The caller is responsible for exchangeability: permuting labels within strata preserves the stratum
-structure only.
-It does not preserve the association of the labels with other covariates (age, sex, RNA quality);
-when those are
-associated with the labels, the permutation null is not the null of the adjusted model.
+structure only. It does not preserve the association of the labels with other covariates (age,
+sex, RNA quality); when those are associated with the labels, the permutation null is not the null
+of the adjusted model.
 
-Two-sided p-values follow the SciPy convention (``scipy.stats.permutation_test``): twice the
-smaller one-sided
-p-value, capped at 1. Comparing absolute values is valid only for statistics centred at 0 under the
-null, so it is
-not used.
+Two-sided p-values: both conventions, doubling the smaller one-sided p-value or comparing $|T|$,
+give valid tests under exchangeability. Comparing $|T|$ defines "extreme" as distance from 0, which
+matches a two-sided alternative only when the null distribution of $T$ is centred at 0 and roughly
+symmetric, so this recipe doubles the smaller one-sided p-value, capped at 1 (the SciPy convention
+of ``scipy.stats.permutation_test``).
+
+Strata are visited in order of first appearance, so a seed gives the same permutations in every
+process, whatever ``PYTHONHASHSEED`` (``CODING_GUIDELINES.md`` ``CODE-REPRO-002``).
 
 ``scipy.stats.permutation_test`` covers unstratified tests; use this module when labels must be
-permuted within strata
-or when the statistic is an expensive pipeline (e.g. a full DE run,
+permuted within strata or when the statistic is an expensive pipeline (e.g. a full DE run,
 ``recipes/bulk/fdr_calibration.py``).
 """
 
@@ -40,6 +43,7 @@ def permute_within_strata(
         One label per experimental unit (not per cell).
     strata : np.ndarray | None
         Stratum per unit (batch, pair); None permutes freely. Missing strata are not allowed.
+        Strata are permuted in order of first appearance (independent of hash seeds).
     rng : np.random.Generator
         Random generator (seeded by the caller).
 
@@ -62,7 +66,7 @@ def permute_within_strata(
     if any(s is None or (isinstance(s, float) and np.isnan(s)) for s in strata):
         raise ValueError("strata contain missing values; assign them explicitly")
     permuted = labels.copy()
-    for stratum in set(strata.tolist()):
+    for stratum in dict.fromkeys(strata.tolist()):  # first appearance: no hash-order dependence
         idx = np.flatnonzero(strata == stratum)
         permuted[idx] = labels[rng.permutation(idx)]
     return permuted
@@ -98,13 +102,12 @@ def permutation_pvalue(
         Strata within which labels are exchangeable.
     n_permutations : int
         Number of random permutations $m$ (at least 1); the smallest attainable p-value is
-        $1/(m+1)$
-        (two-sided: $2/(m+1)$).
+        $1/(m+1)$ (two-sided, doubled: $2/(m+1)$).
     seed : int
         Seed of the random generator.
     alternative : {"two-sided", "greater", "less"}
         ``greater``: large statistics are extreme; ``two-sided``: $\min(1, 2\min(p_{greater},
-        p_{less}))$.
+        p_{less}))$ (the module docstring says why $|T|$ is not compared).
 
     Returns
     -------
@@ -117,8 +120,7 @@ def permutation_pvalue(
     ------
     ValueError
         If the statistic is not finite (observed or any permutation), ``alternative`` is unknown,
-        or
-        ``n_permutations < 1``.
+        or ``n_permutations < 1``.
     """
     if alternative not in ALTERNATIVES:
         raise ValueError(f"unknown alternative {alternative!r}; use one of {ALTERNATIVES}")
@@ -151,8 +153,7 @@ def binomial_upper_bound(n_events: int, n_trials: int, level: float = 0.95) -> f
     """One-sided Clopper-Pearson upper bound for a probability from ``n_events``/``n_trials``.
 
     With 0 events in 20 trials the 95% bound is about 0.139: a small number of permutations cannot
-    show that a
-    probability is below 0.05.
+    show that a probability is below 0.05.
     """
     from scipy.stats import beta
 

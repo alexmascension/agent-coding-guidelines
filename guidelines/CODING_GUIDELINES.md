@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.0.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.1.0 (2026-11-05)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -180,9 +180,13 @@ interface, a threshold or a data invariant MUST update it in the same change.
   pytest for tests, ruff for linting and formatting.
 * `CODE-LANG-007` Environment: a conda environment plus `pip install -e .` of the project package. Export the
   resolved environment (`conda env export --no-builds > environment.lock.yml` or `conda-lock`)
-  whenever dependencies change.
+  whenever dependencies change. The reproducible record is the `conda-lock` lock file; an export with `--no-builds`
+  records package versions, not builds.
   * *Why:* an environment file with version ranges resolves to different packages months later; the lockfile
-    records what actually ran.
+    records what actually ran. `conda-lock` solves the environment for each platform, and installing from its lock
+    file does not run the solver again. `--no-builds` removes the build specification, so the same versions can be
+    installed with other builds; the export still lists platform-specific dependencies (conda documents
+    `--from-history` for a file meant for other platforms).
 * `CODE-LANG-008` Default layout (a project MAY override it):
   `src/<package>/` library code, `src/scripts/` command-line drivers, `src/notebooks/`
   analysis notebooks, `tests/`, `data/` inputs, `results/` outputs.
@@ -420,8 +424,9 @@ interface, a threshold or a data invariant MUST update it in the same change.
   (`CODE-PIPE-004`). Running a pipeline and writing its configuration is not code in another language
   (`CODE-LANG-003`).
   * *Why:* a community pipeline has been run on many datasets and its failure modes are fixed upstream; a hand-built
-    equivalent repeats them, is tested only on the project's data, and its outputs are not comparable with studies
-    that used the pipeline [Ewels 2020].
+    equivalent repeats them and is tested only on the project's data [Ewels 2020]. Its outputs match those of
+    studies that used the pipeline only if every tool, version, parameter and reference matches, which the project
+    would then have to show; a pinned release with its tracked parameters fixes all of them.
   * *Trade-off:* pipeline defaults may differ from the domain guides (`CODE-PIPE-002`); engine and container setup
     cost time (`hpc_sites/`).
 * `CODE-PIPE-002` **Domain rules fix what is computed; implement each at the lowest level that can express it.** The
@@ -480,8 +485,12 @@ interface, a threshold or a data invariant MUST update it in the same change.
 
 ## 13. Data management and provenance
 
-* `CODE-PROV-001` Raw inputs (`data/raw/` or equivalent) are read-only. MUST NOT modify, overwrite or delete
-  them.
+* `CODE-PROV-001` **Raw inputs of record are read-only.** The copy of record of each raw input (`data/raw/` or
+  equivalent; `ARCHIVE/data/raw` on clusters, `HPC-FLOW-001`) MUST NOT be modified, overwritten or deleted. A
+  replica of it (a copy staged on `WORK` or `NODE`, a cache) MAY be deleted once the copy of record has been
+  verified to exist and to match its recorded checksum (`HPC_GUIDELINES.md` §2, data flow, staging and backups).
+  * *Why:* only the copy of record cannot be regenerated; a replica can be copied again from it while that copy
+    exists and is intact, which is what is checked before the replica is deleted.
 * `CODE-PROV-002` MUST NOT commit data, results or large binaries to git. Record how to obtain each input
   (URL, accession, release, checksum) in `README.md` or a download script.
   * *Deviate when:* small derived tables (about 5 MB per file or less) needed to reproduce key results without
@@ -533,6 +542,9 @@ interface, a threshold or a data invariant MUST update it in the same change.
 * `CODE-DL-003` **Validate streamed reads record by record**: every FASTQ record has its `@` and `+` lines and a sequence as long
   as its quality string, the expected number of records arrived, and paired streams have matching read IDs in every
   record, not only the first and the last.
+  * A streamed head is a partial extract: the archive's checksum covers the whole file and cannot verify it. It is
+    validated by these checks and recorded in the provenance file as a partial extract (source, number of records,
+    checks passed); it is never recorded as a checksum-verified file (`CODE-DL-001`).
   * *Note:* the first $N$ reads of a file are not a random sample of the library (they follow lane and tile order);
     state it wherever a streamed head is used as a subsample.
 * `CODE-DL-004` **Treat unexpected responses as failed attempts.** Direct file URLs of archives that serve files without

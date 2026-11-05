@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.2.1 (2026-11-05)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.3.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -48,14 +48,26 @@
   |---|---|
   | Cell-level QC metrics (§4.2), doublet detection and co-expression review (§4.3) | `counts` |
   | Size factors and normalization (§5), HVG, PCA, clustering, annotation | `counts_ambient_corrected` if it exists, else `counts` |
-  | Pseudobulk DE and abundance (§10–11) | `counts_ambient_corrected` if it exists; check key genes on `counts` |
+  | Pseudobulk DE and abundance (§10–11), depth matching, empirical power | `counts_ambient_corrected` if it exists, else `counts`; check key genes on `counts` |
   | RNA velocity (§13) | `spliced`, `unspliced` |
 
+  Recipes resolve the layer with one function; those of normalization and pseudobulk take `layer=None` by default,
+  meaning the row of this table, and honour an explicit layer. Count-based DE tools need integer counts: a corrected
+  layer with non-integer values (e.g. SoupX `adjustCounts`, whose `roundToInt` is `FALSE` by default) MUST NOT be
+  rounded silently. Either round it explicitly and record it in `PROJECT_CONTEXT.md` (SoupX
+  `adjustCounts(roundToInt = TRUE)` rounds at random, up with probability equal to the fractional part: set and record
+  the seed), or pass `layer="counts"`.
   * *Why:* QC and doublet detectors are defined on observed counts, and SoupX or decontX correction before doublet
     detection leaves more doublets undetected [Meier 2026] (`SC-QC-012`), so with these methods the corrected layer is
     created after doublet removal and the first clustering reads `counts`; ambient correction removes contamination that
     otherwise appears as expression of abundant-type markers in every cell type, including in pseudobulk. Checking
-    key genes on uncorrected counts shows whether a result depends on the correction.
+    key genes on uncorrected counts shows whether a result depends on the correction. With the choice in one function,
+    a recipe's default cannot drift from this table; rounding changes the data the DE model sees, so it is a recorded
+    step.
+  * Recipe: `recipes/scrnaseq/layers.py` (`input_layer(adata, step)`: steps `"qc"` and `"doublets"` read `counts`;
+    `"normalization"` and `"pseudobulk"` read `counts_ambient_corrected` when it exists, else `counts`; an unknown step
+    raises; the choice is logged). Count-based DE recipes reject a non-integer layer with an error that names the layer
+    and the two remedies above.
 
 ### 1.2 Observation metadata
 
@@ -102,7 +114,7 @@
   * comparisons between conditions within the donor (regions, treatments in vitro) use independent captures or
     dissociations as replicates; they measure technical and sampling variation, not biological variation;
   * pseudobulk per capture MAY be tested, and results are reported as valid for that donor only;
-  * cell-level p-values are not evidence in any design.
+  * p-values from tests that treat cells as replicates are not evidence about donors or conditions in any design.
 * `SC-DES-005` **Several samples per donor and several donors**: pseudobulk per sample with the donor in the model, i.e. paired
   design `~ donor + condition` when the condition varies within donors; mixed model or `limma::duplicateCorrelation`
   when it varies between donors; or aggregate to the donor, only when each donor contributes to a single level of
@@ -128,8 +140,9 @@
     per donor cost more detections than lower depth per cell [Crampton 2026†], as power models also predict
     [Schmid 2021†]. With cell-level tests, more cells add false discoveries; with pseudobulk, they improve each donor's
     estimate but do not add replicates [Squair 2021†].
-  * *Trade-off:* the benchmark covers one contrast (sex), one tissue and one cohort, and its authors consider it
-    optimistic because its reference set is itself incomplete; use it for orders of magnitude, not thresholds.
+  * *Trade-off:* the benchmark covers one contrast (sex), three cell types of one tissue and one cohort, and its
+    authors consider it optimistic because its reference set is itself incomplete; use it for orders of magnitude, not
+    thresholds, and read its recall and precision as `STATISTICS_GUIDELINES.md` `STAT-RES-008` describes.
   * *Note:* one preprint (2026).
   * Recipe: `recipes/scrnaseq/empirical_power.py` (recall and precision per effect-size bin over a grid of donors and
     cells per donor, against a held-out reference, for a project with a large dataset of its own); every design is a
@@ -189,7 +202,9 @@
     `--aligner kallisto`).
 * `SC-QUANT-002` **Isoform-level questions** need full-length (e.g. Smart-seq) or long-read protocols [Lebrigand 2020], or analysis of
   transcript compatibility counts [Ntranos 2019]. For full-length per-cell isoform quantification, use Salmon rather
-  than alevin. Isoforms are not quantified from 3' tag data.
+  than alevin. Full-length isoforms are not quantified from 3' tag data; poly(A)-site usage (alternative
+  polyadenylation, APA) can be studied from it with dedicated methods, e.g. scAPAtrap [Wu 2020], ten of which were
+  benchmarked in [Bi 2026].
 * `SC-QUANT-003` Record STAR version, all `--solo*` parameters, chemistry and whitelist, reference genome and annotation release.
 * `SC-QUANT-006` **Check every library before its cells enter QC.**
   1. FastQC on the barcode read and on the cDNA read, aggregated with MultiQC together with the STAR logs
@@ -237,18 +252,21 @@ cells that remain, and its layer from normalization (§5) onwards.
   whose tests pass (`CODING_GUIDELINES.md`, `CODE-PIPE-001`). Baseline parameters and the known differences from this
   guide are in §16. Steps it does not implement, or implements differently from §4–8, run at level 3 of `CODE-PIPE-002`
   with the recipes of §16, in two passes:
-  1. first pass with filters that flag rather than remove (doublets kept, `doublet_removal: false`), through the first
-     clustering;
+  1. first pass in which no filter removes cells, through the first clustering: doublets kept
+     (`doublet_removal: false`) and every cell filter at the value that disables it (§16, first pass); then check
+     that each capture keeps every barcode that left cell calling, and record any barcode lost with the step that
+     removed it;
   2. review with the recipes: what each filter removes per cluster (`SC-QC-015`), doublet clusters (`SC-QC-010`),
      nuclear fraction (`SC-QC-002`), mitochondrial fraction on the logit scale with a floor (`SC-QC-003`), Scrublet
      threshold per capture (`SC-QC-013`);
-  3. second pass on the cells kept, with the pipeline's filters disabled, through integration and clustering; then
-     principal components and clustering stability (§6, §8) on its output.
+  3. second pass on the cells kept, with the filters disabled as in the first pass, through integration and
+     clustering; then principal components and clustering stability (§6, §8) on its output.
 
   Convert the pipeline's object to the conventions of §1 at the boundary (`CODE-EXT-005`).
   * *Why:* the pipeline brings tested, containerized implementations of most of §4–8 (CellBender, scDblFinder and
     Scrublet, scran, Harmony and scVI, scib-metrics, Leiden) in one versioned run; the review steps of this guide are
-    the ones it lacks, and running them between two passes keeps the rest inside the pipeline.
+    the ones it lacks, and running them between two passes keeps the rest inside the pipeline. A filter left active in
+    the first pass removes cells before the review can see them (`SC-QC-015`).
   * *Trade-off:* two passes cost a second integration; the first is cheap if run without scVI.
 
 ### 4.1 Cell calling and ambient RNA
@@ -260,8 +278,13 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Why:* it models ambient RNA and cell-containing droplets jointly. Ambient transcripts make every cell appear to
     express markers of abundant types (e.g. neuronal transcripts in glia in nuclei data). Of the three ambient methods
     compared in [Meier 2026], it is the only one that models doublets, and the only one recommended before doublet
-    detection (`SC-QC-012`).
-  * *Trade-off:* needs a GPU to be practical.
+    detection (`SC-QC-012`). In a benchmark of seven decontamination tools, CellBender among them, no tool led on every
+    criterion (accuracy of the contamination estimate, robustness to contamination level, cell number and depth,
+    resolution of closely related subtypes), and the authors advise choosing by goal and data [Nie 2026]; this
+    default rests on the joint cell calling and on the order of steps (`SC-QC-012`), not on a ranking of correction
+    accuracy.
+  * *Trade-off:* needs a GPU to be practical; between closely related subtypes it reduced contamination only modestly,
+    as did the other tools [Nie 2026].
   * *Deviate when:* without a GPU, SoupX (R) [Young 2020]; without the raw (unfiltered) matrix, e.g. public data
     shared as filtered matrices, decontX (R) [Yang 2020], the only one of the three methods compared in
     [Meier 2026] that needs no empty droplets. Both run after doublet removal (`SC-QC-012`). For statistical cell
@@ -278,9 +301,11 @@ cells that remain, and its layer from normalization (§5) onwards.
   below, plus the nuclear-fraction filter above. The scaled MAD is
   $1.4826 \times \text{median}(|x - \text{median}(x)|)$, which estimates the SD for normal data; 5 scaled MADs equal
   7.41 unscaled MADs. State which convention is used.
-  * **Mitochondrial fraction: upper tail only, on the logit scale, and above a floor.** Compute the MADs on
-    $\text{logit}(f + \epsilon)$ with a small pseudocount $\epsilon$, and flag a cell only when it is beyond the MAD
-    threshold *and* above a fixed floor that the project states for its tissue and assay. pipeComp's filters flag
+  * **Mitochondrial fraction: upper tail only, on the logit scale, and above a floor.** Check that every fraction $f$
+    is in $[0, 1]$ (a percentage, or any value outside that range, is an input error, not a value to clip); compute
+    the MADs on $\text{logit}(\text{clip}(f, \epsilon, 1 - \epsilon))$ with a small $\epsilon$ (the recipe uses
+    $10^{-4}$), because the logit is undefined at 0 and 1; and flag a cell only when it is beyond the MAD threshold
+    *and* above a fixed floor that the project states for its tissue and assay. pipeComp's filters flag
     the mitochondrial fraction at more than 2.5 or 3 MADs *and* more than 8% [Germain 2020]; the logit scale is the
     single-cell best-practices book's choice. A low mitochondrial fraction does not mark a bad cell.
   * *Why the logit scale:* the fraction is bounded and skewed, so MADs on the raw scale put the upper threshold too
@@ -392,8 +417,10 @@ cells that remain, and its layer from normalization (§5) onwards.
   demultiplexing (`ID-POOL-001`) in addition to those removed by `SC-QC-010`, and store them as `doublet_genotype`.
   Transcriptional detection (`SC-QC-009`) is still run: demultiplexers detect almost none of the doublets formed by two
   cells of one donor, which are a large share of all doublets when few donors are pooled [Neavin 2024].
-  * *Deviate when:* more than 20 donors per capture, where such doublets are rare; demultiplexing alone MAY then be
-    used [Neavin 2024].
+  * *Deviate when:* more than 20 donors per capture in roughly equal proportions; demultiplexing alone MAY then be
+    used [Neavin 2024]. Under random pairing, the expected share of doublets formed by two cells of one donor is the
+    sum of the squared donor fractions, $\sum_i p_i^2$ ($1/D$ for $D$ equal donors), so a pool dominated by a few
+    donors keeps many such doublets however many donors it has.
   * *Note:* giving the genotype doublets to scDblFinder as known doublets did not improve it [Neavin 2024].
 * `SC-QC-010` **Flag first, remove later**:
   1. Keep all cells through a first clustering (on `counts` with SoupX or decontX, `SC-QC-012`).
@@ -444,7 +471,9 @@ cells that remain, and its layer from normalization (§5) onwards.
    computed, recompute with more components; never truncate the proposal to what was computed.
 2. `SC-PC-002` Propose a number $p$ with two criteria: the elbow of the explained variance (maximum distance to the chord between
    the first and last point of the curve), and the Gavish–Donoho hard threshold on the singular values
-   [Gavish 2014]. If they disagree, take the larger.
+   [Gavish 2014]. If they disagree, take the larger. Gavish–Donoho needs the full singular-value spectrum (with
+   unknown noise, its threshold scales with the median singular value); when that spectrum cannot be computed, use
+   the elbow alone and record that Gavish–Donoho was not evaluated.
 3. `SC-PC-003` **Check robustness over $p \pm 5$**:
    1. Build the neighbour graph and Leiden clusters at the working resolution for $p$ (the reference clustering).
    2. Repeat for every $n$ from $p-5$ to $p+5$ with the same number of neighbours, resolution and seed (use steps of 2
@@ -455,17 +484,21 @@ cells that remain, and its layer from normalization (§5) onwards.
       Otherwise try another $p$ or a lower resolution and repeat; if no setting is robust, report that the data do
       not support a reproducible partition at that resolution.
 4. `SC-PC-004` The check runs on the embedding actually used for clustering: after integration (§7), on the integrated
-   embedding (e.g. Harmony-corrected PCs), and $p$ refers to its dimensions.
+   embedding (e.g. Harmony-corrected PCs), and $p$ refers to its dimensions. For an embedding whose dimensions are
+   not ordered by variance (the scVI latent space), vary the number of latent dimensions by refitting the model for
+   each value, not by truncating one fit.
 
 * `SC-PC-005` Recipe: `recipes/scrnaseq/pc_robustness.py`.
 * `SC-PC-006` *Why:* the elbow is subjective; random-matrix thresholds assume homogeneous noise; permutation methods such as
   JackStraw are statistically sound but slow [Chung 2014]. A clustering that changes when one or two PCs are added
-  depends on noise components. Too few PCs can merge rare populations; too many add noise dimensions that degrade
-  neighbour graphs. Robustness to $p$ and to cell subsampling (§8) is not biological validity: check also that
-  clusters are present across donors and captures rather than driven by one of them.
+  depends on what they carry: noise components, or a weak signal such as a rare population; check which (the genes
+  with the largest loadings on the added PCs, the cells that change cluster). Too few PCs can merge rare populations;
+  too many add noise dimensions that degrade neighbour graphs. Robustness to $p$ and to cell subsampling (§8) is not
+  biological validity: check also that clusters are present across donors and captures rather than driven by one of
+  them.
 * `SC-PC-007` *Trade-off:* 11 extra clusterings. The thresholds (ARI 0.9, Jaccard 0.75) are project defaults; the Jaccard value
   follows the stability reading of §8 [Hennig 2007].
-* `SC-PC-008` Record $p$, both criteria and the robustness table.
+* `SC-PC-008` Record $p$, the criteria evaluated (both, or the elbow alone: `SC-PC-002`) and the robustness table.
 * `SC-PC-009` **UMAP (uniform manifold approximation and projection) and t-SNE (t-distributed stochastic neighbour embedding) are for display only** [Chari 2023†].
   * *Why:* 2-D embeddings distort distances and densities; gaps, cluster sizes and relative positions in the plot are
     not quantitative evidence, and their appearance changes with parameters. For t-SNE, use PCA initialization and
@@ -536,9 +569,11 @@ cells that remain, and its layer from normalization (§5) onwards.
 
 ## 10. Differential expression between conditions
 
-* `SC-DE-001` **MUST use pseudobulk or mixed models; MUST NOT use cell-level tests** to compare conditions [Squair 2021†;
+* `SC-DE-001` **MUST use pseudobulk, or mixed models with the donor (and the sample, when donors have several) as random
+  effects; MUST NOT use tests that treat cells as independent replicates** to compare conditions [Squair 2021†;
   Crowell 2020†; Junttila 2022†; Murphy 2023†]. This includes marker functions called with the condition as the grouping
-  variable (`scanpy.tl.rank_genes_groups`, Seurat `FindMarkers`), which run cell-level tests (`SC-ANNOT-005`).
+  variable (`scanpy.tl.rank_genes_groups`, Seurat `FindMarkers`), which run such tests (`SC-ANNOT-005`). A mixed model
+  fitted to cells is not one of them: its random effects carry the variance between donors (`SC-DE-004`).
   * *Why:* donors of the same condition differ in expression, for biological and technical reasons. A test that treats
     cells as replicates sees only the variance within donors, so it underestimates the variance of each gene and
     attributes the differences between donors to the condition. The underestimate is largest for the genes that vary
@@ -614,7 +649,8 @@ cells that remain, and its layer from normalization (§5) onwards.
     cell type with less data yields a smaller list of strong effects that can look more reproducible [Crampton 2026†].
   * *Trade-off:* matching depth discards data from the deeper cell types; it serves the comparison, not the main
     analysis.
-  * *Note:* one preprint (2026).
+  * *Note:* one preprint (2026), on sex differences in three brain cell types of one cohort (1,494 donors); the 55% is
+    a figure of that comparison, not a general rate.
   * Recipe: `power_inputs` in `recipes/scrnaseq/pseudobulk.py` (units, cells per unit and UMIs per cell, per cell type
     and group) and `recipes/scrnaseq/depth_matching.py` (cells per unit subsampled and UMIs thinned to the reference
     cell type).
@@ -628,18 +664,21 @@ cells that remain, and its layer from normalization (§5) onwards.
     |log2 FC| = 0.2 no gene reached it [Crampton 2026†].
   * *Trade-off:* that power model is reliable at its extremes and poor between 0.2 and 0.8 [Crampton 2026†]; use such
     models to flag genes as practically undetectable, not to compute exact power.
-  * *Note:* one preprint (2026).
+  * *Note:* one preprint (2026); the power model was fitted to sex differences in three brain cell types of one cohort
+    (1,494 donors), and the study did not test it on other tissues or contrasts.
   * Recipe: `detectability_report` in `recipes/scrnaseq/pseudobulk.py` (status per gene and cell type; "no change of
     interest" only from an equivalence test against a margin fixed in advance, Holm-adjusted across the genes).
 * `SC-DE-010` **Treat DE genes near the FDR cut-off as the least reproducible part of the list.** Report each gene's
-  rank and adjusted p-value; choose genes for validation, or for claims about single genes, from the most significant
-  ones or with family-wise control (`STATISTICS_GUIDELINES.md`, `STAT-MT-003`); state that the list is a lower bound
-  of the true changes, enriched for large effects and highly expressed genes.
+  rank and adjusted p-value. Choose genes for validation from the most significant ones; a claim about a single gene
+  needs family-wise control (`STATISTICS_GUIDELINES.md`, `STAT-MT-003`). State that the list is incomplete (with low
+  power it misses true changes), enriched for large effects and highly expressed genes, and contains false
+  discoveries at the rate the procedure controls (on average; one list can contain more).
   * *Why:* in a held-out benchmark, all reference genes passed BH-adjusted p < 0.05, but recall fell sharply from the
     most to the least significant quartile, and only the top quartile was recovered reliably [Crampton 2026†]; with
     low power, significant results are less likely to be true and their effects are exaggerated
     (`STATISTICS_GUIDELINES.md`, `STAT-DES-008`).
-  * *Note:* one preprint (2026).
+  * *Note:* one preprint (2026), on sex differences in three brain cell types of one cohort (1,494 donors), with the
+    reference genes from a held-out half of it.
   * Recipe: columns `rank` and `significance_quartile` of `pseudobulk_de` in `recipes/scrnaseq/pseudobulk.py`.
 * `SC-DE-011` **Other aggregation functions are not the default input for DE between conditions.**
   * `mean` of log-normalized values MAY be tested with limma-trend; it detected DE almost as well as summed counts
@@ -647,8 +686,8 @@ cells that remain, and its layer from normalization (§5) onwards.
     of the mean, with a difference that depends on depth [Lun 2018†]. Report log fold changes from summed counts.
   * `mean` of normalized (linear-scale) values is for display and reference profiles (dot plots, deconvolution
     signatures), not for count-based DE tools.
-  * `median` MUST NOT be used for DE: with sparse counts it is zero for most genes and is not a count. No benchmark
-    supports it.
+  * `median` MUST NOT be the input of count-based DE tools: with sparse counts it is zero for most genes and is not a
+    count.
   * `var` is not a DE input; within-sample variance across cells MAY serve to build precision weights (`SC-DE-004`)
     or as a diagnostic.
   * *Why:* the benchmarks that compared aggregation functions favour the sum [Junttila 2022†; Crowell 2020†]; the
@@ -679,9 +718,14 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Note:* for changes in mean, pseudobulk remains the default (`SC-DE-001`); distinct used to compare means did not
     beat a random baseline in one benchmark [Hafner 2025†].
 * `SC-DE-014` **Model UMI counts without zero inflation.** Poisson or negative binomial models account for the zeros of
-  droplet UMI data [Svensson 2020†; Kim 2020†; Jiang 2022†]; zero-inflated or hurdle models are for read counts
-  without UMIs (e.g. Smart-seq2), where they fit about half of the genes [Jiang 2022†]. A per-donor model fit does not
-  replace summed counts for changes in mean (`SC-DE-002`).
+  droplet UMI data [Svensson 2020†; Kim 2020†; Jiang 2022†] and remain the default for them; a per-donor model fit
+  does not replace summed counts for changes in mean (`SC-DE-002`). Two other model families answer other questions:
+  * zero-inflated mixtures add a source of extra zeros to a count distribution; they are for read counts without UMIs
+    (e.g. Smart-seq2), where they fit about half of the genes [Jiang 2022†];
+  * hurdle (two-part) models, e.g. MAST [Finak 2015], model detection (zero or not) separately from the level in the
+    cells where the gene is detected; they address the differential-detection question of `SC-DE-012` together with a
+    change in level, and do not assume that UMI counts have extra zeros. Fitted to cells, they need the donor as a
+    random effect (`SC-DE-001`).
 
 ## 11. Differential abundance
 
@@ -796,8 +840,17 @@ mito_genes: mito_genes_from_gtf.txt     # SC-QC-004: symbols of the MT/chrM gene
 * Samplesheet: only `unfiltered`, so that CellBender calls the cells (`SC-QC-001`); with `filtered`, the pipeline
   keeps those calls and skips empty-droplet removal. Give `symbol_col` and `batch_col`. In nuclei, set
   `pct_counts_mt_nmads` to 0.
+* First pass of `SC-QC-016`, per sample in the samplesheet: `log1p_total_counts_nmads`,
+  `log1p_n_genes_by_counts_nmads`, `pct_counts_in_top_20_genes_nmads` and `pct_counts_mt_nmads` at 0 and
+  `max_mito_percentage` at 100 (the values the input schema documents as disabling them), `min_genes` and
+  `min_counts_cell` at 0; `sample_n` and `sample_fraction` unset. Two filters have no off value at that commit:
+  `min_ribo_percentage` and `max_hb_percentage` are applied even at 0 and 100 (as `>=` and `<`), and after feature
+  selection a filter fixed in the code (`min_genes` 1) removes cells with no counts in the selected genes. Compare,
+  per sample, the cells of the first-pass object with the row `filtered` (after cell calling) of the report's
+  "Number of cells" table; its row `thresholded` counts the cells left after the filters.
 * Differences from this guide at that commit, handled in the review between the two passes:
-  * the cell filter removes cells before any clustering (`SC-QC-015` asks to flag first);
+  * the cell filter removes cells before any clustering (`SC-QC-015` asks to flag first; the first pass disables it,
+    as above);
   * MADs are unscaled (5 unscaled ≈ 3.4 scaled) and used on both tails of the raw mitochondrial percentage, with
     `max_mito_percentage` as a separate cut-off, not a floor (`SC-QC-003`);
   * a MAD of 0 is not handled: every cell above the median is removed (the reason for `pct_counts_mt_nmads` 0 in

@@ -1,6 +1,6 @@
 # Statistics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.1 (2026-11-05)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.3.0 (2026-11-05)
 >
 > Key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** follow RFC 2119, as in
 > `CODING_GUIDELINES.md`. Bracketed keys such as `[Squair 2021]` point to entries in
@@ -13,12 +13,14 @@
 * `STAT-USE-001` Audience: coding agents and people with introductory statistics (one or two university
   courses). Each rule is followed by its rationale so the reasoning can be checked, not only
   followed: *Why* (mechanism), *Trade-off* (cost) and *Deviate when* (justified exceptions).
-* `STAT-USE-002` Copy this file and `STATISTICS_REFERENCES.md` verbatim into the project root when the project
-  involves statistical analysis. Project-specific deviations go in the *Overrides* section of
-  `PROJECT_CONTEXT.md`, as described in `CODING_GUIDELINES.md` §0 (how to use the guidelines).
+* `STAT-USE-002` When the project involves statistical analysis, copy this file and its reference files verbatim
+  where `CODING_GUIDELINES.md` `CODE-USE-001` puts them: this file into `guidelines/`, `STATISTICS_REFERENCES.md` and
+  `STATISTICS_REFERENCES.bib` into `guidelines/references/`. Project-specific deviations go in the *Overrides* section
+  of `PROJECT_CONTEXT.md`, as described in `CODING_GUIDELINES.md` §0 (how to use the guidelines).
 * `STAT-USE-003` This file covers principles that apply to any data type. Tool-specific procedures for
   sequencing data (normalization, differential expression (DE) packages, single-cell workflows) belong in
-  `RNASEQ_BULK_GUIDELINES.md`, `SCRNASEQ_GUIDELINES.md` and `SPATIAL_GUIDELINES.md`; figure design belongs in `FIGURE_GUIDELINES.md`.
+  `RNASEQ_BULK_GUIDELINES.md`, `SCRNASEQ_GUIDELINES.md` and `SPATIAL_GUIDELINES.md`; figure design belongs in
+  `FIGURE_GUIDELINES.md` (planned; not yet available).
 * `STAT-USE-004` Priority when rules conflict: **validity of the inference > transparency of what was done >
   statistical power > convenience**.
 
@@ -32,8 +34,11 @@
   * *Deviate when:* exploratory analyses are allowed, but are labelled as exploratory, and their findings are
     treated as hypotheses to confirm in independent data.
 * `STAT-DES-002` **Identify the experimental unit**: the smallest entity that was independently assigned to a
-  condition (a mouse, a patient, a culture flask). The sample size $n$ is the number of
-  experimental units, not the number of measurements [Lazic 2018].
+  condition (a mouse, a patient, a culture flask). In observational studies, where no condition is assigned (donors
+  with and without a disease), the unit is the unit of sampling and inference: the smallest entity sampled
+  independently, e.g. a donor; repeated samples of one donor (tissues, time points, aliquots) are dependent and do
+  not add units. The sample size $n$ is the number of experimental units, not the number of measurements
+  [Lazic 2018].
   *Example:* 3 mice per group, 500 cells measured per mouse: $n = 3$ per group, not 1500.
   * *Trade-off:* the honest $n$ is often small, which lowers power; the remedy is more units, not counting
     measurements as units.
@@ -119,8 +124,11 @@
   * *Trade-off:* a fixed rule may keep a few bad points or remove a few good ones; that is preferable to a decision
     that depends on the result. *Deviate when:* a measurement is demonstrably erroneous (documented technical
     failure); remove it and record the reason.
-* `STAT-EXPL-005` **MUST NOT transform the response or delete data to force normality.** Choose a model that fits
-  the data type instead (§3, model choice).
+* `STAT-EXPL-005` **MUST NOT choose a transformation or delete data after looking at the results, to pass a
+  normality test or to reach significance.** Choose a model that fits the data type instead (§3, model choice). A
+  transformation chosen in advance for the estimand and the data type (e.g. log for multiplicative effects, as in the
+  table of §3.2) is part of the model and is reported with it; data are removed only as `STAT-EXPL-004` allows.
+  * *Why:* a transformation or an exclusion picked from the results is one more forking path (`STAT-DES-010`).
 * `STAT-EXPL-006` **Check implementation details on a few cases by hand** (log fold change with its pseudocount,
   normalization direction, default filters). Package documentation and behaviour sometimes
   differ.
@@ -172,11 +180,22 @@
   question.
   *Why:* the two-step procedure distorts the error rates of the final test [Rochon 2012]; with
   large samples the t-test is valid for non-normal data anyway [Fagerland 2012; Lumley 2002].
-* `STAT-MOD-006` **Rank tests answer a different question.** Mann-Whitney tests whether a value from one group tends to be
-  larger than a value from the other, i.e. whether $P(X > Y) + \tfrac{1}{2}P(X = Y)$ differs from 1/2; Kruskal-Wallis
-  extends this to several independent groups (at least one group tends to differ), and Friedman to blocked or
-  repeated-measures designs. State the hypothesis in those terms, with the dependence structure. They MUST NOT be
-  reported as comparisons of medians unless the distributions differ only by a shift [Divine 2018].
+* `STAT-MOD-006` **Rank tests answer a different question; keep the statistic, the hypothesis and the assumptions
+  apart.** The Mann-Whitney $U$ estimates $\theta = P(X > Y) + \tfrac{1}{2}P(X = Y)$, the probability that a value
+  from one group exceeds a value from the other (ties counted half). Its standard null distribution assumes that the
+  two groups have identical distributions, so it is a valid test of $\theta = 1/2$ only when the groups have the same
+  distribution under the null (e.g. a shift model). When spread or shape may differ between the groups and the
+  question is $\theta$, use the Brunner-Munzel test (`scipy.stats.brunnermunzel`) [Fay 2010; Brunner 2000].
+  Kruskal-Wallis tests the null that several independent groups have identical distributions, and Friedman the same
+  null within blocks (blocked or repeated-measures designs). State the hypothesis in those terms, with the dependence
+  structure. They MUST NOT be reported as comparisons of medians unless the distributions differ only by a shift
+  [Divine 2018].
+  * *Why:* $\theta = 1/2$ does not imply identical distributions (two normal distributions with equal means and
+    different variances have $\theta = 1/2$); under such a null the Mann-Whitney test is not valid, while the
+    Brunner-Munzel test is asymptotically valid [Fay 2010].
+  * *Note:* the Brunner-Munzel p-value is an approximation: its authors proposed it for groups of at least 10
+    [Brunner 2000], and [Divine 2018] suggest that it works with at least 30 per group and a not too extreme
+    difference in variances.
   * *Deviate when:* the outcome is ordinal or has extreme outliers and the question is about which group tends to
     have larger values; report the result in those terms (and, under a shift model, a Hodges-Lehmann shift
     estimate).
@@ -269,8 +288,8 @@
   (FDR): among the results called significant, the expected fraction of false positives is at
   most the chosen level (e.g. 5%) [Benjamini 1995]. The FDR is an expectation over repetitions of the study; the
   fraction of false positives in one particular list can be higher.
-  * *Trade-off:* FDR control accepts that some reported results are false (e.g. up to 5%); it is suited to
-    discovery lists, not to claims about single results.
+  * *Trade-off:* FDR control accepts that some reported results are false (on average at most the chosen level,
+    e.g. 5%; one list can contain more); it is suited to discovery lists, not to claims about single results.
 * `STAT-MT-003` **Use family-wise control (Holm; Bonferroni) when any single false positive is costly** (few
   confirmatory hypotheses, a claim about one specific gene).
 * `STAT-MT-004` **Use Benjamini-Yekutieli** when tests may be negatively or arbitrarily dependent
@@ -295,8 +314,10 @@
   Bonferroni because they use the correlation between contrasts.
   * *Why:* Bonferroni is valid under any dependence (it uses the union bound) but does not exploit the known
     correlation between contrasts, so it is more conservative than necessary.
-* `STAT-MT-009` Report adjusted values as "BH-adjusted p" or "q-value", stating the method; they are not
-  interchangeable names for the same number unless the method is stated.
+* `STAT-MT-009` **Name the column of adjusted values after the procedure that produced it** ("BH-adjusted p",
+  "BY-adjusted p", "Storey q-value") and state the method. A Storey q-value uses an estimate of the proportion of
+  true nulls ($\pi_0$) and in general differs from the BH-adjusted p of the same p-values [Storey 2003]; they are
+  different numbers, not two names for one.
 
 ## 8. Effect sizes and uncertainty
 
@@ -318,7 +339,8 @@
   cohorts). Judge results by effect size and its relevance, not by the p-value
   (Practitioner sources, Tang).
 * `STAT-EFF-005` **Interpret the whole interval.** Values near its ends are less compatible with the data than
-  values near the centre, but all are reasonably compatible [Amrhein 2019; Rafi 2020].
+  values near the point estimate, which need not be the midpoint (intervals can be asymmetric, e.g. after
+  back-transformation from the log scale), but all are reasonably compatible [Amrhein 2019; Rafi 2020].
 * `STAT-EFF-006` **Shrink noisy effect estimates for ranking and display** (e.g. log fold changes of low-count
   genes) with an established method, and say so [Zhu 2018; Stephens 2016].
   * *Trade-off:* shrunken estimates are biased towards zero; they are for ranking and display, while tests use the
@@ -360,28 +382,35 @@
   covariates are associated with the labels, adding them to the model does not make plain label permutation valid;
   use restricted permutations (e.g. within matched sets), a method designed for nuisance covariates in that model
   class, or simulation from the fitted null model, and state the null that was constructed.
-* `STAT-RES-003` **Permutation p-values are $p = (b + 1)/(m + 1)$**, where $b$ is the number of permutations with
-  a statistic at least as extreme as the observed one and $m$ the number of permutations; they
-  are never 0 [Phipson 2010]. "As extreme" needs a definition: for two-sided tests use twice the smaller one-sided
-  p-value (capped at 1), as SciPy does; comparing absolute values is valid only for statistics centred at 0 under
-  the null.
+* `STAT-RES-003` **Permutation p-values from $m$ random permutations are $p = (b + 1)/(m + 1)$**, where $b$ is the
+  number of random permutations with a statistic at least as extreme as the observed one; they are never 0
+  [Phipson 2010]. With complete enumeration of all $M$ distinct arrangements, the exact p-value is $b/M$, with the
+  observed arrangement counted among the $M$ (and therefore in $b$). "As extreme" needs a definition for two-sided
+  tests. Both usual conventions, twice the smaller one-sided p-value (capped at 1) and comparing $|T|$, give valid
+  tests under exchangeability; comparing $|T|$ defines "extreme" as distance from 0, which matches a two-sided
+  alternative only when the null distribution of $T$ is centred at 0 and roughly symmetric, so the recipe doubles the
+  smaller one-sided p-value, as `scipy.stats.permutation_test` does. State the convention used.
   * Recipe: `recipes/stats/permutation.py` (permutation within strata and this p-value).
-* `STAT-RES-004` **The number of permutations limits the smallest attainable p-value** ($1/(m+1)$). Choose $m$
-  so that this minimum is well below the threshold after multiple-testing correction. When the permutation result
-  is a frequency (e.g. how often a pipeline makes any discovery), report its Monte Carlo uncertainty: with 0 events
-  in 20 permutations the one-sided 95% upper bound is about 14%.
-* `STAT-RES-005` **Bootstrap MUST resample experimental units**, not measurements within them. Prefer BCa (bias-corrected and accelerated) or
-  percentile intervals from an established implementation.
-  * *Why:* resampling measurements within a unit ignores the variation between units, so the intervals are too
-    narrow.
+* `STAT-RES-004` **The number of permutations limits the smallest attainable p-value**: $1/(m+1)$ one-sided and
+  $2/(m+1)$ for the doubled two-sided p-value with $m$ random permutations ($1/M$ and $2/M$ with complete
+  enumeration). Choose $m$ so that this minimum is well below the threshold after multiple-testing correction. When
+  the permutation result is a frequency (e.g. how often a pipeline makes any discovery), report its Monte Carlo
+  uncertainty: with 0 events in 20 permutations the one-sided 95% upper bound is about 14%.
+* `STAT-RES-005` **Bootstrap MUST resample experimental units.** A two-stage bootstrap MAY additionally resample
+  measurements within each resampled unit; resampling only the measurements, with the units held fixed, is what is
+  prohibited. Prefer BCa (bias-corrected and accelerated) or percentile intervals from an established implementation.
+  * *Why:* resampling only the measurements within units ignores the variation between units, so the intervals are
+    too narrow.
 * `STAT-RES-006` **Simulation studies state their data-generating model** and include the null scenario, to
   check that false-positive rates match the nominal level.
   * *Why:* a method that reports effects where none exist is invalid whatever its power; the null scenario is the
     first check.
 * `STAT-RES-008` **Empirical power or replication estimated by subsampling a large dataset MUST define the reference
   result on units disjoint from those subsampled**, with the split stratified by the variable of interest and repeated
-  over several random splits. Report the split ratio, the number of repetitions, and that the reference is itself
-  incomplete, so the estimates are upper bounds.
+  over several random splits. Report the split ratio, the number of repetitions, and that recall and precision
+  against the held-out reference measure agreement with an imperfect reference, not true power or precision: recall
+  tends to be optimistic (the reference is enriched for large, well-detected effects) and precision pessimistic (true
+  changes missing from the reference count as false), but neither is a guaranteed bound.
   * *Why:* subsampling the units that define the truth measures agreement with oneself: a reference built from 40
     donors concludes that 40 donors find every effect. Even two disjoint halves of about 600 donors never agreed fully
     [Crampton 2026].
@@ -414,7 +443,7 @@ recoverable, in the result itself or in a linked methods note [Lang 2015; Percie
    or "p < 0.05".
 6. `STAT-REP-006` The universe of the result, as required by `CODING_GUIDELINES.md` §11 (numerical code): input
    set, filters and parameters.
-7. `STAT-REP-007` For figures: what each point, bar and error bar represents (`FIGURE_GUIDELINES.md`).
+7. `STAT-REP-007` For figures: what each point, bar and error bar represents (`FIGURE_GUIDELINES.md`, planned).
 8. `STAT-REP-008` Whether the analysis was planned (confirmatory) or exploratory, the date of the plan, and every
    departure from it (`STAT-DES-009`, `STAT-DES-011`).
 
@@ -431,11 +460,11 @@ recoverable, in the result itself or in a linked methods note [Lang 2015; Percie
 | GEE | `statsmodels.formula.api.gee` | State the working correlation structure. |
 | Ordinal outcomes | `statsmodels.miscmodels.ordinal_model.OrderedModel` | |
 | Welch t-test | `scipy.stats.ttest_ind(a, b, equal_var=False)` | |
-| Rank tests | `scipy.stats.mannwhitneyu`, `scipy.stats.kruskal` | Interpret as in §3.3 (rank tests). |
+| Rank tests | `scipy.stats.mannwhitneyu`, `scipy.stats.brunnermunzel`, `scipy.stats.kruskal` | Interpret as in §3.3 (rank tests, `STAT-MOD-006`); the `kruskal` docstring states a null of equal medians, a reading that holds only under a shift model. When the groups do not overlap, `brunnermunzel` returns `nan` (`0.0` with `distribution="normal"`; SciPy 1.17.1); do not report either as a p-value. |
 | Tukey, Dunnett | `scipy.stats.tukey_hsd`, `scipy.stats.dunnett` | |
 | Equivalence (TOST, two one-sided tests) | `statsmodels.stats.weightstats.ttost_ind` | |
 | Multiple testing (BH, BY: Benjamini-Yekutieli, Holm) | `statsmodels.stats.multitest.multipletests` | `method="fdr_bh"`, `"fdr_by"`, `"holm"`. |
-| Permutation tests, bootstrap | `scipy.stats.permutation_test`, `scipy.stats.bootstrap` | Randomized permutations already use the formula of §10 (resampling); custom loops MUST apply it. |
+| Permutation tests, bootstrap | `scipy.stats.permutation_test`, `scipy.stats.bootstrap` | Randomized permutations already use the formula of §10 (resampling); custom loops MUST apply it. With `n_resamples` at least the number of distinct permutations, `permutation_test` enumerates them and returns the exact p-value. |
 | Power and sample size | `statsmodels.stats.power` | |
 | Bulk RNA-seq DE | `pydeseq2` | See `RNASEQ_BULK_GUIDELINES.md`; validate against DESeq2 (`CODING_GUIDELINES.md` §3, languages). |
 
@@ -447,7 +476,8 @@ recoverable, in the result itself or in a linked methods note [Lang 2015; Percie
 
 ## 14. Glossary
 
-* **Experimental unit**: the entity independently assigned to a condition; defines $n$.
+* **Experimental unit**: the entity independently assigned to a condition or, in observational studies, sampled
+  independently (e.g. a donor); defines $n$.
 * **Null hypothesis ($H_0$)**: the model of "no effect" against which the data are compared.
 * **p-value**: probability, if $H_0$ and all model assumptions were true, of a result at least as
   extreme as the one observed.

@@ -45,14 +45,14 @@ Procedure
 
 Input layer
 -----------
-``ambient_method_of_layer`` checks the layer before ``detect_doublets`` and the co-expression
-part of ``doublet_cluster_review`` read it. ``counts`` is accepted. ``counts_ambient_corrected`` is
-refused unless ``uns["ambient_correction"]["method"]`` is CellBender: SoupX and decontX corrections
-leave more doublets undetected, CellBender was the exception [Meier 2026]. Other layer names are
-accepted with a warning, since their correction cannot be checked. ``doublet_cluster_review`` also
-warns when a SoupX or decontX layer already exists: with these methods the first clustering is
-computed on ``counts`` (in the preprint, doublet clusters merged into singlet clusters after
-decontX).
+``ambient_method_of_layer`` checks the layer before ``detect_doublets``, ``run_scdblfinder`` (also
+when called directly) and the co-expression part of ``doublet_cluster_review`` read it. ``counts``
+is accepted. ``counts_ambient_corrected`` is refused unless ``uns["ambient_correction"]["method"]``
+is CellBender: SoupX and decontX corrections leave more doublets undetected, CellBender was the
+exception [Meier 2026]. Other layer names are accepted with a warning, since their correction
+cannot be checked. ``doublet_cluster_review`` also warns when a SoupX or decontX layer already
+exists: with these methods the first clustering is computed on ``counts`` (in the preprint, doublet
+clusters merged into singlet clusters after decontX).
 
 The intersection of the detectors is a conservative project default; the benchmark of
 [Neavin 2024] recommends calling a singlet only when more than half of the methods do (for two
@@ -252,7 +252,8 @@ def run_scdblfinder(
     capture_key : str
         ``obs`` column identifying the capture.
     layer : str
-        Layer with the counts.
+        Layer with the counts; checked with ``ambient_method_of_layer`` as in
+        ``detect_doublets`` (``SC-QC-012``).
     seed : int
         Seed set before ``scDblFinder``.
     dbr : float | None
@@ -271,10 +272,27 @@ def run_scdblfinder(
 
     Raises
     ------
+    ValueError
+        If ``layer`` holds SoupX- or decontX-corrected counts or an unrecorded correction
+        (``ambient_method_of_layer``).
     RuntimeError
         If ``rscript`` is missing, the R script fails (its stderr is included) or the barcode order
         returned differs.
     """
+    ambient_method_of_layer(adata, layer)
+    return _run_scdblfinder_checked(adata, capture_key, layer, seed, dbr, rscript, workdir)
+
+
+def _run_scdblfinder_checked(
+    adata: ad.AnnData,
+    capture_key: str,
+    layer: str,
+    seed: int,
+    dbr: float | None,
+    rscript: str,
+    workdir: str | Path | None,
+) -> pl.DataFrame:
+    """Run ``scdblfinder.R`` on a layer already checked with ``ambient_method_of_layer``."""
     if shutil.which(rscript) is None:
         raise RuntimeError(f"{rscript} not found; run in an environment with R and scDblFinder")
     if workdir is not None:
@@ -455,7 +473,9 @@ def detect_doublets(
             raise ValueError(message)
         logger.warning(message)
     if "scdblfinder" in detectors:
-        table = run_scdblfinder(adata, capture_key, layer, seed, scdblfinder_dbr, rscript, workdir)
+        table = _run_scdblfinder_checked(
+            adata, capture_key, layer, seed, scdblfinder_dbr, rscript, workdir
+        )
         score["scdblfinder"] = table["score"].to_numpy().astype(float)
         call["scdblfinder"] = (table["class"] == "doublet").to_numpy()
         for row in rows.values():

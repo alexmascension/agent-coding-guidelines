@@ -10,9 +10,10 @@ reviewed and the globs of the files followed in it. For each repository, the Git
 (``/repos/{owner}/{repo}/compare/{reviewed_commit}...{branch}``) gives the files changed since
 that commit; each changed file takes the status of the first glob it matches. ``GITHUB_TOKEN``,
 when set, authenticates the requests. A review is needed when a file with status ``integrated``,
-``deferred`` or ``watch`` changed; ``--github-output`` writes ``changed=true|false`` for the
-monthly workflow (``.github/workflows/sources.yml``). ``mark-reviewed`` records the commit a
-review covered, in the block of that repository only.
+``deferred`` or ``watch`` changed, or when the compare API truncated the list of changed files
+(followed files may then be among those not listed); ``--github-output`` writes
+``changed=true|false`` for the monthly workflow (``.github/workflows/sources.yml``).
+``mark-reviewed`` records the commit a review covered, in the block of that repository only.
 """
 
 import argparse
@@ -34,7 +35,6 @@ API = "https://api.github.com"
 COMPARE_FILE_LIMIT = 300  # the compare API lists at most 300 changed files
 STATUSES = ("integrated", "deferred", "watch", "not-integrated")
 REVIEW_ORDER = ("integrated", "deferred", "watch")  # a change to these opens a review
-REVIEW_STATUSES = set(REVIEW_ORDER)
 REPO_KEYS = {"name", "url", "branch", "licence", "reviewed_commit", "reviewed_on", "path"}
 GITHUB_URL = re.compile(r"^https://github\.com/([\w.-]+/[\w.-]+)$")
 COMMIT = re.compile(r"^[0-9a-f]{40}$")
@@ -51,9 +51,23 @@ class RepoReport:
     untracked: list[str] = field(default_factory=list)
     truncated: bool = False
 
+    def review_reasons(self) -> list[str]:
+        """Return why a review is needed: followed files changed, or the list is incomplete."""
+        reasons = [
+            f"{len(self.tracked[status])} {status} files changed"
+            for status in REVIEW_ORDER
+            if self.tracked.get(status)
+        ]
+        if self.truncated:
+            reasons.append(
+                f"the compare API listed only {COMPARE_FILE_LIMIT} changed files; followed files "
+                "may be among the others"
+            )
+        return reasons
+
     def needs_review(self) -> bool:
-        """Return True when a file whose status calls for a review changed."""
-        return any(self.tracked.get(status) for status in REVIEW_STATUSES)
+        """Return True when a followed file changed or the list of changed files is truncated."""
+        return bool(self.review_reasons())
 
 
 def load_registry(path: Path = REGISTRY) -> list[dict]:
@@ -146,9 +160,13 @@ def render(reports: list[RepoReport], today: datetime.date) -> str:
         lines.append(f"{report.commits_ahead} new commits: <{report.compare_url}>")
         if report.truncated:
             lines.append(
-                f"The compare API listed only {COMPARE_FILE_LIMIT} files; check the rest "
-                "on the compare page."
+                f"The compare API listed only {COMPARE_FILE_LIMIT} files, so followed files may "
+                "have changed without being listed: a review is needed; check the rest on the "
+                "compare page."
             )
+        reasons = report.review_reasons()
+        if reasons:
+            lines.append(f"Review needed: {'; '.join(reasons)}.")
         for status in REVIEW_ORDER:
             for filename, change, into in report.tracked[status]:
                 lines.append(f"- [{status}] `{filename}` ({change}): {into}")

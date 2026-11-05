@@ -88,7 +88,11 @@ general sources come first.
 - **[Lumley 2002]** Lumley et al. (2002). The Importance of the Normality Assumption in Large Public Health Data Sets. *Annual Review of Public Health*. [doi:10.1146/annurev.publhealth.23.100901.140546](https://doi.org/10.1146/annurev.publhealth.23.100901.140546)  
   In large samples linear regression and t-tests do not require normally distributed outcomes.
 - **[Divine 2018]** Divine et al. (2018). The Wilcoxon–Mann–Whitney Procedure Fails as a Test of Medians. *The American Statistician*. [doi:10.1080/00031305.2017.1305291](https://doi.org/10.1080/00031305.2017.1305291)  
-  Wilcoxon-Mann-Whitney does not test medians except under restrictive assumptions (shift model); it tests stochastic dominance.
+  Wilcoxon-Mann-Whitney does not test medians except under restrictive assumptions (shift model); the abstract names the quantity it tests, $P(X_1 < X_2) + \tfrac{1}{2}P(X_1 = X_2)$. Its section on the Behrens-Fisher problem notes that the plain test may be invalid with unequal variances (especially with unequal group sizes) and that the Brunner-Munzel variant should work with at least 30 per group and a not too extreme difference in variances.
+- **[Fay 2010]** Fay & Proschan (2010). Wilcoxon-Mann-Whitney or t-test? On assumptions for hypothesis tests and multiple interpretations of decision rules. *Statistics Surveys*. [doi:10.1214/09-SS051](https://doi.org/10.1214/09-SS051)  
+  The same decision rule (t-test, Wilcoxon-Mann-Whitney) can be read under several sets of assumptions, each giving a different meaning to its p-value. Wilcoxon-Mann-Whitney is valid when the two distributions are equal under the null, but not as a test of $P(X > Y) + \tfrac{1}{2}P(X = Y) = 1/2$ when the distributions may otherwise differ (the nonparametric Behrens-Fisher problem); there the Brunner-Munzel test is asymptotically valid.
+- **[Brunner 2000]** Brunner & Munzel (2000). The Nonparametric Behrens-Fisher Problem: Asymptotic Theory and a Small-Sample Approximation. *Biometrical Journal*. [doi:10.1002/(SICI)1521-4036(200001)42:1<17::AID-BIMJ17>3.0.CO;2-U](https://doi.org/10.1002/(SICI)1521-4036(200001)42:1%3C17::AID-BIMJ17%3E3.0.CO;2-U)  
+  Brunner-Munzel test: a rank test for the nonparametric Behrens-Fisher problem that does not assume continuous distributions (ties allowed), with a consistently estimated variance; for groups of at least 10, a t approximation with Satterthwaite-Smith-Welch degrees of freedom kept the nominal level rather accurately (from the abstract).
 - **[Krzywinski 2014a]** Krzywinski & Altman (2014). Nonparametric tests. *Nature Methods*. [doi:10.1038/nmeth.2937](https://doi.org/10.1038/nmeth.2937)  
   Points of Significance primer on rank-based tests, their assumptions and power.
 - **[Altman 2006]** Altman & Royston (2006). The cost of dichotomising continuous variables. *BMJ*. [doi:10.1136/bmj.332.7549.1080](https://doi.org/10.1136/bmj.332.7549.1080)  
@@ -166,7 +170,11 @@ general sources come first.
 - **[Nygaard 2015]** Nygaard et al. (2015). Methods that remove batch effects while retaining group differences may lead to exaggerated confidence in downstream analyses. *Biostatistics*. [doi:10.1093/biostatistics/kxv027](https://doi.org/10.1093/biostatistics/kxv027)  
   Batch correction 'preserving group differences' on unbalanced designs yields exaggerated confidence; include batch in the model instead.
 - **[Zhang 2020]** Zhang et al. (2020). ComBat-seq: batch effect adjustment for RNA-seq count data. *NAR Genomics and Bioinformatics*. [doi:10.1093/nargab/lqaa078](https://doi.org/10.1093/nargab/lqaa078)  
-  ComBat-seq: batch adjustment on counts; corrected data are for visualisation or for methods that cannot model batch.
+  ComBat-seq: negative binomial batch adjustment that keeps integer counts, so that adjusted data can be used with DE
+  software. In simulations, DE on adjusted data had better power and false-positive control than data adjusted by other
+  methods, and slightly higher power than batch as a covariate (true positive rate 0.89 against 0.87 with 1.5-fold mean
+  and 2-fold dispersion batch effects); with no dispersion difference between batches its false-positive rate was
+  0.059-0.067, and the authors note that batch as a covariate may suffice for batch effects in the mean.
 
 ### F. Circular analysis, double dipping and data leakage
 

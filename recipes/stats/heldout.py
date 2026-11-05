@@ -8,7 +8,14 @@ several random splits.
 ``heldout_splits`` returns, for each split, the reference units and the validation units. Within
 each stratum, ``round(reference_fraction * n)`` units go to the reference (at least one, and at
 least one left for validation). Seeds of the splits derive from ``seed`` through
-``numpy.random.SeedSequence``, so each split is reproducible on its own.
+``numpy.random.SeedSequence``, so each split is reproducible on its own; strata are visited in a
+fixed order (sorted by their string, ties in order of first appearance), independent of hash
+seeds.
+
+Recall and precision against such a reference measure agreement with an imperfect reference, not
+true power or precision: recall tends to be optimistic (the reference is enriched for large,
+well-detected effects) and precision pessimistic (true changes missing from the reference count as
+false), but neither is a guaranteed bound.
 """
 
 import numpy as np
@@ -63,7 +70,7 @@ def heldout_splits(
         raise ValueError(f"units and strata differ in length: {units.shape} vs {strata.shape}")
     if any(s is None or (isinstance(s, float) and np.isnan(s)) for s in strata):
         raise ValueError("strata contain missing values; assign them explicitly")
-    levels = sorted(set(strata.tolist()), key=str)
+    levels = sorted(dict.fromkeys(strata.tolist()), key=str)  # stable: no hash-order dependence
     members = {level: np.flatnonzero(strata == level) for level in levels}
     small = {str(level): idx.size for level, idx in members.items() if idx.size < 2}
     if small:

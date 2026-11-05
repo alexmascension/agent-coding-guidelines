@@ -22,7 +22,7 @@ AGT-CLAIM-007	active	AGENTIC_GUIDELINES.md	Use the reader's words, not the sessi
 AGT-CLAIM-008	active	AGENTIC_GUIDELINES.md	Report every failure observed during the work, including failures the agent did 
 AGT-DEL-001	active	AGENTIC_GUIDELINES.md	Delegate by kind of work. Mechanical, well-specified work (searching, extracting
 AGT-DEL-002	active	AGENTIC_GUIDELINES.md	A delegation brief carries its own authority: the question, the sources, what th
-AGT-DEL-003	active	AGENTIC_GUIDELINES.md	A subagent does not see the project's instructions unless it is given them. The 
+AGT-DEL-003	active	AGENTIC_GUIDELINES.md	Do not assume that a subagent sees the project's instructions. What a subagent i
 AGT-DEL-004	active	AGENTIC_GUIDELINES.md	Judge a subagent by what it produced, not by its report that it finished. Check 
 AGT-DEL-005	active	AGENTIC_GUIDELINES.md	Check long lists of independent items one item per fresh context: claims against
 AGT-DEL-006	active	AGENTIC_GUIDELINES.md	Use a subagent for substantial reading that would otherwise fill the main contex
@@ -93,11 +93,11 @@ AGT-SESS-003	active	AGENTIC_GUIDELINES.md	Update the handoff whenever that state
 AGT-SESS-004	active	AGENTIC_GUIDELINES.md	Parallel lines of work keep one handoff each, handoffs/<workstream>.md, rewritte
 AGT-SESS-005	active	AGENTIC_GUIDELINES.md	The conversation is not the archive. Sources, scripts, outputs, decisions and le
 AGT-SESS-006	active	AGENTIC_GUIDELINES.md	When the task changes during a long session, update the handoff and propose a fr
-AGT-USER-001	active	AGENTIC_GUIDELINES.md	A question is not a change request. When the user asks a question, or relays one
+AGT-USER-001	active	AGENTIC_GUIDELINES.md	A question about the work is not a change request. When the user asks a question
 AGT-USER-002	active	AGENTIC_GUIDELINES.md	Do the work before handing a step to the user. Before asking for a file, search 
 AGT-USER-003	active	AGENTIC_GUIDELINES.md	Put decisions so they can be answered. One or two decisions go in the reply, eac
 AGT-USER-004	active	AGENTIC_GUIDELINES.md	Record each substantive decision in the decisions log when it is made: the date,
-AGT-USER-005	active	AGENTIC_GUIDELINES.md	Turn a correction into a rule at the narrowest scope where it applies. Restate t
+AGT-USER-005	active	AGENTIC_GUIDELINES.md	Turn a correction into a rule at the narrowest scope where it applies. The fix f
 AGT-VER-001	active	AGENTIC_GUIDELINES.md	Verify against the intended outcome, not against a rule written to stand for it.
 AGT-VER-002	active	AGENTIC_GUIDELINES.md	A finished process is not a result. A zero exit code, a completed job or a well-
 AGT-VER-003	active	AGENTIC_GUIDELINES.md	MUST NOT loosen an acceptance criterion, expected value or test to obtain a pass
@@ -132,7 +132,7 @@ BULK-EXPL-003	active	RNASEQ_BULK_GUIDELINES.md	Samples that separate by a techni
 BULK-HF-001	active	RNASEQ_BULK_GUIDELINES.md	Known covariates first: batch, platform, sex, age, and RNA quality (RIN), plus p
 BULK-HF-002	active	RNASEQ_BULK_GUIDELINES.md	Hidden factors MAY be estimated and added as covariates, with every biological v
 BULK-HF-003	active	RNASEQ_BULK_GUIDELINES.md	Number of factors: use the method's estimate (num.sv in SVA; for RUV, choose $k$
-BULK-HF-004	active	RNASEQ_BULK_GUIDELINES.md	MUST NOT use batch-corrected matrices for testing [Nygaard 2015†; Zhang 2020†].
+BULK-HF-004	active	RNASEQ_BULK_GUIDELINES.md	MUST NOT use batch-corrected matrices for testing; model batch as a covariate on
 BULK-NORM-001	active	RNASEQ_BULK_GUIDELINES.md	Filter low-count genes with a design-based rule, e.g. a minimum count (around 10
 BULK-NORM-002	active	RNASEQ_BULK_GUIDELINES.md	Use the normalization of the DE method: median-of-ratios (DESeq2, pydeseq2) [And
 BULK-NORM-003	active	RNASEQ_BULK_GUIDELINES.md	Gene length bias can be sample-specific and is not removed by TMM, median-of-rat
@@ -284,7 +284,7 @@ CODE-PROJ-006	active	CODING_GUIDELINES.md	Conventions — coordinate systems, ge
 CODE-PROJ-007	active	CODING_GUIDELINES.md	Interfaces — outputs consumed by notebooks, other repositories or people; siblin
 CODE-PROJ-008	active	CODING_GUIDELINES.md	Overrides — first, the version of each adopted guideline file; then every deviat
 CODE-PROJ-009	active	CODING_GUIDELINES.md	Decisions log — dated entries: decision, rationale, affected outputs. MAY instea
-CODE-PROV-001	active	CODING_GUIDELINES.md	Raw inputs (data/raw/ or equivalent) are read-only. MUST NOT modify, overwrite o
+CODE-PROV-001	active	CODING_GUIDELINES.md	Raw inputs of record are read-only. The copy of record of each raw input (data/r
 CODE-PROV-002	active	CODING_GUIDELINES.md	MUST NOT commit data, results or large binaries to git. Record how to obtain eac
 CODE-PROV-003	active	CODING_GUIDELINES.md	Each analysis run writes to its own directory (e.g. results/<run>/) containing, 
 CODE-PROV-004	active	CODING_GUIDELINES.md	Write outputs atomically (write to a temporary file in the same directory, then 
@@ -424,7 +424,7 @@ HPC-WF-003	active	HPC_GUIDELINES.md	Pin pipeline and engine versions (-r <releas
 HPC-WF-004	active	HPC_GUIDELINES.md	Clean the work directory of completed runs (nextflow clean) once results are pro
 HPC-WF-005	active	HPC_GUIDELINES.md	Pipeline parameters go in a tracked parameters file (-params-file params.yaml), 
 HPC-WF-006	active	HPC_GUIDELINES.md	With Apptainer, check that every process uses a prebuilt image. Some nf-core mod
-ID-DUP-001	active	SAMPLE_IDENTITY_GUIDELINES.md	Exact duplicates: hash the raw read files (checksum) and the count vectors; iden
+ID-DUP-001	active	SAMPLE_IDENTITY_GUIDELINES.md	Exact duplicates: hash the raw read files (checksum) and the count vectors. Iden
 ID-DUP-002	active	SAMPLE_IDENTITY_GUIDELINES.md	Near-duplicates (same library re-sequenced or re-deposited, possibly with differ
 ID-DUP-003	active	SAMPLE_IDENTITY_GUIDELINES.md	Check metadata in parallel: identical read counts, read names, flowcell or lane 
 ID-DUP-004	active	SAMPLE_IDENTITY_GUIDELINES.md	Re-deposited libraries (the same library under several accessions, e.g. in more 
@@ -448,7 +448,7 @@ ID-ORDER-007	active	SAMPLE_IDENTITY_GUIDELINES.md	Why this order: the early chec
 ID-POOL-001	active	SAMPLE_IDENTITY_GUIDELINES.md	Pooled designs (cells of several donors in one capture) MUST be demultiplexed by
 ID-POOL-002	active	SAMPLE_IDENTITY_GUIDELINES.md	Match demultiplexed clusters to donors with the fingerprints of §4 (pseudobulk B
 ID-POOL-003	active	SAMPLE_IDENTITY_GUIDELINES.md	Genotype demultiplexing also detects cross-donor doublets and estimates ambient 
-ID-POOL-004	active	SAMPLE_IDENTITY_GUIDELINES.md	Reliability varies by species and depends on genetic diversity; inbred mouse str
+ID-POOL-004	active	SAMPLE_IDENTITY_GUIDELINES.md	Reliability varies by species and depends on genetic diversity. Animals of one i
 ID-POOL-005	active	SAMPLE_IDENTITY_GUIDELINES.md	Label clusters with the strongest available evidence, in this order, and record 
 ID-POOL-006	active	SAMPLE_IDENTITY_GUIDELINES.md	Before deleting a pooled library's BAM, MUST store one genotype fingerprint per 
 ID-POOL-007	active	SAMPLE_IDENTITY_GUIDELINES.md	A cluster-to-donor match MUST be one-to-one, MUST name a donor of that pool, and
@@ -487,7 +487,7 @@ META-OREP-004	active	META_ANALYSIS_GUIDELINES.md	Sensitivity of the main results
 META-PROT-001	active	META_ANALYSIS_GUIDELINES.md	Write the protocol before collecting studies: question, population or tissue, ex
 META-PROT-002	active	META_ANALYSIS_GUIDELINES.md	Report the selection process with a PRISMA (Preferred Reporting Items for System
 META-PROT-003	active	META_ANALYSIS_GUIDELINES.md	Screening and data extraction SHOULD be checked by a second person or a second i
-META-PUB-001	active	META_ANALYSIS_GUIDELINES.md	Draw a funnel plot and run asymmetry tests (Egger) only with at least 10 studies
+META-PUB-001	active	META_ANALYSIS_GUIDELINES.md	Run funnel-plot asymmetry tests (Egger) only with at least 10 studies [Sterne 20
 META-PUB-002	active	META_ANALYSIS_GUIDELINES.md	Asymmetry is not proof of publication bias: heterogeneity, chance and small-stud
 META-PUB-003	active	META_ANALYSIS_GUIDELINES.md	Prefer sensitivity analyses that quantify how strong selective publication would
 META-PUB-004	active	META_ANALYSIS_GUIDELINES.md	When several effect sizes come from the same study, bias tests and models MUST a
@@ -567,7 +567,7 @@ SC-DATA-008	active	SCRNASEQ_GUIDELINES.md	Display symbols in plots and tables th
 SC-DATA-009	active	SCRNASEQ_GUIDELINES.md	Cross-species marker lists use one-to-one orthologs from a stated Ensembl releas
 SC-DATA-010	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/common/gene_ids.py (annotation table from the GTF, stable IDs, m
 SC-DATA-011	active	SCRNASEQ_GUIDELINES.md	Library-level metrics live in adata.uns["library_qc"]: one row per sample_id wit
-SC-DE-001	active	SCRNASEQ_GUIDELINES.md	MUST use pseudobulk or mixed models; MUST NOT use cell-level tests to compare co
+SC-DE-001	active	SCRNASEQ_GUIDELINES.md	MUST use pseudobulk, or mixed models with the donor (and the sample, when donors
 SC-DE-002	active	SCRNASEQ_GUIDELINES.md	Pseudobulk procedure:
 SC-DE-003	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/scrnaseq/pseudobulk.py (aggregation with cell counts per pseudob
 SC-DE-004	active	SCRNASEQ_GUIDELINES.md	Mixed models with a random effect for donor are an alternative [Zimmerman 2021a†
@@ -604,7 +604,7 @@ SC-PC-004	active	SCRNASEQ_GUIDELINES.md	The check runs on the embedding actually
 SC-PC-005	active	SCRNASEQ_GUIDELINES.md	Recipe: recipes/scrnaseq/pc_robustness.py.
 SC-PC-006	active	SCRNASEQ_GUIDELINES.md	Why: the elbow is subjective; random-matrix thresholds assume homogeneous noise;
 SC-PC-007	active	SCRNASEQ_GUIDELINES.md	Trade-off: 11 extra clusterings. The thresholds (ARI 0.9, Jaccard 0.75) are proj
-SC-PC-008	active	SCRNASEQ_GUIDELINES.md	Record $p$, both criteria and the robustness table.
+SC-PC-008	active	SCRNASEQ_GUIDELINES.md	Record $p$, the criteria evaluated (both, or the elbow alone: SC-PC-002) and the
 SC-PC-009	active	SCRNASEQ_GUIDELINES.md	UMAP (uniform manifold approximation and projection) and t-SNE (t-distributed st
 SC-QC-001	active	SCRNASEQ_GUIDELINES.md	CellBender is the default for ambient RNA removal and cell calling on the raw (u
 SC-QC-002	active	SCRNASEQ_GUIDELINES.md	Nuclear fraction per barcode is unspliced / (spliced + unspliced) from the STARs
@@ -653,7 +653,7 @@ SEX-DEC-003	active	SEX_INFERENCE_GUIDELINES.md	Expression calls are screening re
 SEX-DEC-004	active	SEX_INFERENCE_GUIDELINES.md	All discordances are flagged; they MUST NOT be corrected silently. Metadata chan
 SEX-DEC-005	active	SEX_INFERENCE_GUIDELINES.md	Discordance between samples of one donor MUST trigger review; it MUST NOT by its
 SEX-LOY-001	active	SEX_INFERENCE_GUIDELINES.md	Mosaic loss of chromosome Y (LOY) is common and biological. About 20% of men in 
-SEX-LOY-002	active	SEX_INFERENCE_GUIDELINES.md	XIST+Y+ is resolved with genotype: XXY shows X heterozygosity and a single genot
+SEX-LOY-002	active	SEX_INFERENCE_GUIDELINES.md	For XIST+Y+, genotype evidence suggests the explanation: XXY shows X heterozygos
 SEX-LOY-003	active	SEX_INFERENCE_GUIDELINES.md	XIST-Y- with good library quality and no X heterozygosity suggests X0; with poor
 SEX-MARK-001	active	SEX_INFERENCE_GUIDELINES.md	Female-specific signal: XIST (mouse Xist).
 SEX-MARK-002	active	SEX_INFERENCE_GUIDELINES.md	Male-specific signal: broadly expressed male-specific region of Y (MSY) genes, s
@@ -689,7 +689,7 @@ SP-DES-004	active	SPATIAL_GUIDELINES.md	Where possible, profile matched scRNA-se
 SP-DOM-001	active	SPATIAL_GUIDELINES.md	No method is best in all settings [Yuan 2024]. Choose by data type and goal: Bay
 SP-DOM-002	active	SPATIAL_GUIDELINES.md	Validate domains against histology or known anatomy, and check their stability a
 SP-NBH-001	active	SPATIAL_GUIDELINES.md	Neighbourhood enrichment and co-occurrence statistics (squidpy) use permutations
-SP-NBH-002	active	SPATIAL_GUIDELINES.md	Inference across conditions uses sections or donors as units: compute the statis
+SP-NBH-002	active	SPATIAL_GUIDELINES.md	Inference across conditions uses donors as units: compute the statistic per sect
 SP-NBH-003	active	SPATIAL_GUIDELINES.md	Differential expression between conditions: pseudobulk per donor and cell type (
 SP-NBH-004	active	SPATIAL_GUIDELINES.md	Neighbouring cells and spots are correlated (spatial autocorrelation), which vio
 SP-NORM-001	active	SPATIAL_GUIDELINES.md	Library size in spatial data partly reflects biology: it correlates with tissue 
@@ -764,7 +764,7 @@ STAT-EXPL-001	active	STATISTICS_GUIDELINES.md	Plot the raw data before modelling
 STAT-EXPL-002	active	STATISTICS_GUIDELINES.md	Missing is not zero. Decide for every variable what a missing value means (not m
 STAT-EXPL-003	active	STATISTICS_GUIDELINES.md	Zeros must be explicit. When counting events per group (e.g. cells of a type per
 STAT-EXPL-004	active	STATISTICS_GUIDELINES.md	Outliers are removed only by a rule fixed before looking at the results (e.g. a 
-STAT-EXPL-005	active	STATISTICS_GUIDELINES.md	MUST NOT transform the response or delete data to force normality. Choose a mode
+STAT-EXPL-005	active	STATISTICS_GUIDELINES.md	MUST NOT choose a transformation or delete data after looking at the results, to
 STAT-EXPL-006	active	STATISTICS_GUIDELINES.md	Check implementation details on a few cases by hand (log fold change with its ps
 STAT-HIER-001	active	STATISTICS_GUIDELINES.md	Pseudoreplication is treating measurements that are not independent as if they w
 STAT-HIER-002	active	STATISTICS_GUIDELINES.md	Use one of three valid approaches, in order of simplicity:
@@ -777,7 +777,7 @@ STAT-MOD-002	active	STATISTICS_GUIDELINES.md	The assumptions concern the residua
 STAT-MOD-003	active	STATISTICS_GUIDELINES.md	When an assumption fails, change the model, not the test family. See the table i
 STAT-MOD-004	active	STATISTICS_GUIDELINES.md	Two-group comparison of means: Welch's t-test by default, not Student's.
 STAT-MOD-005	active	STATISTICS_GUIDELINES.md	MUST NOT choose the test by first testing normality (e.g. Shapiro-Wilk, then t-t
-STAT-MOD-006	active	STATISTICS_GUIDELINES.md	Rank tests answer a different question. Mann-Whitney tests whether a value from 
+STAT-MOD-006	active	STATISTICS_GUIDELINES.md	Rank tests answer a different question; keep the statistic, the hypothesis and t
 STAT-MOD-007	active	STATISTICS_GUIDELINES.md	MUST NOT dichotomize continuous variables (e.g. "high vs low expression" at the 
 STAT-MOD-008	active	STATISTICS_GUIDELINES.md	Randomized two-group before/after designs: adjust for the baseline (ANCOVA, anal
 STAT-MOD-009	active	STATISTICS_GUIDELINES.md	Test interactions directly. "The effect is significant in males and not in femal
@@ -791,7 +791,7 @@ STAT-MT-005	active	STATISTICS_GUIDELINES.md	Independent filtering and weighting 
 STAT-MT-006	active	STATISTICS_GUIDELINES.md	Inspect the histogram of raw p-values for every family. Expected shape: flat (tr
 STAT-MT-007	active	STATISTICS_GUIDELINES.md	MUST NOT combine an FDR cut-off with an effect-size cut-off (the "volcano plot" 
 STAT-MT-008	active	STATISTICS_GUIDELINES.md	Contrasts within one model (pairwise comparisons, comparisons with a control) us
-STAT-MT-009	active	STATISTICS_GUIDELINES.md	Report adjusted values as "BH-adjusted p" or "q-value", stating the method; they
+STAT-MT-009	active	STATISTICS_GUIDELINES.md	Name the column of adjusted values after the procedure that produced it ("BH-adj
 STAT-REP-001	active	STATISTICS_GUIDELINES.md	The question as a comparison and the experimental unit.
 STAT-REP-002	active	STATISTICS_GUIDELINES.md	$n$ per group (experimental units), and units excluded with the reason.
 STAT-REP-003	active	STATISTICS_GUIDELINES.md	The model or test, with its formula (~ batch + condition), the software and its 
@@ -802,13 +802,13 @@ STAT-REP-007	active	STATISTICS_GUIDELINES.md	For figures: what each point, bar a
 STAT-REP-008	active	STATISTICS_GUIDELINES.md	Whether the analysis was planned (confirmatory) or exploratory, the date of the 
 STAT-RES-001	active	STATISTICS_GUIDELINES.md	Permutation tests MUST permute what is exchangeable under the null: the conditio
 STAT-RES-002	active	STATISTICS_GUIDELINES.md	Exchangeability is a property of the design, not of the procedure. Permuting wit
-STAT-RES-003	active	STATISTICS_GUIDELINES.md	Permutation p-values are $p = (b + 1)/(m + 1)$, where $b$ is the number of permu
-STAT-RES-004	active	STATISTICS_GUIDELINES.md	The number of permutations limits the smallest attainable p-value ($1/(m+1)$). C
-STAT-RES-005	active	STATISTICS_GUIDELINES.md	Bootstrap MUST resample experimental units, not measurements within them. Prefer
+STAT-RES-003	active	STATISTICS_GUIDELINES.md	Permutation p-values from $m$ random permutations are $p = (b + 1)/(m + 1)$, whe
+STAT-RES-004	active	STATISTICS_GUIDELINES.md	The number of permutations limits the smallest attainable p-value: $1/(m+1)$ one
+STAT-RES-005	active	STATISTICS_GUIDELINES.md	Bootstrap MUST resample experimental units. A two-stage bootstrap MAY additional
 STAT-RES-006	active	STATISTICS_GUIDELINES.md	Simulation studies state their data-generating model and include the null scenar
 STAT-RES-007	active	STATISTICS_GUIDELINES.md	Seeds and determinism follow CODING_GUIDELINES.md §15 (reproducibility).
 STAT-RES-008	active	STATISTICS_GUIDELINES.md	Empirical power or replication estimated by subsampling a large dataset MUST def
 STAT-USE-001	active	STATISTICS_GUIDELINES.md	Audience: coding agents and people with introductory statistics (one or two univ
-STAT-USE-002	active	STATISTICS_GUIDELINES.md	Copy this file and STATISTICS_REFERENCES.md verbatim into the project root when 
+STAT-USE-002	active	STATISTICS_GUIDELINES.md	When the project involves statistical analysis, copy this file and its reference
 STAT-USE-003	active	STATISTICS_GUIDELINES.md	This file covers principles that apply to any data type. Tool-specific procedure
 STAT-USE-004	active	STATISTICS_GUIDELINES.md	Priority when rules conflict: validity of the inference > transparency of what w

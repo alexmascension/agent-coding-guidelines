@@ -1,6 +1,6 @@
 # Bulk RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.3.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.4.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Conesa 2016]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Schurch 2016†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -22,6 +22,13 @@
 ## 1. Design
 
 * `BULK-DES-001` **The experimental unit is the biological sample**; technical replicates (re-sequencing of a library) are summed.
+  * **Samples that share a donor are dependent**: several tissues, time points or aliquots of one donor, or pools that
+    contain the same donor. Model the donor (`STATISTICS_GUIDELINES.md` `STAT-DES-002`) with the designs of
+    `SCRNASEQ_GUIDELINES.md` `SC-DES-005`: `~ donor + condition` when the condition varies within donors; a mixed
+    model or `limma::duplicateCorrelation` when it varies between donors; aggregation to the donor only under the
+    condition stated there.
+  * *Why:* a test that treats such samples as independent counts one donor several times and is overconfident about
+    the population of donors (`STATISTICS_GUIDELINES.md` §4, hierarchical data).
 * `BULK-DES-002` **Plan at least 6 biological replicates per group** for a general DE (differential expression) study
   [Schurch 2016†]. This is a planning default from a benchmark, not a power calculation; the sample size of a study
   is justified as in `STATISTICS_GUIDELINES.md` §1 (design).
@@ -169,6 +176,10 @@
     studies [Jaffe 2017].
   * *Why PCA only for QTL:* for molecular QTL mapping PCA matched or outperformed SVA, PEER (probabilistic estimation of expression residuals) and HCP (hidden covariates with prior) and is much faster
     [Zhou 2022; Stegle 2012], but in DE the factors must be estimated with the condition protected.
+  * *Note:* principal components of the residuals after regressing out the known design (`residual_pcs` in
+    `recipes/bulk/hidden_factors.py`) are not PCA of expression: the design is protected, but they are an exploratory
+    estimator for the sensitivity analysis of `BULK-HF-003`, not a substitute for qSVA, SVA or RUV, and they do not
+    remove confounding between a hidden factor and the condition.
 * `BULK-HF-003` **Number of factors**: use the method's estimate (`num.sv` in SVA; for RUV, choose $k$ with relative log expression
   plots and p-value histograms), and report how the DE list changes over a range of $k$.
   * *Why:* too many factors absorb real signal; too few leave confounding. Stability over $k$ shows whether
@@ -177,7 +188,16 @@
     factors from any method; plus residual principal components with the known design protected, an exploratory
     estimator that is not qSVA, RUV or SVA and does not remove confounding between a hidden factor and the
     condition).
-* `BULK-HF-004` MUST NOT use batch-corrected matrices for testing [Nygaard 2015†; Zhang 2020†].
+* `BULK-HF-004` **MUST NOT use batch-corrected matrices for testing**; model batch as a covariate on the original counts
+  (`BULK-HF-001`).
+  * *Why:* a corrected matrix is then tested as if it had been observed, so the uncertainty of the batch estimates is
+    lost; when groups are unbalanced across batches, corrections that preserve group differences exaggerate
+    significance [Nygaard 2015†]. A covariate keeps the uncertainty of the batch estimate in the model.
+  * *Note:* ComBat-seq was proposed by its authors to produce adjusted integer counts for DE software. In their
+    simulations, DE on its output had slightly higher power than batch as a covariate when batches differed in
+    dispersion (true positive rate 0.89 against 0.87 in their realistic setting), and a false-positive rate above 0.05
+    when batches did not differ in dispersion [Zhang 2020†]. The guide keeps the covariate for the reason above, not
+    because the adjusted counts were shown to fail.
 
 ## 8. Differential expression
 
