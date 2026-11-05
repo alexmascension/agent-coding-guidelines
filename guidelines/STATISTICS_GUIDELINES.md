@@ -1,6 +1,6 @@
 # Statistics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.1 (2026-11-05)
 >
 > Key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** follow RFC 2119, as in
 > `CODING_GUIDELINES.md`. Bracketed keys such as `[Squair 2021]` point to entries in
@@ -220,7 +220,7 @@
   1. **Aggregate to the experimental unit** (mean per animal, pseudobulk counts per sample and
      cell type) and analyse the aggregates.
   2. **Mixed model** with a random effect for the unit (`(1 | mouse)`) [Aarts 2014; Zimmerman
-     2021].
+     2021a].
   3. **GEE** with the unit as cluster, when population-averaged effects are the target.
 * `STAT-HIER-003` For confirmatory tests with mixed models, include the random effects implied by the design
   (random slopes when the condition varies within units); too simple a structure inflates type I
@@ -343,6 +343,10 @@
   * *Competitive*: the genes in the set are more associated with the condition than other genes.
   * *Self-contained*: at least one gene in the set is associated with the condition.
 * `STAT-ENR-005` Report the tool, its version, the gene-set database and its release, and the background list.
+* `STAT-ENR-006` **A coherent enrichment result does not validate the gene list it was computed from.** In comparisons
+  without any biological difference, DE lists from methods that ignored variation between replicates were enriched
+  for hundreds of GO terms [Squair 2021]. Establish the validity of the list first (§4, hierarchical data; global-null
+  diagnostic, `RNASEQ_BULK_GUIDELINES.md` `BULK-DE-005`).
 
 ## 10. Resampling and simulation
 
@@ -374,6 +378,17 @@
   check that false-positive rates match the nominal level.
   * *Why:* a method that reports effects where none exist is invalid whatever its power; the null scenario is the
     first check.
+* `STAT-RES-008` **Empirical power or replication estimated by subsampling a large dataset MUST define the reference
+  result on units disjoint from those subsampled**, with the split stratified by the variable of interest and repeated
+  over several random splits. Report the split ratio, the number of repetitions, and that the reference is itself
+  incomplete, so the estimates are upper bounds.
+  * *Why:* subsampling the units that define the truth measures agreement with oneself: a reference built from 40
+    donors concludes that 40 donors find every effect. Even two disjoint halves of about 600 donors never agreed fully
+    [Crampton 2026].
+  * *Trade-off:* units held out for the reference are not available for the design grid; the split ratio trades the
+    completeness of the reference against the range of designs tested, and should be reported [Crampton 2026].
+  * Recipe: `recipes/stats/heldout.py` (disjoint, stratified, reproducible splits); its use for single-cell DE is
+    `recipes/scrnaseq/empirical_power.py`.
 * `STAT-RES-007` Seeds and determinism follow `CODING_GUIDELINES.md` §15 (reproducibility).
 
 ## 11. Bayesian analysis (optional)

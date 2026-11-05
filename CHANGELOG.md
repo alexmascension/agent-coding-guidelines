@@ -6,6 +6,171 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-05 (recipes 0.7.0 for single-cell DE power and pseudoreplication; SCRNASEQ 5.2.1, STATISTICS 2.2.1)
+
+Recipes for the rules added in SCRNASEQ 5.1.0 and STATISTICS 2.2.0 (`SC-DES-007`, `SC-DE-002`, `SC-DE-006` to
+`SC-DE-010`, `STAT-RES-008`).
+
+### SCRNASEQ_GUIDELINES.md [5.2.1]
+
+#### Changed
+
+- `SC-DES-007`, `SC-DE-002`, `SC-DE-003`, `SC-DE-006` to `SC-DE-010`: *Recipe* lines for the new functions and modules.
+
+### STATISTICS_GUIDELINES.md [2.2.1]
+
+#### Changed
+
+- `STAT-RES-008`: *Recipe* line (`recipes/stats/heldout.py`).
+
+### recipes/ [0.7.0]
+
+#### Added
+
+- `scrnaseq/pseudobulk`: `check_no_pseudo_replicates` and `aggregate_counts(..., sample_keys=...)`, which raise when
+  the cells of one sample (of one donor, in pooled captures) fall in several aggregation units (`SC-DE-006`);
+  `detectability_report`, status per gene of interest and cell type, with "no change of interest" only from an
+  equivalence test (TOST, Holm-adjusted) against a margin fixed in advance (`SC-DE-009`); `null_split_de`, random
+  splits of the control units or permuted labels per cell type through `bulk/fdr_calibration` (`SC-DE-007`);
+  `min_cells_diagnostic`, principal components of pseudobulk samples against their number of cells, by bins
+  (`SC-DE-002`); `power_inputs`, units, cells per unit and UMIs per cell per cell type and group (`SC-DE-008`).
+- `scrnaseq/depth_matching`: `match_depth`, cells per unit subsampled and UMIs thinned binomially to a reference cell
+  type, for comparisons between cell types (`SC-DE-008`).
+- `scrnaseq/empirical_power`: recall and precision per effect-size bin over a grid of donors and cells per donor,
+  against a held-out reference (`SC-DES-007`).
+- `stats/heldout`: disjoint, stratified, seeded reference and validation splits (`STAT-RES-008`).
+- `tests/test_scrnaseq_de_power.py`.
+
+#### Changed
+
+- `scrnaseq/pseudobulk`: `pseudobulk_de` adds `lfc_ci_low`, `lfc_ci_high` (Wald interval of the unshrunken log fold
+  change), `rank` (by p-value within the cell type) and `significance_quartile` (`SC-DE-010`), and accepts `alpha` and
+  `shrink`.
+
+## 2026-11-04 (pseudobulk aggregation function, detection, distribution and variability; SCRNASEQ 5.2.0)
+
+Which aggregation function to use for pseudobulk (`scanpy.get.aggregate`: `sum`, `mean`, `median`, `count_nonzero`,
+`var`) and whether percentiles, per-donor models (ZINB) or Gini and skewness indices are alternatives. Full texts read:
+[Crowell 2020], [Zimmerman 2021a], [Squair 2021], [Junttila 2022], [Murphy 2022], [Gilis 2025], [Bouland 2023],
+[Hoffman 2026]; the other new references from abstracts.
+
+### SCRNASEQ_GUIDELINES.md [5.2.0]
+
+#### Added
+
+- `SC-DE-011`: `mean`, `median` and `var` are not the default input for DE between conditions; mean of log-normalized
+  values only with limma-trend, with log fold changes from summed counts; `median` not for DE.
+- `SC-DE-012`: differential detection on binarized pseudobulk counts (`count_nonzero`), with cell numbers as trials and
+  a normalization offset, combined with DE by stage-wise testing.
+- `SC-DE-013`: changes in variability or distribution shape tested with methods that separate them from mean and depth
+  (distinct, IDEAS, memento, BASiCS); no comparison of raw Gini indices, skewness, percentiles or fractions detected.
+- `SC-DE-014`: UMI counts modelled without zero inflation; zero-inflated or hurdle models for read counts without UMIs.
+
+#### Changed
+
+- `SC-DE-002`: step 1 sums raw counts from the counts layer, never `X` after normalization (`sc.get.aggregate` uses `X`
+  by default), and normalizes after aggregation; *Why* cites the benchmarks that compared sum and mean.
+- `SC-DE-004`: precision-weighted pseudobulk (dreamlet) for unequal cell numbers or repeated measures.
+- `SC-ANNOT-005`: specificity across cell types summarized with tau.
+- `SC-REP-006`: the aggregation function and its layer are reported.
+- §16 tools table: dreamlet; new row for differential detection, distribution and variability.
+
+### STATISTICS_REFERENCES.md
+
+#### Added
+
+- [Murphy 2022], [Thurman 2021], [Gilis 2025], [Bouland 2021], [Bouland 2023], [Hoffman 2026], [Kim 2024],
+  [Lun 2018] (preprint), [Svensson 2020], [Kim 2020], [Jiang 2022], [Tiberi 2023], [Zhang 2022], [Hafner 2025],
+  [Eling 2018], [Jiang 2016]; metadata and BibTeX from Crossref, months as BibTeX macros.
+
+#### Changed
+
+- [Crowell 2020], [Junttila 2022]: notes state the result of the comparison of aggregation functions.
+
+### OMICS_REFERENCES.md
+
+#### Added
+
+- [Kryuchkova-Mostacci 2017]; BibTeX from Crossref, year, month, volume and pages of the journal issue.
+
+### Repository
+
+#### Changed
+
+- `references/SOURCE_REPOS.toml`: the deferred differential-expression chapter of the single-cell best-practices book
+  notes that the aggregation function is settled (`SC-DE-002`, `SC-DE-011`).
+
+## 2026-11-04 (single-cell DE: power and pseudoreplication; SCRNASEQ 5.1.0, STATISTICS 2.2.0, RNASEQ_BULK 3.3.0)
+
+Rules from [Crampton 2026] (preprint: empirical power of pseudobulk DE in 1,494 human brain donors, with a held-out
+reference set) and from a full reading of [Squair 2021] (why cell-level tests produce false discoveries).
+
+### SCRNASEQ_GUIDELINES.md [5.1.0]
+
+#### Added
+
+- `SC-DES-007`: justify the number of donors against the smallest effect of interest and the expression of the genes of
+  interest; simulation tools with parameters from large external data, not from a pilot; cells per donor of the cell
+  type of interest before depth per cell; budget in UMIs per donor.
+- `SC-DE-006`: no replicates made by partitioning the cells of one sample (pseudo-replicates).
+- `SC-DE-007`: global-null diagnostic (random split of control donors, or permuted donor labels) with
+  `recipes/bulk/fdr_calibration.py`.
+- `SC-DE-008`: the number of DE genes per cell type is not a measure of response; report donors, cells per donor and
+  UMIs per cell; compare at matched depth or by effect sizes.
+- `SC-DE-009`: a gene absent from a DE list is not evidence of no change; report its expression and the interval of its
+  log fold change.
+- `SC-DE-010`: DE genes near the FDR cut-off are the least reproducible; ranks and adjusted p-values reported, genes for
+  validation chosen from the most significant.
+
+#### Changed
+
+- `SC-DE-001`: names the marker functions that run cell-level tests (`scanpy.tl.rank_genes_groups`, Seurat
+  `FindMarkers`); *Why* states the mechanism (variance between donors ignored, underestimated most for highly
+  expressed genes).
+- `SC-DE-002`: the minimum number of cells per pseudobulk sample is checked on the data (principal components against
+  the number of cells), fixed before the results and applied to all groups.
+- `SC-DE-004`: *Trade-off* and *Deviate when* for mixed models.
+- `SC-DES-002`: points to `SC-DES-007`; cohorts of 3–5 donors are powered only for large effects.
+- `SC-REP-006`: donors tested, cells per donor and UMIs per cell reported per cell type.
+- Citation key [Zimmerman 2021†] renamed [Zimmerman 2021a†].
+
+### STATISTICS_GUIDELINES.md [2.2.0]
+
+#### Added
+
+- `STAT-RES-008`: empirical power or replication estimated by subsampling defines the reference on disjoint units,
+  stratified and repeated; the estimates are upper bounds.
+- `STAT-ENR-006`: a coherent enrichment result does not validate the gene list it was computed from.
+
+#### Changed
+
+- `STAT-HIER-002`: citation key [Zimmerman 2021] renamed [Zimmerman 2021a].
+
+### RNASEQ_BULK_GUIDELINES.md [3.3.0]
+
+#### Changed
+
+- `BULK-DE-003`: log fold changes compared across DE tools are shrunk with one common estimator.
+
+### SPATIAL_GUIDELINES.md [3.0.1]
+
+#### Changed
+
+- Citation key [Zimmerman 2021†] renamed [Zimmerman 2021a†].
+
+### STATISTICS_REFERENCES.md
+
+#### Added
+
+- [Crampton 2026] (preprint), [Schmid 2021] (scPower), [Zimmerman 2021b] (hierarchicell) and [Vieth 2017] (powsimR);
+  metadata and BibTeX from Crossref, months as BibTeX macros, notes from the abstracts.
+
+#### Changed
+
+- [Squair 2021]: the note states the mechanism and the pseudo-replicate result.
+- [Zimmerman 2021] renamed [Zimmerman 2021a] (`.bib` key `Zimmerman_2021a`), to tell it from [Zimmerman 2021b].
+
+
 ## 2026-11-04 (established pipelines: CODING 4.0.0, SCRNASEQ 5.0.0)
 
 ### CODING_GUIDELINES.md [4.0.0]

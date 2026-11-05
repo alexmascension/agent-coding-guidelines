@@ -1,6 +1,6 @@
 # Spatial transcriptomics guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 3.0.1 (2026-11-04)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Palla 2022b]` point to
 > `OMICS_REFERENCES.md`; keys marked with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`.
@@ -38,7 +38,7 @@
 ## 2. Design
 
 * `SP-DES-001` **The experimental unit is the donor or animal.** Spots or cells of one section are not replicates, and several
-  sections from one block are technical replicates [Squair 2021†; Zimmerman 2021†].
+  sections from one block are technical replicates [Squair 2021†; Zimmerman 2021a†].
   * *Why:* spots and cells of one section share donor, tissue processing and slide; treating them as replicates
     turns every donor difference into a significant result. *Trade-off:* spatial studies often have few donors; the
     remedy is more donors or descriptive claims, not counting spots.

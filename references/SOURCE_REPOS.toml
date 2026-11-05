@@ -311,7 +311,7 @@ into = "SCRNASEQ §8 (clustering): nothing to adapt"
 [[repo.path]]
 glob = "jupyter-book/conditions/differential_gene_expression.ipynb"
 status = "deferred"
-into = "SCRNASEQ round: pseudobulk count threshold, exploration of pseudobulk samples (§10)"
+into = "SCRNASEQ round: pseudobulk count threshold, exploration of pseudobulk samples (§10); aggregation function settled on sum of raw counts (SC-DE-002, SC-DE-011)"
 
 [[repo.path]]
 glob = "jupyter-book/conditions/compositional.ipynb"

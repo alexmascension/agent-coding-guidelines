@@ -105,19 +105,59 @@ general sources come first.
 ### D. Pseudoreplication and single-cell differential expression
 
 - **[Squair 2021]** Squair et al. (2021). Confronting false discoveries in single-cell differential expression. *Nature Communications*. [doi:10.1038/s41467-021-25960-2](https://doi.org/10.1038/s41467-021-25960-2)  
-  Single-cell DE methods that ignore variation between biological replicates produce hundreds of false DE genes; pseudobulk methods perform best.
-- **[Zimmerman 2021]** Zimmerman et al. (2021). A practical solution to pseudoreplication bias in single-cell studies. *Nature Communications*. [doi:10.1038/s41467-021-21038-1](https://doi.org/10.1038/s41467-021-21038-1)  
+  Single-cell DE methods that ignore variation between biological replicates underestimate the variance of each gene, most for highly expressed genes, and report hundreds of DE genes even between random groups of controls; pseudobulk methods agreed best with matched bulk data. Summing random groups of cells (pseudo-replicates) brings the problem back.
+- **[Zimmerman 2021a]** Zimmerman et al. (2021). A practical solution to pseudoreplication bias in single-cell studies. *Nature Communications*. [doi:10.1038/s41467-021-21038-1](https://doi.org/10.1038/s41467-021-21038-1)  
   Mixed models with a random effect for individual correct pseudoreplication in single-cell data.
 - **[Crowell 2020]** Crowell et al. (2020). muscat detects subpopulation-specific state transitions from multi-sample multi-condition single-cell transcriptomics data. *Nature Communications*. [doi:10.1038/s41467-020-19894-4](https://doi.org/10.1038/s41467-020-19894-4)  
-  muscat: framework and benchmark for multi-sample, multi-condition single-cell DE; aggregation (pseudobulk) is competitive and fast.
+  muscat: framework and benchmark for multi-sample, multi-condition single-cell DE; aggregation (pseudobulk) is competitive and fast. edgeR on summed counts ranked first; limma-trend on mean log-counts was close but with attenuated log fold changes; methods on sctransform residuals gave many false discoveries.
 - **[Junttila 2022]** Junttila et al. (2022). Benchmarking methods for detecting differential states between conditions from multi-subject single-cell RNA-seq data. *Briefings in Bioinformatics*. [doi:10.1093/bib/bbac286](https://doi.org/10.1093/bib/bbac286)  
-  Benchmark of differential-state methods: naive cell-level methods suffer pseudoreplication bias; pseudobulk and mixed models are preferred.
+  Benchmark of differential-state methods: naive cell-level methods suffer pseudoreplication bias; pseudobulk and mixed models are preferred. Sum aggregation followed by bulk normalization performed systematically better than the mean of single-cell-normalized values.
 - **[Murphy 2023]** Murphy et al. (2023). Avoiding false discoveries in single-cell RNA-seq by revisiting the first Alzheimer’s disease dataset. *eLife*. [doi:10.7554/eLife.90214](https://doi.org/10.7554/eLife.90214)  
   Re-analysis of a landmark Alzheimer snRNA-seq study: correct QC and pseudobulk DE change the reported DE genes substantially.
 - **[Soneson 2018]** Soneson & Robinson (2018). Bias, robustness and scalability in single-cell differential expression analysis. *Nature Methods*. [doi:10.1038/nmeth.4612](https://doi.org/10.1038/nmeth.4612)  
   Benchmark of single-cell DE methods: results depend strongly on method and filtering; methods developed for bulk perform comparably or better.
+- **[Crampton 2026]** Crampton et al. (2026). Single-Cell Study Designs Are Systematically Underpowered for Small-Effect Genes. *(preprint)* [doi:10.64898/2026.09.17.752063](https://doi.org/10.64898/2026.09.17.752063)  
+  Empirical power of pseudobulk DE from sex differences in 1,494 human brain donors, with the reference set from a held-out half: small effects in the range many studies report are not detected reliably even with 600 donors; lower depth and fewer cells per donor lose over half the DE genes; only the most significant genes reproduce; effect size, donor count and gene expression drive detection.
+- **[Schmid 2021]** Schmid et al. (2021). scPower accelerates and optimizes the design of multi-sample single cell transcriptomic studies. *Nature Communications*. [doi:10.1038/s41467-021-26779-7](https://doi.org/10.1038/s41467-021-26779-7)  
+  scPower: power of multi-sample single-cell DE and eQTL designs as a function of sample size, cells per individual and sequencing depth, for a fixed budget; shallow sequencing of many cells generally gives more power than deep sequencing of few.
+- **[Zimmerman 2021b]** Zimmerman & Langefeld (2021). Hierarchicell: an R-package for estimating power for tests of differential expression with single-cell data. *BMC Genomics*. [doi:10.1186/s12864-021-07635-w](https://doi.org/10.1186/s12864-021-07635-w)  
+  Simulates hierarchical single-cell data, with the within-individual correlation estimated from real data, to estimate DE power; calculators that count cells instead of individuals grossly overestimate power.
+- **[Vieth 2017]** Vieth et al. (2017). powsimR: power analysis for bulk and single cell RNA-seq experiments. *Bioinformatics*. [doi:10.1093/bioinformatics/btx435](https://doi.org/10.1093/bioinformatics/btx435)  
+  Simulation framework to evaluate DE power for bulk and single-cell RNA-seq, before an experiment or from existing data.
 - **[Ahlmann-Eltze 2023]** Ahlmann-Eltze & Huber (2023). Comparison of transformations for single-cell RNA-seq data. *Nature Methods*. [doi:10.1038/s41592-023-01814-1](https://doi.org/10.1038/s41592-023-01814-1)  
   Comparison of single-cell transformations: a shifted log with a sensible pseudocount followed by PCA performs as well as more complex methods.
+- **[Murphy 2022]** Murphy & Skene (2022). A balanced measure shows superior performance of pseudobulk methods in single-cell RNA-sequencing analysis. *Nature Communications*. [doi:10.1038/s41467-022-35519-4](https://doi.org/10.1038/s41467-022-35519-4)  
+  Re-analysis of [Zimmerman 2021a] with a balanced metric (MCC) and ROC curves: pseudobulk outperforms mixed models; the apparent advantage of mean over sum aggregation comes from a simulator without normalization.
+- **[Thurman 2021]** Thurman et al. (2021). Differential gene expression analysis for multi-subject single-cell RNA-sequencing studies withaggregateBioVar. *Bioinformatics*. [doi:10.1093/bioinformatics/btab337](https://doi.org/10.1093/bioinformatics/btab337)  
+  aggregateBioVar: pseudobulk with sum aggregation and DESeq2 for multi-subject single-cell DE, with between-subject variance.
+- **[Gilis 2025]** Gilis et al. (2025). Differential detection workflows for multi-sample single-cell RNA-seq data. *BMC Genomics*. [doi:10.1186/s12864-025-12102-x](https://doi.org/10.1186/s12864-025-12102-x)  
+  Benchmark of eight differential detection workflows on binarized pseudobulk data; recommends edgeR_NB_optim (muscat) and joint DE and DD inference by stage-wise testing.
+- **[Bouland 2021]** Bouland et al. (2021). Differential analysis of binarized single-cell RNA sequencing data captures biological variation. *NAR Genomics and Bioinformatics*. [doi:10.1093/nargab/lqab118](https://doi.org/10.1093/nargab/lqab118)  
+  Binarized scRNA-seq data capture biological variation; differential analysis on detection rather than counts.
+- **[Bouland 2023]** Bouland et al. (2023). Consequences and opportunities arising due to sparser single-cell RNA-seq datasets. *Genome Biology*. [doi:10.1186/s13059-023-02933-w](https://doi.org/10.1186/s13059-023-02933-w)  
+  As datasets get sparser, binarized data give results similar to counts; pseudobulk DE on detection rates matches counts except for genes detected in more than about 90% of cells or with few cells per sample.
+- **[Hoffman 2026]** Hoffman et al. (2026). Efficient differential expression analysis of large-scale single-cell transcriptomics data using Dreamlet. *Nature Communications*. [doi:10.1038/s41467-026-75680-8](https://doi.org/10.1038/s41467-026-75680-8)  
+  dreamlet: pseudobulk DE with two-step precision weights (cell and read numbers, mean-variance trend) and linear mixed models, scalable to millions of cells.
+- **[Kim 2024]** Kim et al. (2024). Method of moments framework for differential expression analysis of single-cell RNA sequencing data. *Cell*. [doi:10.1016/j.cell.2024.09.044](https://doi.org/10.1016/j.cell.2024.09.044)  
+  memento: hypergeometric sampling model with method-of-moments estimates of mean, residual variance and gene correlation, and bootstrap tests for differential mean, variability and correlation.
+- **[Lun 2018]** Lun (2018). Overcoming systematic errors caused by log-transformation of normalized single-cell RNA sequencing data. *(preprint, bioRxiv)* [doi:10.1101/404962](https://doi.org/10.1101/404962)  
+  Preprint. The mean of log-normalized expression differs from the log of the mean normalized expression by an amount that depends on sequencing depth, creating spurious differences.
+- **[Svensson 2020]** Svensson (2020). Droplet scRNA-seq is not zero-inflated. *Nature Biotechnology*. [doi:10.1038/s41587-019-0379-5](https://doi.org/10.1038/s41587-019-0379-5)  
+  Negative-control data show that droplet UMI counts are not zero-inflated.
+- **[Kim 2020]** Kim et al. (2020). Demystifying “drop-outs” in single-cell UMI data. *Genome Biology*. [doi:10.1186/s13059-020-02096-y](https://doi.org/10.1186/s13059-020-02096-y)  
+  Zeros in UMI data are explained by Poisson or negative binomial sampling; apparent excess zeros reflect biological heterogeneity.
+- **[Jiang 2022]** Jiang et al. (2022). Statistics or biology: the zero-inflation controversy about scRNA-seq data. *Genome Biology*. [doi:10.1186/s13059-022-02601-5](https://doi.org/10.1186/s13059-022-02601-5)  
+  Review of the zero-inflation debate: Poisson or NB fits almost all genes in UMI data (10x, Drop-seq), zero-inflated models about half of the genes in Smart-seq2 read counts.
+- **[Tiberi 2023]** Tiberi et al. (2023). distinct: A novel approach to differential distribution analyses. *The Annals of Applied Statistics*. [doi:10.1214/22-AOAS1689](https://doi.org/10.1214/22-AOAS1689)  
+  distinct: differential distribution tests comparing per-sample ECDFs with hierarchical permutation; detects changes in mean and in shape, with samples as replicates.
+- **[Zhang 2022]** Zhang et al. (2022). IDEAS: individual level differential expression analysis for single-cell RNA-seq data. *Genome Biology*. [doi:10.1186/s13059-022-02605-1](https://doi.org/10.1186/s13059-022-02605-1)  
+  IDEAS: per-individual gene expression distributions (parametric, e.g. ZINB, or kernel), distances between individuals and PERMANOVA.
+- **[Hafner 2025]** Hafner et al. (2025). Single-cell differential expression analysis between conditions within nested settings. *Briefings in Bioinformatics*. [doi:10.1093/bib/bbaf397](https://doi.org/10.1093/bib/bbaf397)  
+  Benchmark of DE in nested designs: single-cell-specific methods gave no advantage over pseudobulk DESeq2; distinct used for means did not beat a random baseline.
+- **[Eling 2018]** Eling et al. (2018). Correcting the Mean-Variance Dependency for Differential Variability Testing Using Single-Cell RNA Sequencing Data. *Cell Systems*. [doi:10.1016/j.cels.2018.06.011](https://doi.org/10.1016/j.cels.2018.06.011)  
+  BASiCS residual over-dispersion: a measure of cell-to-cell variability not confounded by mean expression, for joint differential mean and variability tests.
+- **[Jiang 2016]** Jiang et al. (2016). GiniClust: detecting rare cell types from single-cell gene expression data with Gini index. *Genome Biology*. [doi:10.1186/s13059-016-1010-4](https://doi.org/10.1186/s13059-016-1010-4)  
+  GiniClust: selects genes by a Gini index normalized against expression to detect rare cell types.
 
 ### E. Batch effects
 
