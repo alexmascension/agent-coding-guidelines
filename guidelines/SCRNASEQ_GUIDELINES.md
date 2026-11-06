@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.3.0 (2026-11-05)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.4.0 (2026-11-06)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -329,6 +329,43 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Why:* depth and quality differ between captures; one fixed threshold removes good cells in one capture and keeps
     bad cells in another.
   * *Trade-off:* MAD (median absolute deviation) filters assume most cells are good; inspect distributions when a capture is mostly poor.
+    They also assume one population per capture: when log total counts or log genes detected is bimodal within a
+    capture, use `SC-QC-017`.
+* `SC-QC-017` **When log total counts or log genes detected is bimodal within a capture, the count and gene thresholds of
+  `SC-QC-003` MAY come from a per-capture Gaussian mixture instead of the median and MAD.** Bimodality arises when cell
+  types with very different RNA content share a capture, e.g. neuronal and glial nuclei in brain snRNA-seq, in
+  proportions that follow the tissue composition of each sample. The median then falls between the modes: the lower
+  MAD limit lies below every cell and the upper one inside the mode of the larger cells, so the filter removes part of
+  a cell type rather than poor cells. Procedure, per capture:
+  1. Fit a Gaussian mixture with full covariance to (log1p total counts, log1p genes detected) for one to three
+     components, with a fixed seed and several initializations (e.g. `sklearn.mixture.GaussianMixture`, `n_init=5`).
+  2. Choose the number of components by the integrated completed likelihood, ICL = BIC + 2 × the entropy of the
+     posterior assignments [Biernacki 2000†], not by BIC: with thousands of cells per capture, BIC adds a component for
+     any departure from normality of one mode (skew, or truncation by an upstream filter) and splits it into
+     overlapping components.
+  3. Flag a cell when its squared Mahalanobis distance to its own component exceeds $k^2$, with $k$ in SD units
+     (comparable to the 3–5 MADs of `SC-QC-003`; report the equivalent $\chi^2$ quantile with as many degrees of
+     freedom as metrics), **and** it lies in an outer tail: below the mean log genes of the lowest component, or above
+     that of the highest. Cells between the modes are never flagged.
+  4. Remove the lower tail (low-quality cells). Flag the upper tail and review it with the doublets (`SC-QC-010`)
+     before removing it.
+  5. Report per capture the number of components, their weights and means, and the cells flagged in each tail; plot
+     the per-capture histogram of log genes detected coloured by component, with the flagged cells overlaid. The
+     mitochondrial and nuclear-fraction filters of `SC-QC-003` still apply.
+  * *Why:* a mixture models several populations per capture where the median and MAD assume one; SampleQC fits a
+    Gaussian mixture across samples for this reason [Macnair 2023], and QC metrics differ between cell types
+    [Subramanian 2022]. The outer-tail condition is needed because the distance to the assigned component is
+    two-sided: without it, the cells in the valley between two modes, which the mixture as a whole explains well, are
+    flagged. The upper tail of the highest component is where multiplets of the largest cells fall, and removing it
+    before the doublet review can remove a population under study.
+  * *Trade-off:* the components are not cell types (they overlap where types have similar RNA content), so the
+    mixture does not replace the per-population check of `SC-QC-015`. On matrices filtered upstream (a minimum of
+    counts or genes, e.g. public filtered matrices) the lower tail is truncated: a Gaussian component overestimates it
+    and flagged cells accumulate at the filter floor. $k$, the component grid and the seed are project parameters,
+    recorded with the run.
+  * *Deviate when:* thresholds per cell type are needed: MAD per coarse cluster, as in ddqc [Subramanian 2022], or
+    SampleQC across samples [Macnair 2023]. When ICL selects one component, the rule reduces to a Mahalanobis threshold
+    on both tails of that component, like `SC-QC-003` in two dimensions.
 * `SC-QC-015` **Check what the filters remove from each population before removing it.** After the first clustering (§4.3),
   tabulate per cluster the fraction of cells flagged by each metric. When one cluster loses a much larger fraction
   than the others, inspect it (lineage markers against signs of damage) and record whether its cells are removed.

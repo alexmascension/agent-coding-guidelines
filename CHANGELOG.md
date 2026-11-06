@@ -6,6 +6,38 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-06 (SCRNASEQ 5.4.0)
+
+### SCRNASEQ_GUIDELINES.md [5.4.0]
+
+#### Added
+
+- `SC-QC-017`: when log total counts or log genes detected is bimodal within a capture (e.g. neuronal and glial nuclei
+  in brain snRNA-seq), the count and gene thresholds of `SC-QC-003` MAY come from a per-capture Gaussian mixture on
+  (log1p total counts, log1p genes detected): one to three components chosen by ICL rather than BIC, outliers beyond a
+  Mahalanobis radius of $k$ SD from their own component and only in the outer tails (below the lowest component, above
+  the highest), lower tail removed, upper tail flagged and reviewed with the doublets (`SC-QC-010`). Motivated by a
+  re-analysis of public snRNA-seq of human cortex in which the median-and-MAD limits fell outside or inside the modes.
+
+#### Changed
+
+- `SC-QC-003`: *Trade-off* adds that MAD filters assume one population per capture and points to `SC-QC-017` for
+  bimodal metrics.
+
+### STATISTICS_REFERENCES.md
+
+#### Added
+
+- [Biernacki 2000] (integrated completed likelihood); metadata and BibTeX from Crossref (month written as the macro
+  `Jul`); no abstract in Europe PMC, the note states the criterion as used and was not checked against the full text.
+
+### OMICS_REFERENCES.md
+
+#### Added
+
+- [Macnair 2023] (SampleQC), [Subramanian 2022] (ddqc); DOIs verified against Crossref, BibTeX from Crossref, notes from
+  the abstracts (Europe PMC).
+
 ## 2026-11-05 (external audit of c981ac89; recipes 0.8.0; CODING 4.1.0, AGENTIC 1.2.0, MANUSCRIPT 1.2.0, STATISTICS 2.3.0, SCRNASEQ 5.3.0, RNASEQ_BULK 3.4.0, SEX_INFERENCE 2.2.0, SAMPLE_IDENTITY 3.1.0, DECONVOLUTION 2.0.1, SPATIAL 3.1.0, META_ANALYSIS 2.3.0, HPC 1.5.0)
 
 An external audit of commit `c981ac89` raised 99 tabulated observations (76 on the guides, 23 on the recipes and

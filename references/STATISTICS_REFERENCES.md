@@ -105,6 +105,8 @@ general sources come first.
   For confirmatory tests, include the random-effects structure justified by the design; too-simple structures inflate type I error.
 - **[Li 2022]** Li et al. (2022). Exaggerated false positives by popular differential expression methods when analyzing human population samples. *Genome Biology*. [doi:10.1186/s13059-022-02648-4](https://doi.org/10.1186/s13059-022-02648-4)  
   Permutation analysis: DESeq2/edgeR can exceed nominal FDR in large human population cohorts; authors recommend Wilcoxon for large n. Contested; treat as a warning to check FDR calibration (e.g. with permuted labels) in large heterogeneous cohorts.
+- **[Biernacki 2000]** Biernacki, Celeux & Govaert (2000). Assessing a mixture model for clustering with the integrated completed likelihood. *IEEE Transactions on Pattern Analysis and Machine Intelligence*. [doi:10.1109/34.865189](https://doi.org/10.1109/34.865189)  
+  Defines the integrated completed likelihood (ICL), the BIC penalized by the entropy of the assignment of observations to components, to choose the number of components of a mixture used for clustering; it favours well-separated components. No abstract in Europe PMC; the note states the criterion as used in `SC-QC-017`, not checked against the full text.
 
 ### D. Pseudoreplication and single-cell differential expression
 

@@ -622,6 +622,7 @@ SC-QC-013	active	SCRNASEQ_GUIDELINES.md	Check the Scrublet threshold of every ca
 SC-QC-014	active	SCRNASEQ_GUIDELINES.md	Pooled captures (SAMPLE_IDENTITY_GUIDELINES.md §6): remove the doublets called b
 SC-QC-015	active	SCRNASEQ_GUIDELINES.md	Check what the filters remove from each population before removing it. After the
 SC-QC-016	active	SCRNASEQ_GUIDELINES.md	From matrix to clustered object, run nf-core/scdownstream (<https://github.com/n
+SC-QC-017	active	SCRNASEQ_GUIDELINES.md	When log total counts or log genes detected is bimodal within a capture, the cou
 SC-QUANT-001	active	SCRNASEQ_GUIDELINES.md	Default: STARsolo [Kaminow 2021] through nf-core/scrnaseq (--aligner star) [Ewel
 SC-QUANT-002	active	SCRNASEQ_GUIDELINES.md	Isoform-level questions need full-length (e.g. Smart-seq) or long-read protocols
 SC-QUANT-003	active	SCRNASEQ_GUIDELINES.md	Record STAR version, all --solo parameters, chemistry and whitelist, reference g

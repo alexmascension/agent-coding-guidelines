@@ -5,6 +5,8 @@ would go; remove an item in the change that completes it.
 
 ## Guides
 
+- `SCRNASEQ_GUIDELINES.md` `SC-QC-017`: a recipe in `recipes/scrnaseq/qc.py` (per-capture Gaussian mixture, ICL
+  selection, outer-tail Mahalanobis flags, per-capture report and figure) with tests, and the matching row of §16.
 - `SCRNASEQ_GUIDELINES.md`: pooled CRISPR screens read out by the transcriptome (guide assignment, perturbation
   effects, multiplicity of infection). The 4.1.0 draft mentioned them in the scope (§0) and pointed to §15, but no
   section exists; the mention was removed in 4.1.0 until the section is written.
