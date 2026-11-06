@@ -181,7 +181,8 @@ Decide, in the protocol, which of these strategies is used and why [Ramasamy 200
 ## 11. Single-cell meta-analysis
 
 * `META-SC-001` **Per study, run pseudobulk DE per cell type** (`SCRNASEQ_GUIDELINES.md` §10, condition DE), then combine across
-  studies. MUST NOT merge cells from several studies and run cell-level tests.
+  studies. MUST NOT merge cells from several studies and run tests that treat cells as replicates
+  (`SCRNASEQ_GUIDELINES.md` `SC-DE-001`).
   * *Why:* pooling cells from several studies and testing them treats cells as replicates and ignores study and
     donor (pseudoreplication at a larger scale); when conditions are unbalanced across studies, study is also
     confounded with condition. Per-study pseudobulk keeps the donor as the unit and lets heterogeneity between studies

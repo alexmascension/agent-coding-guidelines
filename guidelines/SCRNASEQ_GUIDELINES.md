@@ -142,7 +142,8 @@
     estimate but do not add replicates [Squair 2021†].
   * *Trade-off:* the benchmark covers one contrast (sex), three cell types of one tissue and one cohort, and its
     authors consider it optimistic because its reference set is itself incomplete; use it for orders of magnitude, not
-    thresholds, and read its recall and precision as `STATISTICS_GUIDELINES.md` `STAT-RES-008` describes.
+    thresholds, and read its recall and precision as `STATISTICS_GUIDELINES.md` `STAT-RES-008` describes (neither is a
+    guaranteed bound).
   * *Note:* one preprint (2026).
   * Recipe: `recipes/scrnaseq/empirical_power.py` (recall and precision per effect-size bin over a grid of donors and
     cells per donor, against a held-out reference, for a project with a large dataset of its own); every design is a
@@ -577,17 +578,18 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Why:* donors of the same condition differ in expression, for biological and technical reasons. A test that treats
     cells as replicates sees only the variance within donors, so it underestimates the variance of each gene and
     attributes the differences between donors to the condition. The underestimate is largest for the genes that vary
-    most between donors, which are the highly expressed ones, so cell-level tests favour them and report hundreds of DE
+    most between donors, which are the highly expressed ones, so such tests favour them and report hundreds of DE
     genes even between random groups of control donors. Pseudobulk keeps the donor as the replicate, and with it that
     variance; it agreed best with matched bulk RNA-seq and its calls were confirmed in situ more often [Squair 2021†].
-  * *Note:* more cells per donor make cell-level tests worse, not better; more donors help. Human tissue varies more
+  * *Note:* more cells per donor make tests that treat cells as replicates worse, not better; more donors help. Human tissue varies more
     between donors than mouse models and is the most exposed [Squair 2021†].
 * `SC-DE-002` **Pseudobulk procedure**:
   1. Sum raw counts per aggregation unit and cell type. The unit is the experimental unit of the comparison: the
      sample, or the donor only when each donor contributes to one level of every compared factor (§2). Sum the counts
-     layer of §1.1, never `X` after normalization or log-transformation (e.g.
-     `sc.get.aggregate(adata, by=[unit_key, celltype_key], func="sum", layer="counts")`; `X` is used when no layer is
-     given), and normalize after aggregation with the DE tool (size factors, TMM).
+     layer that `SC-DATA-004` selects for pseudobulk, never `X` after normalization or log-transformation (e.g.
+     `sc.get.aggregate(adata, by=[unit_key, celltype_key], func="sum", layer=input_layer(adata, "pseudobulk"))`, with
+     `input_layer` from `recipes/scrnaseq/layers.py`; `X` is used when no layer is given), and normalize after
+     aggregation with the DE tool (size factors, TMM).
      * *Why:* summed counts followed by bulk normalization performed systematically better than the mean of
        single-cell-normalized values [Junttila 2022†], ranked first overall in [Crowell 2020†] and were recommended with
        DESeq2 [Thurman 2021†]. The one benchmark in which the mean did better had simulated data without
@@ -723,8 +725,9 @@ cells that remain, and its layer from normalization (§5) onwards.
   * zero-inflated mixtures add a source of extra zeros to a count distribution; they are for read counts without UMIs
     (e.g. Smart-seq2), where they fit about half of the genes [Jiang 2022†];
   * hurdle (two-part) models, e.g. MAST [Finak 2015], model detection (zero or not) separately from the level in the
-    cells where the gene is detected; they address the differential-detection question of `SC-DE-012` together with a
-    change in level, and do not assume that UMI counts have extra zeros. Fitted to cells, they need the donor as a
+    cells where the gene is detected, and do not assume that UMI counts have extra zeros; they are an alternative when
+    detection and level are modelled jointly, while the pseudobulk workflow of `SC-DE-012` stays the default for
+    differential detection. Fitted to cells, they need the donor as a
     random effect (`SC-DE-001`).
 
 ## 11. Differential abundance
@@ -843,7 +846,7 @@ mito_genes: mito_genes_from_gtf.txt     # SC-QC-004: symbols of the MT/chrM gene
 * First pass of `SC-QC-016`, per sample in the samplesheet: `log1p_total_counts_nmads`,
   `log1p_n_genes_by_counts_nmads`, `pct_counts_in_top_20_genes_nmads` and `pct_counts_mt_nmads` at 0 and
   `max_mito_percentage` at 100 (the values the input schema documents as disabling them), `min_genes` and
-  `min_counts_cell` at 0; `sample_n` and `sample_fraction` unset. Two filters have no off value at that commit:
+  `min_counts_cell` at 0; and the pipeline parameters `sample_n` and `sample_fraction` unset. Two filters have no off value at that commit:
   `min_ribo_percentage` and `max_hb_percentage` are applied even at 0 and 100 (as `>=` and `<`), and after feature
   selection a filter fixed in the code (`min_genes` 1) removes cells with no counts in the selected genes. Compare,
   per sample, the cells of the first-pass object with the row `filtered` (after cell calling) of the report's

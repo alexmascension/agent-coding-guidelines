@@ -378,3 +378,23 @@ def test_empirical_power_marks_splits_without_a_testable_reference():
         small, "donor", "cell_type", "A", reference_fraction=0.2, **POWER_KWARGS
     )
     assert set(runs["status"]) == {"reference_not_testable"}
+
+
+def test_empirical_power_marks_splits_whose_reference_calls_no_gene(monkeypatch):
+    """An empty reference set leaves recall undefined; precision must not count every call as false."""
+    import recipes.scrnaseq.empirical_power as power_module
+
+    real = power_module.pseudobulk_de
+
+    def reference_calls_nothing(*args, **kwargs):
+        results, not_testable = real(*args, **kwargs)
+        if kwargs.get("shrink", True):  # the reference call; designs run with shrink=False
+            results = results.with_columns(pl.lit(1.0).alias("p_adjusted"))
+        return results, not_testable
+
+    monkeypatch.setattr(power_module, "pseudobulk_de", reference_calls_nothing)
+    adata = simulate_donors(n_per_group=6, cells=30, n_genes=60, seed=3)
+    runs, summary = empirical_power(adata, "donor", "cell_type", "A", **POWER_KWARGS)
+    assert set(runs["status"]) == {"reference_empty"}
+    assert runs["precision"].null_count() == runs.height
+    assert (summary["n_runs"] == 0).all() and (summary["n_reference_empty"] >= 1).all()

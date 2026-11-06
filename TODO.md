@@ -34,5 +34,5 @@ would go; remove an item in the change that completes it.
 - `tools/check_guides.py`: citation-key checks also for `CODING_GUIDELINES.md`, which is excluded today (audit C22).
 - `recipes/common/build_gene_groups.py`: the shipped lists predate source snapshots and cannot be rebuilt offline.
   The next networked rebuild (`python -m recipes.common.build_gene_groups --overwrite`) writes the first snapshot under
-  `build/gene_groups_sources/<date>`; archive it outside git (the HGNC response is about 19 MB, above the pre-commit
+  `build/gene_groups_sources/<date and time>`; archive it outside git (the HGNC response is about 19 MB, above the pre-commit
   size limit) and record where.

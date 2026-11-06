@@ -63,7 +63,8 @@
   * *Trade-off:* staged copies count against the `WORK` quota; stage what the next runs need and remove it after.
     A staged copy is a replica: `CODE-PROV-001` lets it be deleted, or overwritten with the source, once the copy
     of record in `ARCHIVE/data/raw` has been verified to exist and match its checksum; the copy of record itself is
-    never modified or deleted.
+    never modified or deleted. A staged copy that differs from the source does not show which of the two is damaged:
+    check the copy of record before replacing the replica (`recipes/hpc/stage.sh` stops unless `--overwrite`).
   * *Deviate when:* large read-only references (e.g. aligner indexes) MAY be read directly from `ARCHIVE` when load
     times measured under the intended concurrency are acceptable; record the measurement.
 * `HPC-FLOW-002` **Jobs write only to `WORK` (and `NODE`).** Final results reach `ARCHIVE` through an explicit **promotion** step

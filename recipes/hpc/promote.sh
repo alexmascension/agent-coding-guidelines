@@ -63,7 +63,7 @@ files="$(wc -l < "${manifest}")"
 [[ "${files}" -gt 0 ]] || { echo "ERROR: ${src} contains no files" >&2; exit 2; }
 
 rsync -a "${src}/" "${tmp}/"
-cp "${manifest}" "${tmp}/MANIFEST.sha256"
+cat "${manifest}" > "${tmp}/MANIFEST.sha256"  # umask mode, as PROMOTION.yaml (mktemp files are 0600)
 copied="$(cd "${tmp}" && find . -type f ! -path ./MANIFEST.sha256 -printf . | wc -c)"
 if [[ "${copied}" -ne "${files}" ]] \
     || ! (cd "${tmp}" && sha256sum --quiet --strict -c MANIFEST.sha256); then
@@ -83,7 +83,11 @@ dirty="$(git -C "${PROJECT_ROOT}" status --porcelain 2>/dev/null | head -c1 | wc
     echo "files: ${files}"
     echo "manifest: MANIFEST.sha256, computed on the source before the copy; PROMOTION.yaml appended"
 } > "${tmp}/PROMOTION.yaml"
-(cd "${tmp}" && sha256sum ./PROMOTION.yaml >> MANIFEST.sha256 && sha256sum --quiet --strict -c MANIFEST.sha256)
+(cd "${tmp}" && sha256sum ./PROMOTION.yaml >> MANIFEST.sha256)
+if ! (cd "${tmp}" && tail -n 1 MANIFEST.sha256 | sha256sum --quiet --strict -c -); then
+    echo "ERROR: PROMOTION.yaml does not match the checksum appended to MANIFEST.sha256; nothing promoted" >&2
+    exit 6
+fi
 mv -T "${tmp}" "${dst}"
 chmod -R a-w "${dst}"
 echo "promoted ${src} -> ${dst} (${files} files verified)"

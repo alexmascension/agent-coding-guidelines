@@ -195,7 +195,9 @@
     Brunner-Munzel test is asymptotically valid [Fay 2010].
   * *Note:* the Brunner-Munzel p-value is an approximation: its authors proposed it for groups of at least 10
     [Brunner 2000], and [Divine 2018] suggest that it works with at least 30 per group and a not too extreme
-    difference in variances.
+    difference in variances. Below about 10 per group, the SciPy documentation of `brunnermunzel` recommends the
+    permuted Brunner-Munzel test: a permutation test of the Brunner-Munzel statistic (`scipy.stats.permutation_test`,
+    `STAT-RES-003`).
   * *Deviate when:* the outcome is ordinal or has extreme outliers and the question is about which group tends to
     have larger values; report the result in those terms (and, under a shift model, a Hodges-Lehmann shift
     estimate).
@@ -401,6 +403,9 @@
   prohibited. Prefer BCa (bias-corrected and accelerated) or percentile intervals from an established implementation.
   * *Why:* resampling only the measurements within units ignores the variation between units, so the intervals are
     too narrow.
+  * *Trade-off:* the variation between unit means already contains the variation within units, so resampling
+    measurements again within each resampled unit adds it a second time: a two-stage bootstrap with replacement at both
+    levels tends to give wider, conservative intervals. Resampling units alone is the default.
 * `STAT-RES-006` **Simulation studies state their data-generating model** and include the null scenario, to
   check that false-positive rates match the nominal level.
   * *Why:* a method that reports effects where none exist is invalid whatever its power; the null scenario is the

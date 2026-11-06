@@ -195,8 +195,9 @@
     significance [Nygaard 2015†]. A covariate keeps the uncertainty of the batch estimate in the model.
   * *Note:* ComBat-seq was proposed by its authors to produce adjusted integer counts for DE software. In their
     simulations, DE on its output had slightly higher power than batch as a covariate when batches differed in
-    dispersion (true positive rate 0.89 against 0.87 in their realistic setting), and a false-positive rate above 0.05
-    when batches did not differ in dispersion [Zhang 2020†]. The guide keeps the covariate for the reason above, not
+    dispersion (true positive rate 0.89 against 0.87 in their realistic setting), and a false-positive rate of
+    0.059–0.067, as for ComBat on logCPM, when batches did not differ in dispersion, a case the authors call
+    unrealistic [Zhang 2020†]. The guide keeps the covariate for the reason above, not
     because the adjusted counts were shown to fail.
 
 ## 8. Differential expression

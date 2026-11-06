@@ -127,22 +127,48 @@ def test_stage_copies_verifies_and_logs(staged):
     assert fields[4:] == ["1", "sha256-verified"]
 
 
-def test_stage_replaces_a_replica_with_the_same_size_and_time(staged):
-    """C09: rsync's quick check (size and mtime) would keep the wrong content."""
+def test_stage_stops_on_a_differing_replica_unless_overwrite(staged):
+    """C09: rsync's quick check (size and mtime) would keep the wrong content; C16: replacing a replica that
+    differs from the source needs --overwrite (CODE-PROV-001)."""
     source, copy = staged["source"], staged["copy"]
     copy.write_bytes(b"evil")
     times = source.stat()
     os.utime(copy, ns=(times.st_atime_ns, times.st_mtime_ns))
-    result = _run("stage.sh", staged["repo"], "batch1")
+    log = staged["work"] / "logs" / "staging.tsv"
+    refused = _run("stage.sh", staged["repo"], "batch1")
+    assert refused.returncode == 7, refused.stderr
+    assert "s1.fastq.gz" in refused.stderr and "--overwrite" in refused.stderr
+    assert copy.read_bytes() == b"evil"
+    assert len(log.read_text().splitlines()) == 1
+    result = _run("stage.sh", staged["repo"], "batch1", "--overwrite")
     assert result.returncode == 0, result.stderr
     assert copy.read_bytes() == b"good"
-    assert len((staged["work"] / "logs" / "staging.tsv").read_text().splitlines()) == 2
+    assert len(log.read_text().splitlines()) == 2
+
+
+def test_stage_restages_an_identical_replica_without_overwrite(staged):
+    result = _run("stage.sh", staged["repo"], "batch1")
+    assert result.returncode == 0, result.stderr
+    assert staged["copy"].read_bytes() == b"good"
+
+
+def test_stage_refuses_symlinks_and_empty_sources(project):
+    repo, work, archive = project["repo"], project["work"], project["archive"]
+    _run("setup_storage.sh", repo)
+    linked = archive / "data" / "raw" / "linked"
+    linked.mkdir()
+    (linked / "s1.fastq.gz").symlink_to(project["tmp"])
+    assert _run("stage.sh", repo, "linked").returncode == 5
+    (archive / "data" / "raw" / "empty").mkdir()
+    assert _run("stage.sh", repo, "empty").returncode == 2
+    assert not (work / "data" / "raw" / "linked").exists()
+    assert not (work / "logs" / "staging.tsv").exists()
 
 
 def test_stage_fails_when_the_copy_does_not_match_the_source(staged):
     staged["copy"].write_bytes(b"evil")
     fake = _fake_rsync(staged["tmp"] / "fake", "exit 0  # copies nothing")
-    result = _run("stage.sh", staged["repo"], "batch1", path_prefix=fake)
+    result = _run("stage.sh", staged["repo"], "batch1", "--overwrite", path_prefix=fake)
     assert result.returncode == 6
     assert "does not match the SHA-256 checksums" in result.stderr
     assert len((staged["work"] / "logs" / "staging.tsv").read_text().splitlines()) == 1
@@ -213,6 +239,10 @@ def test_promote_writes_verified_read_only_run(project):
     assert "run: 20261016_test_abc1234" in promotion and "files: 2" in promotion
     assert f"promoted_by: {_user()}@" in promotion  # USER is unset in _run
     assert not (dst / "tables" / "de.tsv").stat().st_mode & stat.S_IWUSR
+    mode = stat.S_IMODE((dst / "PROMOTION.yaml").stat().st_mode)
+    assert (
+        stat.S_IMODE((dst / "MANIFEST.sha256").stat().st_mode) == mode
+    )  # not 0400 from mktemp's 0600
     assert not list((archive / "results").glob("*.partial.*"))
     second = _run("promote.sh", repo, run_dir.name)
     assert second.returncode == 3

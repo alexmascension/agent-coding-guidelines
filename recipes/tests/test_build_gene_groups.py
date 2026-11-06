@@ -129,7 +129,13 @@ def test_existing_lists_are_replaced_only_with_overwrite(built, monkeypatch):
     assert {p.name: p.read_bytes() for p in out.iterdir()} == before  # nothing fetched or written
     monkeypatch.setattr(bgg, "_get", _fake_get([]))
     assert bgg.main(["--out", str(built["tmp"] / "o2"), "--snapshot-dir", str(snap)]) == 1
-    assert bgg.main(["--out", str(out), "--snapshot-dir", str(snap), "--overwrite"]) == 0
+    assert (
+        bgg.main(["--out", str(out), "--snapshot-dir", str(snap), "--overwrite"]) == 1
+    )  # snapshot kept
+    assert (
+        bgg.main(["--out", str(out), "--snapshot-dir", str(built["tmp"] / "s3"), "--overwrite"])
+        == 0
+    )
 
 
 def test_rebuild_from_snapshot_is_offline_and_identical(built):

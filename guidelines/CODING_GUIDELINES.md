@@ -179,7 +179,7 @@ interface, a threshold or a data invariant MUST update it in the same change.
   NumPy/SciPy for numerics, `statsmodels` for statistical models, matplotlib/seaborn for figures,
   pytest for tests, ruff for linting and formatting.
 * `CODE-LANG-007` Environment: a conda environment plus `pip install -e .` of the project package. Export the
-  resolved environment (`conda env export --no-builds > environment.lock.yml` or `conda-lock`)
+  resolved environment (`conda env export --no-builds > environment.export.yml` or `conda-lock`)
   whenever dependencies change. The reproducible record is the `conda-lock` lock file; an export with `--no-builds`
   records package versions, not builds.
   * *Why:* an environment file with version ranges resolves to different packages months later; the lockfile

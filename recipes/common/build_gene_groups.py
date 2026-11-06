@@ -14,14 +14,15 @@ snapshot. The builder fails when a group matches no gene or an excluded symbol r
 candidate group names.
 
 Sources: a build needs network access, and saves every response it uses, byte for byte, in a
-snapshot directory (default ``build/gene_groups_sources/<date>``, which git ignores), with
+snapshot directory (default ``build/gene_groups_sources/<date and time>``, which git ignores), with
 ``SOURCES.json`` (URL, parameters, size and SHA-256 of each file, download date) and
 ``SHA256SUMS``.
 ``--from-snapshot`` rebuilds the lists offline from such a directory after checking every checksum;
 the lists are then identical to those of the original build. Keep the snapshot with the project's
 inputs if the lists must be rebuildable. Outputs are written only after every source has been read,
-each through a temporary file and ``os.replace``; existing lists (and a non-empty snapshot
-directory) are replaced only with ``--overwrite`` (``CODE-PROV-005``).
+each through a temporary file and ``os.replace``; existing lists are replaced only with
+``--overwrite`` (``CODE-PROV-005``). A non-empty snapshot directory is never written into, so the
+snapshot behind earlier lists stays intact when a later build fails midway.
 """
 
 import argparse
@@ -31,7 +32,7 @@ import json
 import os
 import re
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 
 import polars as pl
@@ -307,7 +308,7 @@ def main(argv: list[str] | None = None) -> int:
     source.add_argument(
         "--snapshot-dir",
         type=Path,
-        help=f"where to save the source responses (default {DEFAULT_SNAPSHOT_ROOT}/<date>)",
+        help=f"where to save the source responses (default {DEFAULT_SNAPSHOT_ROOT}/<date>T<time>)",
     )
     source.add_argument(
         "--from-snapshot",
@@ -315,7 +316,7 @@ def main(argv: list[str] | None = None) -> int:
         help="rebuild offline from the responses saved in this directory",
     )
     parser.add_argument(
-        "--overwrite", action="store_true", help="replace existing lists and a non-empty snapshot"
+        "--overwrite", action="store_true", help="replace existing lists (never a snapshot)"
     )
     args = parser.parse_args(argv)
     existing = [str(args.out / name) for name in OUTPUT_NAMES if (args.out / name).exists()]
@@ -328,10 +329,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.from_snapshot:
         sources = Sources(args.from_snapshot, offline=True)
     else:
-        snapshot = args.snapshot_dir or DEFAULT_SNAPSHOT_ROOT / date.today().isoformat()
-        if snapshot.is_dir() and any(snapshot.iterdir()) and not args.overwrite:
+        stamp = datetime.now().strftime("%Y-%m-%dT%H%M%S")
+        snapshot = args.snapshot_dir or DEFAULT_SNAPSHOT_ROOT / stamp
+        if snapshot.is_dir() and any(snapshot.iterdir()):
             print(
-                f"ERROR: {snapshot} is not empty; pass --overwrite to replace it", file=sys.stderr
+                f"ERROR: {snapshot} is not empty; a snapshot is never written into, "
+                "choose another --snapshot-dir",
+                file=sys.stderr,
             )
             return 1
         snapshot.mkdir(parents=True, exist_ok=True)
@@ -345,6 +349,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{group}: {human.height} human, {mouse.height} mouse genes")
     sums_sha256 = lists[OUTPUT_NAMES[0]][1]["sources_sha256"]
     print(f"sources: {sources.directory} ({SNAPSHOT_SUMS} SHA-256 {sums_sha256})")
+    if not args.from_snapshot:
+        print(f"keep {sources.directory} with the project's inputs: git does not track it")
     return 0
 
 

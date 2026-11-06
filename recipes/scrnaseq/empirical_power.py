@@ -162,12 +162,14 @@ def empirical_power(
     runs : pl.DataFrame
         One row per split, design, iteration and bin (``RUN_SCHEMA``); ``cells_per_unit`` is
         missing for all cells. ``status`` is ``ok``, ``infeasible`` (too few eligible units),
-        ``not_testable`` (the DE of the design could not run) or ``reference_not_testable`` (the
+        ``not_testable`` (the DE of the design could not run), ``reference_not_testable`` (the
         reference DE of the split could not run: no reference unit with ``min_cells`` cells, too
-        few units per group, or no gene passing the filter; the split is not used).
+        few units per group, or no gene passing the filter; the split is not used) or
+        ``reference_empty`` (the reference DE ran but called no gene, so recall is undefined and
+        precision would count every call as false; the split is not used).
     summary : pl.DataFrame
         Per design and bin: ``mean_recall``, ``mean_precision``, ``n_runs`` (``ok`` runs),
-        ``n_infeasible`` and ``n_reference_not_testable``.
+        ``n_infeasible``, ``n_reference_not_testable`` and ``n_reference_empty``.
 
     Raises
     ------
@@ -245,10 +247,22 @@ def empirical_power(
             f"split {s}: reference of {len(ref_units)} units, {len(reference_set)} genes called"
         )
         if not reference_set:
-            logger.warning(
-                f"split {s}: the reference calls no gene; recall is undefined and every call of "
-                "a design counts against precision"
-            )
+            logger.warning(f"split {s}: the reference calls no gene; split not used")
+            rows += [
+                {
+                    "split": s,
+                    "units_per_group": n_units,
+                    "cells_per_unit": n_cells,
+                    "iteration": it,
+                    "lfc_bin": b,
+                    "status": "reference_empty",
+                }
+                for n_units in units_per_group
+                for n_cells in cells_per_unit
+                for it in range(n_iterations)
+                for b in bins
+            ]
+            continue
         val_levels = levels.loc[validation_units]
         for d_i, n_units in enumerate(units_per_group):
             for c_i, n_cells in enumerate(cells_per_unit):
@@ -319,6 +333,7 @@ def empirical_power(
             n_runs=(pl.col("status") == "ok").sum(),
             n_infeasible=(pl.col("status") == "infeasible").sum(),
             n_reference_not_testable=(pl.col("status") == "reference_not_testable").sum(),
+            n_reference_empty=(pl.col("status") == "reference_empty").sum(),
         )
         .sort(keys, nulls_last=True)
     )
