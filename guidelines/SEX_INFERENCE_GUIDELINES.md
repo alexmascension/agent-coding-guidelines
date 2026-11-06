@@ -1,6 +1,6 @@
 # Sex inference guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.1.0 (2026-10-17)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Olney 2020]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger point to `STATISTICS_REFERENCES.md`. Each rule is followed by its
@@ -51,12 +51,16 @@
     and platforms [Staedtler 2013]; X-degenerate Y genes are expressed across most tissues [Godfrey 2020]. Summing
     several genes reduces dependence on any one gene's tissue-specific expression.
   * *Deviate when:* drop genes not expressed in the tissue at hand (check on samples of known sex).
-* `SEX-MARK-003` **Within-sample ratio from X/Y homolog pairs**: for each pair, $r = Y/(X+Y)$, then the median across pairs. Human
+* `SEX-MARK-003` **Within-sample ratio from X/Y homolog pairs**: for each pair, $r = Y/(X+Y)$, then the median across pairs. A pair
+  with $X + Y = 0$ in a sample has no ratio and is left out of that sample's median; the project states the minimum
+  number of informative pairs ($X + Y > 0$) for the ratio to be reported, and a sample below it is `LOW_SIGNAL`
+  (`SEX-COUNT-004`). Human
   pairs include *RPS4X/RPS4Y1*, *DDX3X/DDX3Y*, *KDM5C/KDM5D*, *KDM6A/UTY*, *EIF1AX/EIF1AY*, *USP9X/USP9Y*, *ZFX/ZFY* (and *TXLNG/TXLNGY* where expressed);
   mouse: *Ddx3x/Ddx3y*, *Eif2s3x/Eif2s3y*, *Kdm5c/Kdm5d*, *Kdm6a/Uty*.
   * *Why:* the X homolog is a built-in denominator. The ratio cancels factors that scale both homologs equally
-    (library size, overall depth) and separates XY ($r$ substantial) from XX ($r \approx 0$) without a cohort-level
-    threshold. It is also the most sensitive signal for male material mixed into an XX sample.
+    (library size, overall depth), so XY ($r$ substantial) and XX ($r \approx 0$) separate on a scale that does not
+    depend on depth and one minimum applies to every sample of a cohort (`SEX-THR-002`, calibrated as in
+    `SEX-THR-006`). It is also sensitive to male material mixed into an XX sample (`SEX-THR-004`).
   * *Limits:* tissue, RNA quality and mapping can affect the two homologs differently, so the ratio is more robust
     than absolute values but not invariant to them; inspect its distribution per tissue and batch.
   * *Trade-off:* homologs share sequence; with a reference that does not mask the Y PAR (pseudoautosomal region), or with multi-mapping reads,
@@ -65,14 +69,14 @@
 ## 3. Counting and normalization
 
 * `SEX-COUNT-001` **Count marker genes over the whole gene body (exons and introns)** with uniquely mapped reads, when the library
-  captures intronic reads (total RNA, nuclei).
-  * *Why:* in total RNA and in nuclei about half of the reads are intronic, and several Y genes have long loci, so the
-    signal multiplies several-fold. Introns of X-degenerate Y genes have diverged from their X homologs, so unique
-    reads are unambiguous.
-  * *Deviate when:* for poly(A) or 3'-tag libraries, exonic counts are sufficient.
+  captures intronic reads: total RNA and nuclei, including 3' single-nucleus libraries.
+  * *Why:* in total RNA and in nuclei a substantial share of the reads is intronic (how much depends on protocol and
+    tissue), and several Y genes have long loci, so counting introns adds marker reads. Introns of X-degenerate Y genes
+    have diverged from their X homologs, so unique reads are unambiguous.
+  * *Deviate when:* for whole-cell poly(A) or 3'-tag libraries, exonic counts are sufficient.
 * `SEX-COUNT-002` **Normalize to counts per million uniquely mapped reads (or fragments)** and analyse on the $\log_{10}(1+x)$ scale.
-  * *Why:* the distributions are bimodal with many values near zero; the log scale separates the modes and stabilizes
-    Poisson noise.
+  * *Why:* the distributions are bimodal with many values near zero; the log scale separates the modes and compresses
+    the range.
 * `SEX-COUNT-003` **Screening depth:** for XX versus XY, about 1 million read pairs per sample is a starting value. With gene-body counting of total
   RNA, expect hundreds to thousands of informative reads at this depth (fewer with exonic counting or 3' libraries);
   observing zero MSY reads in an XY sample is then negligible. Re-evaluate anomalies at full depth.
@@ -81,8 +85,9 @@
   * *Deviate when:* the screening reads MAY be streamed from the archive (the first $N$ pairs, decompressed on the
     fly) instead of downloading whole files, so that the cohort is screened and routed (§4) before the main
     alignment. The stream MUST be validated as in `CODING_GUIDELINES.md` §13 (downloads from public archives). The
-    first reads of a file are not a random sample of the library (lane and tile order); this is acceptable for
-    `XX`/`XY` calls, which do not depend on it, and the flags of §7 are re-evaluated at full depth anyway.
+    first reads of a file are not a random sample of the library (lane and tile order). `XX`/`XY` calls from a
+    stream are acceptable only when it yields at least the informative reads of `SEX-COUNT-004`; a sample below it is
+    `LOW_SIGNAL` and is screened on more reads. The flags of §7 are re-evaluated at full depth anyway.
 * `SEX-COUNT-004` **Minimum informative reads:** samples with fewer than a fixed number of informative reads (XIST + MSY + X homologs;
   about 30 as a starting value) are `LOW_SIGNAL` and are re-run at higher depth, not called.
 * `SEX-COUNT-005` **Marker counts MUST use the library's strandedness** (e.g. featureCounts `-s 2` for reverse-stranded libraries),
@@ -147,8 +152,9 @@
   3. Reported sex.
 * `SEX-DEC-002` **Genotype-based sex** from the same RNA BAM: heterozygosity on non-PAR X (XX and XXY have heterozygous sites; XY
   does not) and Y depth, e.g. with somalier [Pedersen 2020] or peddy (DNA) [Pedersen 2017].
-  * *Why:* it is orthogonal to expression; a sample that is `XX` by expression but has no X heterozygosity is
-    suspicious.
+  * *Why:* it is partly independent of expression: it reads alleles, not expression levels, but it shares the reads,
+    the mapping and the coverage of the expression call, so a mapping or coverage problem can affect both. A sample
+    that is `XX` by expression but has no X heterozygosity is suspicious.
   * *Trade-off:* in RNA, only expressed genes are covered, and allele-specific expression (including X inactivation in
     clonal tissue) can hide heterozygosity; treat it as supporting evidence.
 * `SEX-DEC-003` **Expression calls are screening results, not karyotypes.** Keep separate columns: reported sex (metadata),
@@ -176,8 +182,9 @@
     them (modulated by composition); one low sample among normal ones from the same donor points to sample quality
     or composition. `XY_lowY` calls are often the lower tail of a continuous distribution; read them with their
     distance to the threshold (`SEX-THR-005`).
-* `SEX-LOY-002` `XIST+Y+` is resolved with genotype: XXY shows X heterozygosity and a single genotype; a mixture shows excess
-  heterozygosity, allele fractions inconsistent with one individual, and high relatedness to another sample.
+* `SEX-LOY-002` For `XIST+Y+`, genotype evidence suggests the explanation: XXY shows X heterozygosity and a single genotype; a mixture
+  shows excess heterozygosity, allele fractions inconsistent with one individual, and high relatedness to another
+  sample. A karyotype (XXY, X0) is confirmed only with DNA (WGS, genotyping array, karyotype; `SEX-DEC-003`).
 * `SEX-LOY-003` `XIST-Y-` with good library quality and no X heterozygosity suggests X0; with poor quality, a failed library.
 
 ## 8. Single-cell and single-nucleus data
@@ -205,7 +212,8 @@
 
 * `SEX-REP-001` One table per dataset with, per sample: reported sex, call, distance to each threshold, informative reads,
   normalized XIST and Y, median homolog ratio, `possible_mix`, chosen reference, concordance (`concordant`,
-  `DISCORDANT`, `no_reported_sex`, `uncertain_call`), and review flag.
+  `DISCORDANT`, `no_reported_sex`, `uncertain_call`), and review flag. The table states that the call is an
+  expression-based screening result, not a karyotype (`SEX-DEC-003`); the labels stay `XX`, `XY`, etc.
 * `SEX-REP-002` A scatter plot of $\log_{10}(1+\text{XIST})$ against $\log_{10}(1+\text{Y})$ coloured by reported sex, with the
   thresholds, discordant samples circled, and a histogram of the homolog ratio.
 * `SEX-REP-003` The thresholds used (and whether data-driven or calibrated), the marker lists and the reference versions.

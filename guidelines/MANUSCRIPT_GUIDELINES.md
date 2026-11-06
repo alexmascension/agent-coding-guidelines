@@ -1,6 +1,6 @@
 # Manuscript guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.1.0 (2026-10-26)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.2.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -59,6 +59,10 @@
     sidecar no one can say which run a submitted figure shows.
   * *Deviate when:* the final multi-panel layout is composed by hand. The scripted panels remain the source; the
     composite records the panels it contains and is composed again whenever a panel changes.
+  * *Deviate when:* a figure or panel is not an analysis output: a schematic drawn by hand, or an acquired image
+    (micrograph, gel, histology). Keep its source file (the drawing file; the image as acquired, a raw input under
+    `CODE-PROV-001`) and write the sidecar with that source and, for an image, the acquisition (instrument,
+    settings) and every processing step applied to it, in order.
 * `MS-TRACE-002` **Every number in the text comes from a generated file.** The analysis writes the values the text
   reports to a file the manuscript includes (LaTeX macros such as `\newcommand{\nDonors}{48}`, a Quarto or YAML
   variables file), rounded there and only there. A number that cannot be generated carries a comment in the source
@@ -178,8 +182,9 @@
   version can be regenerated.
 * `MS-RESP-004` **Check whether revision rounds converge** (`AGT-LOOP-002`, convergence of revision loops): when
   each round raises a new kind of problem, or the abstract has been reframed three or more times on unchanged
-  results, say that the bottleneck is the data or the question, not the wording, and propose a narrower claim, more
-  evidence or a different question.
+  results, stop rewording and examine the evidence, the argument and the audience. If the data or the question is
+  the bottleneck, say so and propose a narrower claim, more evidence or a different question; the count is a prompt
+  to look, not a diagnosis.
 
 ## 7. Writing
 

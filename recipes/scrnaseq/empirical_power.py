@@ -19,10 +19,16 @@ Procedure, for one cell type of a large dataset:
    Precision per bin: among the genes called whose own absolute log2 fold change falls in the bin,
    the fraction in the reference set (``p_adjusted < alpha``, any effect size).
 
-The reference is itself incomplete and shares the cohort, protocol and pipeline of the validation
-set, so recall and precision are upper bounds for an independent study. Every design is a full DE
-run: the cost is ``n_splits * len(units_per_group) * len(cells_per_unit) * n_iterations`` runs.
-Seeds derive from ``seed``, the split, the design and the iteration.
+Recall and precision against a held-out reference measure agreement with an imperfect reference,
+not true power or precision: recall tends to be optimistic (the reference is enriched for large,
+well-detected effects) and precision pessimistic (true changes missing from the reference count as
+false), but neither is a guaranteed bound. Reference and validation units also share the cohort,
+protocol and pipeline, so the estimates describe this cohort. Every design is a full DE run: the
+cost is ``n_splits * len(units_per_group) * len(cells_per_unit) * n_iterations`` runs. Seeds derive
+from ``seed``, the split, the design and the iteration.
+
+The default layer is resolved with ``recipes/scrnaseq/layers.py`` (``SC-DATA-004``, step
+``"pseudobulk"``) and MUST hold integer counts.
 """
 
 import logging
@@ -33,7 +39,9 @@ import pandas as pd
 import polars as pl
 import scipy.sparse as sp
 
-from recipes.scrnaseq.pseudobulk import ALPHA, MIN_CELLS, pseudobulk_de, unit_metadata
+from recipes.scrnaseq.layers import input_layer, require_integer_counts
+from recipes.scrnaseq.pseudobulk import ALPHA, MIN_CELLS, pseudobulk_de
+from recipes.scrnaseq.units import unit_metadata
 from recipes.stats.heldout import REFERENCE_FRACTION, heldout_splits
 
 logger = logging.getLogger(__name__)
@@ -104,7 +112,7 @@ def empirical_power(
     lfc_bin_edges: tuple[float, ...] = LFC_BIN_EDGES,
     alpha: float = ALPHA,
     min_cells: int = MIN_CELLS,
-    layer: str = "counts",
+    layer: str | None = None,
     seed: int = 0,
     n_cpus: int = 1,
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
@@ -142,8 +150,8 @@ def empirical_power(
         FDR level of every DE call.
     min_cells : int
         Minimum cells for a unit to enter the reference DE.
-    layer : str
-        Counts layer.
+    layer : str | None
+        Integer counts layer; None resolves it with ``input_layer(adata, "pseudobulk")``.
     seed : int
         Base seed.
     n_cpus : int
@@ -153,11 +161,15 @@ def empirical_power(
     -------
     runs : pl.DataFrame
         One row per split, design, iteration and bin (``RUN_SCHEMA``); ``cells_per_unit`` is
-        missing for all cells. ``status`` is ``ok``, ``infeasible`` (too few eligible units) or
-        ``not_testable`` (the DE could not run).
+        missing for all cells. ``status`` is ``ok``, ``infeasible`` (too few eligible units),
+        ``not_testable`` (the DE of the design could not run), ``reference_not_testable`` (the
+        reference DE of the split could not run: no reference unit with ``min_cells`` cells, too
+        few units per group, or no gene passing the filter; the split is not used) or
+        ``reference_empty`` (the reference DE ran but called no gene, so recall is undefined and
+        precision would count every call as false; the split is not used).
     summary : pl.DataFrame
-        Per design and bin: ``mean_recall``, ``mean_precision``, ``n_runs`` (``ok`` runs) and
-        ``n_infeasible``.
+        Per design and bin: ``mean_recall``, ``mean_precision``, ``n_runs`` (``ok`` runs),
+        ``n_infeasible``, ``n_reference_not_testable`` and ``n_reference_empty``.
 
     Raises
     ------
@@ -177,6 +189,8 @@ def empirical_power(
     levels = meta[variable].astype(str)
     if not {tested, reference_level} <= set(levels):
         raise ValueError(f"levels {tested!r} and {reference_level!r} must be in {variable!r}")
+    layer = input_layer(adata, "pseudobulk") if layer is None else layer
+    require_integer_counts(adata, layer)
     layer_counts = adata.layers[layer]
     layer_counts = (
         layer_counts.tocsr() if sp.issparse(layer_counts) else sp.csr_matrix(layer_counts)
@@ -191,10 +205,36 @@ def empirical_power(
     )
     for s, (reference_units, validation_units) in enumerate(splits):
         ref_units = [u for u in reference_units if cells_of[u].size >= min_cells]
-        ref_pb = _pseudobulk(
-            counts, {u: cells_of[u] for u in ref_units}, meta, adata.var_names, cell_type
-        )
-        ref_results, _ = pseudobulk_de(ref_pb, design, contrast, alpha=alpha, n_cpus=n_cpus)
+        ref_results, ref_not_testable = pl.DataFrame(), pl.DataFrame()
+        if ref_units:
+            ref_pb = _pseudobulk(
+                counts, {u: cells_of[u] for u in ref_units}, meta, adata.var_names, cell_type
+            )
+            ref_results, ref_not_testable = pseudobulk_de(
+                ref_pb, design, contrast, alpha=alpha, n_cpus=n_cpus
+            )
+        if not ref_units or ref_not_testable.height or ref_results.height == 0:
+            reason = (
+                ref_not_testable["reason"][0]
+                if ref_not_testable.height
+                else f"{len(ref_units)} reference units with at least {min_cells} cells"
+            )
+            logger.warning(f"split {s}: reference DE not testable ({reason}); split not used")
+            rows += [
+                {
+                    "split": s,
+                    "units_per_group": n_units,
+                    "cells_per_unit": n_cells,
+                    "iteration": it,
+                    "lfc_bin": b,
+                    "status": "reference_not_testable",
+                }
+                for n_units in units_per_group
+                for n_cells in cells_per_unit
+                for it in range(n_iterations)
+                for b in bins
+            ]
+            continue
         ref = ref_results.to_pandas()
         ref = ref[ref["p_adjusted"] < alpha]
         lfc = ref["log2_fold_change_shrunk"].where(
@@ -206,6 +246,23 @@ def empirical_power(
         logger.info(
             f"split {s}: reference of {len(ref_units)} units, {len(reference_set)} genes called"
         )
+        if not reference_set:
+            logger.warning(f"split {s}: the reference calls no gene; split not used")
+            rows += [
+                {
+                    "split": s,
+                    "units_per_group": n_units,
+                    "cells_per_unit": n_cells,
+                    "iteration": it,
+                    "lfc_bin": b,
+                    "status": "reference_empty",
+                }
+                for n_units in units_per_group
+                for n_cells in cells_per_unit
+                for it in range(n_iterations)
+                for b in bins
+            ]
+            continue
         val_levels = levels.loc[validation_units]
         for d_i, n_units in enumerate(units_per_group):
             for c_i, n_cells in enumerate(cells_per_unit):
@@ -275,6 +332,8 @@ def empirical_power(
             mean_precision=pl.col("precision").filter(pl.col("status") == "ok").mean(),
             n_runs=(pl.col("status") == "ok").sum(),
             n_infeasible=(pl.col("status") == "infeasible").sum(),
+            n_reference_not_testable=(pl.col("status") == "reference_not_testable").sum(),
+            n_reference_empty=(pl.col("status") == "reference_empty").sum(),
         )
         .sort(keys, nulls_last=True)
     )

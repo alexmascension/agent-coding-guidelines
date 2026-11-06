@@ -19,9 +19,10 @@ Procedure
 
    * log total counts and log genes detected: both tails;
    * mitochondrial fraction: upper tail only, on the logit scale
-     (``logit(clip(f, MITO_LOGIT_EPS, 1 - MITO_LOGIT_EPS))``), and a cell is flagged only when it
-     is beyond the MAD threshold *and* above ``mito_floor`` (the project's floor for its tissue and
-     assay);
+     (``logit(clip(f, MITO_LOGIT_EPS, 1 - MITO_LOGIT_EPS))``, after checking that every finite
+     fraction lies in [0, 1], so percentages are refused rather than clipped), and a cell is
+     flagged only when it is beyond the MAD threshold *and* above ``mito_floor`` (the project's
+     floor for its tissue and assay);
    * fraction of counts in the top 20 genes: both tails;
    * nuclear fraction: lower tail.
 5. ``flagged_fraction_by_cluster``: after the first clustering, the fraction of cells flagged by
@@ -304,6 +305,12 @@ def mad_outlier_flags(
         ``evaluated``, ``evaluated_no_floor``, ``mad_floor_applied`` (fraction metrics whose MAD is
         below ``min_scaled_mad``), ``not_evaluated_mad_zero`` (log metrics with MAD 0) or
         ``not_evaluated_no_values`` (no finite value in the capture).
+
+    Raises
+    ------
+    ValueError
+        If a fraction metric (``FRACTION_METRICS``) has finite values outside [0, 1] (e.g.
+        percentages): the logit clip would hide them.
     """
     rules = [
         ("log1p_total_counts", n_mads_counts, True, True),
@@ -315,6 +322,15 @@ def mad_outlier_flags(
         rules.append(("top20_fraction", n_mads_top20, True, True))
     if n_mads_nuclear is not None:
         rules.append(("nuclear_fraction", n_mads_nuclear, True, False))
+    for metric, *_ in rules:
+        if metric in FRACTION_METRICS:
+            values = adata.obs[metric].to_numpy(dtype=float)
+            outside = np.isfinite(values) & ((values < 0) | (values > 1))
+            if outside.any():
+                raise ValueError(
+                    f"{metric}: {int(outside.sum())} values outside [0, 1]; pass fractions, not "
+                    "percentages (SC-QC-003)"
+                )
     outlier = {metric: np.zeros(adata.n_obs, dtype=bool) for metric, *_ in rules}
     invalid = {metric: np.zeros(adata.n_obs, dtype=bool) for metric, *_ in rules}
     captures = adata.obs[capture_key].astype(str).to_numpy()

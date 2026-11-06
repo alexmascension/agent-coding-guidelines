@@ -98,6 +98,11 @@ def test_groups_changed_files_by_the_first_matching_glob(repos):
     assert report.tracked["watch"] == [("skills/new-skill/SKILL.md", "added", "new skills")]
     assert report.untracked == ["tests/run.sh"]
     assert report.needs_review()
+    assert report.review_reasons() == [
+        "1 integrated files changed",
+        "1 deferred files changed",
+        "1 watch files changed",
+    ]
     text = render([report], DAY)
     assert "- [integrated] `skills/brainstorming/SKILL.md` (modified): AGENTIC §13" in text
     assert "<details><summary>1 not-integrated files</summary>" in text
@@ -131,11 +136,27 @@ def test_no_new_commits_reports_nothing(repos):
     assert "No new commits." in render([report], DAY)
 
 
-def test_flags_a_file_list_truncated_by_the_api(repos):
+def test_a_file_list_truncated_by_the_api_needs_review(repos):
+    """Only untracked files are listed, but followed files may be among those the API left out."""
     files = [{"filename": f"other/{i}.txt", "status": "added"} for i in range(COMPARE_FILE_LIMIT)]
     report = summarize(repos[1], compare(*files, ahead_by=400))
     assert report.truncated
-    assert f"listed only {COMPARE_FILE_LIMIT} files" in render([report], DAY)
+    assert not any(report.tracked.values())
+    assert report.needs_review()
+    assert any("listed only" in reason for reason in report.review_reasons())
+    text = render([report], DAY)
+    assert f"listed only {COMPARE_FILE_LIMIT} files" in text
+    assert "Review needed: the compare API listed only" in text
+
+
+def test_a_file_list_below_the_limit_is_not_truncated(repos):
+    files = [
+        {"filename": f"other/{i}.txt", "status": "added"} for i in range(COMPARE_FILE_LIMIT - 1)
+    ]
+    report = summarize(repos[1], compare(*files))
+    assert not report.truncated
+    assert not report.needs_review()
+    assert "Review needed" not in render([report], DAY)
 
 
 def test_mark_reviewed_changes_only_the_named_repository():

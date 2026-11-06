@@ -1,6 +1,6 @@
 # HPC guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.4.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.5.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -59,13 +59,18 @@
 
 * `HPC-FLOW-001` **Raw inputs live once in `ARCHIVE/data/raw` and are read-only** (`CODE-PROV-001`). Jobs SHOULD read staged copies
   in `WORK/data/` when `ARCHIVE` is not designed for job I/O (e.g. an NFS filesystem, or read-only from compute
-  nodes); staging is an explicit, logged `rsync` step.
+  nodes); staging is an explicit, logged `rsync` step, verified against checksums of the source (`HPC-FLOW-005`).
   * *Trade-off:* staged copies count against the `WORK` quota; stage what the next runs need and remove it after.
+    A staged copy is a replica: `CODE-PROV-001` lets it be deleted, or overwritten with the source, once the copy
+    of record in `ARCHIVE/data/raw` has been verified to exist and match its checksum; the copy of record itself is
+    never modified or deleted. A staged copy that differs from the source does not show which of the two is damaged:
+    check the copy of record before replacing the replica (`recipes/hpc/stage.sh` stops unless `--overwrite`).
   * *Deviate when:* large read-only references (e.g. aligner indexes) MAY be read directly from `ARCHIVE` when load
     times measured under the intended concurrency are acceptable; record the measurement.
 * `HPC-FLOW-002` **Jobs write only to `WORK` (and `NODE`).** Final results reach `ARCHIVE` through an explicit **promotion** step
   (`recipes/hpc/promote.sh`), run where `ARCHIVE` is writable (e.g. a login node), that copies one run directory
-  and writes a manifest (file list with checksums, commit, job IDs, date).
+  and writes a manifest (file list with checksums computed on the run before the copy and checked on the copy,
+  commit, job IDs, date).
   * *Why:* results in `ARCHIVE` are then complete runs with provenance, never half-written outputs of a job that
     failed; and the rule works on sites where `ARCHIVE` is read-only from compute nodes.
 * `HPC-FLOW-003` **Assume nothing on the cluster is backed up unless the site profile says so.** Code is safe only when pushed to
@@ -74,12 +79,16 @@
 * `HPC-FLOW-004` **`WORK` is not storage.** Remove intermediates of finished runs (or archive them as one file); scratch areas
   degrade for everyone when full and may be purged by the centre.
 * `HPC-FLOW-005` **Transfers use `rsync`** (`-a`, checksums for verification, `--dry-run` before any `--delete`); large or many
-  files are archived (`tar`) before transfer. Downloads from public archives follow `CODING_GUIDELINES.md` §13
-  (downloads from public archives).
+  files are archived (`tar`) before transfer. Verification compares content: `rsync --checksum`, or SHA-256
+  checksums computed on the source and checked on the copy. Downloads from public archives follow
+  `CODING_GUIDELINES.md` §13 (downloads from public archives).
+  * *Why:* by default rsync skips files whose size and modification time match, so a copy that differs from the
+    source with the same size and time is kept, and the transfer still succeeds.
+  * *Trade-off:* checksums read every file in full on both sides, which can slow a transfer considerably.
 * `HPC-FLOW-006` **Alignments that later questions may need SHOULD be archived as CRAM, not deleted.** Convert the
-  coordinate-sorted BAM to CRAM against the exact FASTA used for mapping, check that the record count matches,
-  then delete the BAM (`HPC-BATCH-004`). Set the CRAM version and profile explicitly, chosen by the project's priority
-  (recorded in `PROJECT_CONTEXT.md`):
+  coordinate-sorted BAM to CRAM against the exact FASTA used for mapping, check that the CRAM holds the content of
+  the BAM (below), then delete the BAM (`HPC-BATCH-004`). Set the CRAM version and profile explicitly, chosen by the
+  project's priority (recorded in `PROJECT_CONTEXT.md`):
   * **Compatibility with older readers:** CRAM 3.0 (`samtools view -O cram,version=3.0`). Required when any reader
     in use lacks CRAM 3.1 support, e.g. tools built on htsjdk older than 4.3.0 (GATK before 4.7.0.0).
   * **Balance of size and speed** (default once every reader in use is known to read CRAM 3.1): CRAM 3.1 with the
@@ -87,9 +96,15 @@
   * **Minimal volume:** CRAM 3.1 with the `archive` profile (`-O cram,version=3.1,archive`), when encoding and
     decoding time matter less than space; measure the extraction time of region BAMs on a pilot first.
 
-  Read a converted file once with the oldest reader in use. Record format, CRAM version and profile, writing tool and
-  version, reference path and checksum, and removed tags in provenance. Region BAMs for a list of regions are
-  extracted from the CRAMs (`samtools view -T <fasta> -M -L <bed>`) whenever the list changes, without re-mapping.
+  Equal record counts do not show that names, bases, qualities, positions or tags survived the conversion. Compare
+  `samtools checksum -a` of the BAM and of the CRAM (samtools 1.22 or later, the same version for both: the
+  checksums of mate fields changed in 1.24). `-a` checksums names, flags, sequences, qualities, positions, mapping
+  quality and CIGAR, mate fields and tags (except `MD`, `NM`, `cF`) in record order, and the samtools manual
+  documents it for BAM-to-CRAM round trips. Tags removed on purpose change the `+aux` and `combined` columns; every
+  other column MUST match. Read a converted file once with the oldest reader in use. Record format, CRAM version
+  and profile, writing tool and version, reference path and checksum, the checksum reports, and removed tags in
+  provenance. Region BAMs for a list of regions are extracted from the CRAMs (`samtools view -T <fasta> -M -L <bed>`)
+  whenever the list changes, without re-mapping.
   Which tags to keep: `SCRNASEQ_GUIDELINES.md` §3 (`SC-QUANT-005`), `RNASEQ_BULK_GUIDELINES.md` §4
   (`BULK-QUANT-005`).
   * *Why:* re-mapping means downloading and aligning again (STARsolo: about 1 h per 150 M reads on 4 CPUs, plus the
@@ -112,6 +127,9 @@
 
 * `HPC-BATCH-001` **Process in batches sized to a space budget.** Each batch fetches or stages its inputs, runs the pipeline,
   harvests and validates its results, and deletes its inputs and intermediates before the next batch takes the space.
+  The inputs it deletes are replicas (`CODE-PROV-001`): staged copies whose copy of record stays in
+  `ARCHIVE/data/raw`, or downloads whose copy of record is the public archive, verified against the archive's
+  checksum when fetched (`CODE-DL-001`).
   The budget is the project's share of the `WORK` quota (shared with the user's other projects) minus a free margin;
   a batch waits, for a bounded time, when the budget is exhausted.
 * `HPC-BATCH-002` **Calibrate the footprint on a pilot**: peak `WORK` usage divided by input size, measured on a few batches;
@@ -156,8 +174,14 @@
   * `--output`/`--error` to `WORK/logs/` with job name and ID (`%x.%j`, arrays `%x.%A_%a`);
   * `--no-requeue` unless the job resumes from checkpoints;
   * thread counts from the allocation (`OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK`, and the tool's own thread option).
-  * *Why:* propagating the login environment makes jobs depend on whatever was loaded at submission; automatic
-    requeueing of a job that does not resume restarts it from the beginning and overwrites its outputs.
+  * *Why:* propagating the submission environment makes jobs depend on whatever was loaded in the shell that
+    submitted them; automatic requeueing of a job that does not resume restarts it from the beginning and
+    overwrites its outputs.
+  * *Note:* `--export=NONE` does not start the job from an empty environment. Only `SLURM_*` (and SPANK)
+    variables come from the submitting shell, and Slurm then loads the user's login environment on the node, as
+    with `--get-user-env` (`--export=NIL` skips that step); what login files set still applies, so the script sets
+    what the job needs. Steps started with `srun` inside the job inherit `NONE`: set `SLURM_EXPORT_ENV=ALL` in the
+    script before them (or `srun --export=ALL`) so that they receive the environment the script built.
 * `HPC-JOB-002` **Resources are requested from measurements**: run once with generous limits on a small input, read `seff` and
   `sacct` (`MaxRSS`, `Elapsed`, CPU efficiency) of completed jobs, then request about 1.2–1.5 times the measured
   peak memory and time. Record the measured values in the job script comments.
@@ -165,7 +189,10 @@
 * `HPC-JOB-003` **Test before production**: a short run on the test QoS or a reduced input, then the full job.
 * `HPC-JOB-004` **Independent tasks use job arrays** with a throttle (`--array=1-500%50`) and one task per sample, not one job per
   sample submitted in a loop.
-  * *Why:* arrays respect submission limits and are cancelled, monitored and accounted as one job.
+  * *Why:* an array is submitted, monitored (`squeue` shows its pending tasks on one line) and cancelled
+    (`scancel <array ID>`) as one unit, and the scheduler handles thousands of tasks without thousands of separate
+    submissions. Each task still counts as a job toward per-user limits such as `MaxJobs` and `MaxSubmitJobs`
+    (site profile); the throttle (`%50`) bounds how many tasks run at once.
 * `HPC-JOB-005` **Jobs are idempotent and restartable**: each task writes to a temporary name and renames on success, skips work
   whose output already exists and is complete, and never overwrites existing outputs without `--overwrite`
   (`CODE-PROV-005`).
@@ -199,8 +226,13 @@
 ## 6. I/O and small files
 
 * `HPC-IO-001` **Avoid many small files on parallel filesystems**: keep fewer than a few thousand files per directory; pack
-  per-sample outputs into archives or container formats (HDF5, zarr, parquet); use `NODE` for workloads that create
-  many temporary files and copy back only the results.
+  per-sample outputs into archives or single-file formats (HDF5, parquet); use `NODE` for workloads that create
+  many temporary files and copy back only the results. A zarr directory store writes one file per chunk: use zarr
+  with sharding (zarr format 3, `shards=` in `zarr.create_array`) or in a zip store (`zarr.storage.ZipStore`), with
+  chunk and shard shapes matched to access (the chunk is the unit read independently, the shard the unit written
+  at once).
+  * *Why:* file systems can be slow to store and access many files, files smaller than the block size waste space,
+    and sites cap the number of files per user (site profile).
 * `HPC-IO-002` **`NODE` directories are created and removed by the job** (`mkdir -p "$PROJECT_NODE"` at the start, cleanup in a
   `trap ... EXIT`), with the job ID in the name; a killed job may leave them behind, so the name must identify them.
 * `HPC-IO-003` Read large inputs sequentially and once per job; avoid many jobs reading the same file from a non-parallel
@@ -246,8 +278,8 @@
 | Role roots of a site (copy to `config/sites/<site>.env`) | `recipes/hpc/sites/local.env`, `recipes/hpc/sites/hyperion.env` |
 | Resolve the project root and load the site file (sourced by the scripts below) | `recipes/hpc/load_site.sh` |
 | Create role directories and repository links (§1) | `recipes/hpc/setup_storage.sh` |
-| Stage raw inputs from `ARCHIVE` to `WORK`, with a log (§2) | `recipes/hpc/stage.sh` |
-| Promote a run from `WORK` to `ARCHIVE` with checksums and a manifest (§2, §7) | `recipes/hpc/promote.sh` |
+| Stage raw inputs from `ARCHIVE` to `WORK`, verified against SHA-256 checksums of the source, with a log (§2) | `recipes/hpc/stage.sh` |
+| Promote a run from `WORK` to `ARCHIVE`, checked against checksums computed on the run, with a manifest (§2, §7) | `recipes/hpc/promote.sh` |
 | Batch job template with `ERR` trap and node-local directory (§4, §6) | `recipes/hpc/job.slurm` |
 | Site facts | `hpc_sites/<SITE>.md` (e.g. `hpc_sites/DIPC_HYPERION.md`) |
 

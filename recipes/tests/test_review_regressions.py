@@ -83,9 +83,9 @@ def test_nan_statistic_is_rejected():
 
 def test_two_sided_pvalue_uses_scipy_convention():
     rng = np.random.default_rng(0)
-    values = (
-        rng.normal(size=20) + 5.0
-    )  # statistic not centred at 0: absolute values would be wrong
+    # null distribution of the statistic not centred at 0: comparing |T| would measure distance
+    # from 0, not a two-sided alternative; the recipe doubles the smaller one-sided p-value
+    values = rng.normal(size=20) + 5.0
     labels = np.array([0, 1] * 10)
     p, _, _ = permutation_pvalue(lambda lab: values[lab == 1].mean(), labels, n_permutations=499)
     assert p > 0.05

@@ -25,6 +25,12 @@ Procedure
   median cell. The centring sets the effective pseudocount, so it is part of the method and is
   recorded.
 * All factors are validated: one per cell, finite and positive.
+* Input layer: ``layer=None`` (default of every function here) is resolved with
+  ``recipes/scrnaseq/layers.py`` (``SC-DATA-004``, step ``"normalization"``):
+  ``counts_ambient_corrected`` if it exists, else ``counts``. An explicit layer is honoured.
+  ``log_normalize`` refuses to write into a layer of observed counts (``counts``,
+  ``counts_ambient_corrected``, ``spliced``, ``unspliced``, ``ambiguous``; ``SC-DATA-003``) or
+  into its input layer.
 
 Installation and limits of scranPY
 ----------------------------------
@@ -54,6 +60,7 @@ import scipy.io
 import scipy.sparse as sp
 
 from recipes.common.resources import package_script
+from recipes.scrnaseq.layers import check_output_layer, input_layer
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +71,11 @@ MAX_DENSE_GB = 32.0  # project-adjustable memory guard for the dense copy scranP
 
 def _totals(adata: ad.AnnData, layer: str) -> np.ndarray:
     return np.asarray(adata.layers[layer].sum(axis=1)).ravel().astype(float)
+
+
+def _layer(adata: ad.AnnData, layer: str | None) -> str:
+    """Return ``layer``, or the default of the normalization step (``SC-DATA-004``)."""
+    return input_layer(adata, "normalization") if layer is None else layer
 
 
 def validate_size_factors(
@@ -85,15 +97,17 @@ def validate_size_factors(
     return factors
 
 
-def median_size_factors(adata: ad.AnnData, layer: str = "counts") -> np.ndarray:
+def median_size_factors(adata: ad.AnnData, layer: str | None = None) -> np.ndarray:
     """Size factors proportional to library size, scaled so that the median cell has factor 1.
+
+    ``layer=None`` reads ``input_layer(adata, "normalization")``.
 
     Raises
     ------
     ValueError
         If any cell has zero counts.
     """
-    totals = _totals(adata, layer)
+    totals = _totals(adata, _layer(adata, layer))
     if not np.all(np.isfinite(totals)) or np.any(totals <= 0):
         raise ValueError(
             f"{int(np.sum(~(totals > 0)))} cells with zero or invalid totals; filter them first"
@@ -103,7 +117,7 @@ def median_size_factors(adata: ad.AnnData, layer: str = "counts") -> np.ndarray:
 
 def scranpy_size_factors(
     adata: ad.AnnData,
-    layer: str = "counts",
+    layer: str | None = None,
     cluster_key: str | None = None,
     min_mean: float = SCRAN_MIN_MEAN,
     max_dense_gb: float = MAX_DENSE_GB,
@@ -114,9 +128,9 @@ def scranpy_size_factors(
     Parameters
     ----------
     adata : ad.AnnData
-        Cells after QC; raw counts in ``layer``. Not modified.
-    layer : str
-        Layer with raw counts.
+        Cells after QC; counts in ``layer``. Not modified.
+    layer : str | None
+        Layer with the counts; None reads ``input_layer(adata, "normalization")``.
     cluster_key : str | None
         ``obs`` column with clusters for pooling (recommended when cell types differ in RNA
         content).
@@ -149,7 +163,7 @@ def scranpy_size_factors(
         raise MemoryError(
             f"dense copy needs {dense_gb:.1f} GB (> {max_dense_gb}); use scran_size_factors (R)"
         )
-    counts = adata.layers[layer]
+    counts = adata.layers[_layer(adata, layer)]
     dense = counts.toarray() if sp.issparse(counts) else np.asarray(counts)
     obs = adata.obs[[cluster_key]].copy() if cluster_key else None
     tmp = ad.AnnData(X=dense.astype(np.float64), obs=obs)
@@ -174,7 +188,7 @@ def scranpy_size_factors(
 
 def scran_size_factors(
     adata: ad.AnnData,
-    layer: str = "counts",
+    layer: str | None = None,
     cluster_key: str | None = None,
     min_mean: float = SCRAN_MIN_MEAN,
     seed: int = 0,
@@ -186,9 +200,9 @@ def scran_size_factors(
     Parameters
     ----------
     adata : ad.AnnData
-        Cells after QC; raw integer counts in ``layer``.
-    layer : str
-        Layer with raw counts.
+        Cells after QC; counts in ``layer``.
+    layer : str | None
+        Layer with the counts; None reads ``input_layer(adata, "normalization")``.
     cluster_key : str | None
         ``obs`` column with clusters for pooling; None lets ``quickCluster`` define them.
     min_mean : float
@@ -221,7 +235,7 @@ def scran_size_factors(
     )  # unique per run; never reuses earlier files
     r_script = package_script("recipes.scrnaseq", "scran_size_factors.R")
     try:
-        counts = adata.layers[layer]
+        counts = adata.layers[_layer(adata, layer)]
         counts = counts if sp.issparse(counts) else sp.csr_matrix(counts)
         scipy.io.mmwrite(tmp / "counts.mtx", counts.T.tocoo())
         (tmp / "barcodes.txt").write_text("\n".join(adata.obs_names) + "\n")
@@ -260,16 +274,23 @@ def scran_size_factors(
 def log_normalize(
     adata: ad.AnnData,
     size_factors: np.ndarray,
-    layer: str = "counts",
+    layer: str | None = None,
     key_added: str = "log1p_norm",
 ) -> None:
     """Store ``log1p(counts / s)`` in ``layers[key_added]`` and ``obs["size_factor"]`` (in place).
 
+    ``layer=None`` reads ``input_layer(adata, "normalization")``; compute the factors from the same
+    layer.
+
     Raises
     ------
     ValueError
-        If factors are not positive or their length differs from the number of cells.
+        If factors are not positive or their length differs from the number of cells, or
+        ``key_added`` is a layer of observed counts (``PROTECTED_LAYERS`` of
+        ``recipes/scrnaseq/layers.py``) or the input layer.
     """
+    layer = _layer(adata, layer)
+    check_output_layer(key_added, layer)
     factors = validate_size_factors(size_factors, adata.n_obs)
     counts = adata.layers[layer]
     if sp.issparse(counts):

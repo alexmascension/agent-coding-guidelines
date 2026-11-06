@@ -20,8 +20,8 @@ Procedure
 
 Input contract
 --------------
-Counts are non-negative and finite. Non-integer values are accepted only with
-``allow_non_integer=True``, for
+Counts are non-negative, finite and within the int64 range. Integers are checked exactly (no
+tolerance). Non-integer values are accepted only with ``allow_non_integer=True``, for
 ``lengthScaledTPM`` counts from tximport (rounded, as DESeq2 users do); normalized or transformed
 values MUST NOT be
 passed: rounding does not make them counts.
@@ -46,6 +46,7 @@ from pydeseq2.ds import DeseqStats
 logger = logging.getLogger(__name__)
 
 MIN_COUNT = 10
+INT64_LIMIT = 2.0**63  # smallest float that does not fit in int64
 RESULT_COLUMNS = [
     "gene_id",
     "base_mean",
@@ -108,18 +109,29 @@ def filter_genes(
 def validated_counts(counts: pd.DataFrame, allow_non_integer: bool = False) -> pd.DataFrame:
     """Return integer counts after checking that the input is a count matrix.
 
+    The integer check is exact (no relative or absolute tolerance): float storage represents
+    integer counts exactly (float64 up to 2**53), so any fractional part means the values are not
+    counts. ``allow_non_integer=True`` rounds them (``lengthScaledTPM`` only).
+
     Raises
     ------
     ValueError
-        If values are negative or non-finite, or non-integer while ``allow_non_integer`` is False.
+        If values are negative or non-finite, at or above 2**63 (outside the int64 range), or
+        non-integer while ``allow_non_integer`` is False.
     """
     values = counts.to_numpy(dtype=float)
     if not np.all(np.isfinite(values)) or np.any(values < 0):
         raise ValueError("counts contain negative or non-finite values")
-    if not allow_non_integer and not np.allclose(values, np.round(values)):
-        raise ValueError(
-            "non-integer counts; pass allow_non_integer=True only for lengthScaledTPM counts"
-        )
+    if np.any(values >= INT64_LIMIT):
+        raise ValueError(f"counts at or above 2**63 ({INT64_LIMIT:.3g}) do not fit in int64")
+    if not allow_non_integer:
+        fractional = values != np.round(values)
+        if fractional.any():
+            raise ValueError(
+                f"non-integer counts ({int(fractional.sum())} values, e.g. "
+                f"{values[fractional][0]!r}); pass allow_non_integer=True only for "
+                "lengthScaledTPM counts"
+            )
     return counts.round().astype(np.int64)
 
 
@@ -192,10 +204,12 @@ def run_deseq2(
     Raises
     ------
     ValueError
-        If the counts violate the input contract, a covariate has missing values, or a level is
-        absent.
+        If there are no genes, the counts violate the input contract, a covariate has missing
+        values, or a level is absent.
     """
     variable, tested, reference = contrast
+    if counts.shape[1] == 0:
+        raise ValueError("no genes to test: the gene filter kept none")
     integer_counts = validated_counts(counts, allow_non_integer)
     metadata = metadata.copy()
     if metadata.isna().any().any():

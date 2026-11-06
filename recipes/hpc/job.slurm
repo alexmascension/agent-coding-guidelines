@@ -16,7 +16,9 @@
 set -Eeuo pipefail
 trap 'echo "ERROR line ${LINENO}: ${BASH_COMMAND} (exit $?)" >&2' ERR
 
-# --export=NONE drops variables of the submitting shell: set the site here.
+# --export=NONE drops variables of the submitting shell (Slurm then loads the login environment, as with
+# --get-user-env): set the site here. Steps started with srun inherit NONE; before them:
+#   export SLURM_EXPORT_ENV=ALL
 export PROJECT_SITE="${PROJECT_SITE:-hyperion}"
 export PROJECT_ROOT="${SLURM_SUBMIT_DIR}"
 # shellcheck source-path=SCRIPTDIR source=load_site.sh

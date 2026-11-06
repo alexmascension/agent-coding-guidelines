@@ -14,6 +14,16 @@ would go; remove an item in the change that completes it.
   unreleased pipeline beyond a pinned commit with passing tests.
 - `SCRNASEQ_GUIDELINES.md` `SC-QUANT-001`: motivating case for the pinned fork of `nf-core/scrnaseq` (nuclei with
   `GeneFull_Ex50pAS`), to be written from the first project that runs it.
+- `hpc_sites/DIPC_HYPERION.md`: for each observation, the command and a minimal output (or an incident reference),
+  so it can be re-verified (audit item G-H06); add the `srun` note (`SLURM_EXPORT_ENV=ALL` before `srun` steps of a
+  job submitted with `--export=NONE`, `HPC-JOB-001`) once tested on the cluster.
+- `CODING_GUIDELINES.md` `CODE-USE-007`: the text defines MINOR as new rules or reorganization and MAJOR as removed
+  or substantially changed rules; recent rounds bumped MINOR for requirements added to a rule or scopes narrowed or
+  widened while overrides still apply. Write that practice into the rule, or decide otherwise.
+- References: separate the kind of evidence of each note (method paper, independent benchmark, review,
+  documentation, local experience) and state the scope of comparative claims (datasets, criterion); trace each
+  MUST/MUST NOT, threshold and superlative to the passage or figure of its source (audit §1.15).
+- `OMICS_REFERENCES.md` [Hennig 2007]: the note is empty; no abstract was accessible (CrossRef, Europe PMC).
 
 ## Tooling
 
@@ -21,3 +31,8 @@ would go; remove an item in the change that completes it.
   each typed return condition (`schema_accepts` against the `nextflow_schema.json` of a release, `first_release`,
   `pipeline_includes`, `issue_closed`) and list the deviations whose condition is met (`CODE-PIPE-005`); `manual`
   conditions listed for review.
+- `tools/check_guides.py`: citation-key checks also for `CODING_GUIDELINES.md`, which is excluded today (audit C22).
+- `recipes/common/build_gene_groups.py`: the shipped lists predate source snapshots and cannot be rebuilt offline.
+  The next networked rebuild (`python -m recipes.common.build_gene_groups --overwrite`) writes the first snapshot under
+  `build/gene_groups_sources/<date and time>`; archive it outside git (the HGNC response is about 19 MB, above the pre-commit
+  size limit) and record where.

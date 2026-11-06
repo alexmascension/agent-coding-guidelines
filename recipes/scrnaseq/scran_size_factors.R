@@ -4,7 +4,7 @@
 # it can also be run on its own.
 #
 # Inputs
-#   --counts    Matrix Market file, genes x cells, raw counts (integer).
+#   --counts    Matrix Market file, genes x cells, counts (raw or ambient-corrected, SC-DATA-004).
 #   --barcodes  Text file, one barcode per line, in column order.
 #   --clusters  Optional text file, one cluster label per line (same order). Without it, scran::quickCluster is used.
 #   --min-mean  Minimum mean count of genes used for pooling; 0.1 is the scran recommendation for UMI data.

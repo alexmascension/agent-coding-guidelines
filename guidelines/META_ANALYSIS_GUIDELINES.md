@@ -1,6 +1,6 @@
 # Meta-analysis guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.2.0 (2026-11-04)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 2.3.0 (2026-11-05)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Borenstein 2023]` point to
 > `OMICS_REFERENCES.md`; keys marked with a dagger point to `STATISTICS_REFERENCES.md`.
@@ -73,7 +73,7 @@
   population and protocol); state the justification.
 * `META-MOD-003` **Estimate the between-study variance $\tau^2$ with REML (restricted maximum likelihood) or Paule-Mandel, not DerSimonian-Laird**
   [Veroniki 2015; Langan 2018].
-  * *Why:* DerSimonian-Laird underestimates $\tau^2$ when heterogeneity is substantial or studies are few, which
+  * *Why:* DerSimonian-Laird can underestimate $\tau^2$ when heterogeneity is substantial or studies are few, which
     makes confidence intervals too narrow [Veroniki 2015; Langan 2018].
 * `META-MOD-004` **Compute the confidence interval of the mean with the Hartung-Knapp-Sidik-Jonkman (HKSJ) method**
   [IntHout 2014; Langan 2018]. With very few studies, HKSJ can be anticonservative or erratic; use the modified
@@ -99,7 +99,8 @@
 
 ## 6. Small-study effects and publication bias
 
-* `META-PUB-001` Draw a funnel plot and run asymmetry tests (Egger) only with at least 10 studies [Sterne 2011; Egger 1997].
+* `META-PUB-001` Run funnel-plot asymmetry tests (Egger) only with at least 10 studies [Sterne 2011; Egger 1997]. With fewer, a
+  funnel plot MAY be shown as a description; it is not interpreted as evidence for or against bias.
   * *Why:* with fewer studies the tests have too little power to distinguish asymmetry from chance [Sterne 2011].
 * `META-PUB-002` **Asymmetry is not proof of publication bias**: heterogeneity, chance and small-study effects also produce it. Report
   "risk of publication bias" rather than its presence [Afonso 2023].
@@ -139,12 +140,17 @@ Decide, in the protocol, which of these strategies is used and why [Ramasamy 200
   [Sweeney 2016].
   * *Why:* combining effect sizes keeps direction and magnitude and allows heterogeneity to be estimated per gene;
     p-value combination only says that some study shows an effect.
+  * *Note:* an effect-size threshold used to select genes is prioritization; the FDR of the selected set is then not
+    controlled. FDR control above a threshold needs a test against it (`STATISTICS_GUIDELINES.md` `STAT-MT-007`).
 * `META-STRAT-002` p-value combination MUST be done separately for each direction (one-sided p-values), so that up- and
-  down-regulation in different studies do not combine into a significant result [Rau 2014]. For dependent tests, the
-  harmonic mean p-value MAY be used [Wilson 2019], with conditions: the raw harmonic mean is anti-conservative and
-  MUST NOT be compared directly with $\alpha$; use the asymptotically exact procedure of its author's R package
-  (`harmonicmeanp::p.hmp`, as amended in the published correction), and state that its family-wise error control
-  is approximate and relies on the assumptions of that procedure.
+  down-regulation in different studies do not combine into a significant result [Rau 2014]. The two one-sided
+  analyses form one family: correct across both directions (e.g. per gene, twice the smaller of the two combined
+  p-values, capped at 1, then adjusted across genes). A combined p-value in one direction shows an effect in that
+  direction in at least one study, not replication across studies. For dependent tests, the harmonic mean p-value
+  MAY be used [Wilson 2019], with conditions: the raw harmonic mean is anti-conservative and MUST NOT be compared
+  directly with $\alpha$; use the asymptotically exact procedure of its author's R package (`harmonicmeanp::p.hmp`,
+  as amended in the published correction), and state that its family-wise error control is approximate and relies
+  on the assumptions of that procedure.
 * `META-STRAT-003` Rank products are an option for microarray and mixed-platform data [Hong 2006].
 
 ## 10. Data sources and harmonization
@@ -175,10 +181,15 @@ Decide, in the protocol, which of these strategies is used and why [Ramasamy 200
 ## 11. Single-cell meta-analysis
 
 * `META-SC-001` **Per study, run pseudobulk DE per cell type** (`SCRNASEQ_GUIDELINES.md` §10, condition DE), then combine across
-  studies. MUST NOT merge cells from several studies and run cell-level tests.
-  * *Why:* merging cells across studies confounds study with condition and reintroduces pseudoreplication at a
-    larger scale; per-study pseudobulk keeps the donor as the unit and lets heterogeneity between studies be
-    measured.
+  studies. MUST NOT merge cells from several studies and run tests that treat cells as replicates
+  (`SCRNASEQ_GUIDELINES.md` `SC-DE-001`).
+  * *Why:* pooling cells from several studies and testing them treats cells as replicates and ignores study and
+    donor (pseudoreplication at a larger scale); when conditions are unbalanced across studies, study is also
+    confounded with condition. Per-study pseudobulk keeps the donor as the unit and lets heterogeneity between studies
+    be measured.
+  * *Deviate when:* a joint pseudobulk model with donors as units and study in the model MAY replace the per-study
+    analysis when every study contains every compared condition; between-study heterogeneity then needs a
+    study × condition term.
 * `META-SC-002` **Harmonize cell-type labels** across studies with a common reference (label transfer or CellTypist), and check that
   each cell type is replicable across studies with MetaNeighbor [Crow 2018].
 * `META-SC-003` DE genes from single studies of neurodegenerative diseases reproduce poorly across studies; a non-parametric

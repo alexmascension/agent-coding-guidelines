@@ -11,7 +11,11 @@ Procedure
    samples in several conditions or time points, aggregate per sample and model the donor
    (``SCRNASEQ_GUIDELINES.md`` §2). With ``sample_keys``, the cells of one physical sample of one
    donor MUST fall in a single unit; splitting them creates pseudo-replicates and raises an error
-   (``SC-DE-006``).
+   (``SC-DE-006``). Missing unit identifiers, and distinct identifiers that become the same string
+   (``1`` and ``"1"``), raise an error before any conversion (``recipes/scrnaseq/units.py``). The
+   default layer is resolved with ``recipes/scrnaseq/layers.py`` (``SC-DATA-004``:
+   ``counts_ambient_corrected`` if it exists, else ``counts``); non-integer counts raise an error
+   that names the layer, and are never rounded here.
 2. Units with fewer than ``min_cells`` cells (default ``MIN_CELLS``) are not used. The report lists
    every (unit, cell type) combination with status ``kept``, ``below_min_cells`` or ``absent`` (no
    cells). A cell type absent from a unit is not turned into a pseudobulk sample of zeros.
@@ -55,6 +59,8 @@ from statsmodels.stats.multitest import multipletests
 
 from recipes.bulk.deseq2 import RESULT_COLUMNS, filter_genes, run_deseq2
 from recipes.bulk.fdr_calibration import fdr_calibration
+from recipes.scrnaseq.layers import input_layer, require_integer_counts
+from recipes.scrnaseq.units import unit_ids, unit_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -82,35 +88,6 @@ DE_EXTRA_COLUMNS = [
 ]
 
 
-def unit_metadata(obs: pd.DataFrame, unit_key: str, covariates: list[str]) -> pd.DataFrame:
-    """One row per aggregation unit with its covariates, keeping dtypes.
-
-    Raises
-    ------
-    ValueError
-        If a covariate has missing values or is not constant within a unit.
-    """
-    missing = [c for c in covariates if obs[c].isna().any()]
-    if missing:
-        raise ValueError(
-            f"covariates with missing values: {missing}; resolve them before aggregation"
-        )
-    units = obs[unit_key].astype(str)
-    varying = [
-        c
-        for c in covariates
-        if (obs.groupby(units, observed=True)[c].nunique(dropna=False) > 1).any()
-    ]
-    if varying:
-        raise ValueError(f"covariates not constant within {unit_key}: {varying}")
-    meta = obs.assign(_unit=units).drop_duplicates("_unit").set_index("_unit")[covariates]
-    meta.index.name = unit_key
-    for column in covariates:
-        if isinstance(meta[column].dtype, pd.CategoricalDtype):
-            meta[column] = meta[column].cat.remove_unused_categories()
-    return meta
-
-
 def check_no_pseudo_replicates(obs: pd.DataFrame, unit_key: str, sample_keys: list[str]) -> None:
     """Raise if the cells of one physical sample are split across several aggregation units.
 
@@ -127,14 +104,14 @@ def check_no_pseudo_replicates(obs: pd.DataFrame, unit_key: str, sample_keys: li
     Raises
     ------
     ValueError
-        If a sample maps to more than one unit (pseudo-replicates, ``SC-DE-006``) or a key is
-        missing.
+        If a sample maps to more than one unit (pseudo-replicates, ``SC-DE-006``), a key is
+        absent, or a key has missing values or values that collide as strings (``unit_ids``).
     """
     absent = [k for k in [unit_key, *sample_keys] if k not in obs.columns]
     if absent:
         raise ValueError(f"columns not in obs: {absent}")
-    keys = obs[sample_keys].astype(str)
-    n_units = obs[unit_key].astype(str).groupby([keys[k] for k in sample_keys]).nunique()
+    keys = {k: unit_ids(obs, k) for k in sample_keys}
+    n_units = unit_ids(obs, unit_key).groupby([keys[k] for k in sample_keys]).nunique()
     split = n_units[n_units > 1]
     if not split.empty:
         examples = [str(i) for i in split.index[:5]]
@@ -150,7 +127,7 @@ def aggregate_counts(
     unit_key: str,
     celltype_key: str,
     covariates: list[str],
-    layer: str = "counts",
+    layer: str | None = None,
     min_cells: int = MIN_CELLS,
     sample_keys: list[str] | None = None,
 ) -> tuple[dict[str, tuple[pd.DataFrame, pd.DataFrame]], pl.DataFrame]:
@@ -159,16 +136,18 @@ def aggregate_counts(
     Parameters
     ----------
     adata : ad.AnnData
-        Cells after QC and doublet removal; counts in ``layer``.
+        Cells after QC and doublet removal; integer counts in ``layer``.
     unit_key : str
         ``obs`` column with the experimental unit (sample, or donor when appropriate; see module
-        docstring).
+        docstring). Missing identifiers and values that collide as strings are rejected.
     celltype_key : str
         ``obs`` column with the final annotation.
     covariates : list[str]
         Unit-level ``obs`` columns carried into the metadata; dtypes are preserved.
-    layer : str
-        Counts layer (``SCRNASEQ_GUIDELINES.md`` §1.1 states which one each step uses).
+    layer : str | None
+        Counts layer; None resolves it with ``input_layer(adata, "pseudobulk")``
+        (``counts_ambient_corrected`` if it exists, else ``counts``; ``SC-DATA-004``). The layer
+        MUST hold integer counts (``require_integer_counts``).
     min_cells : int
         Minimum cells per pseudobulk sample.
     sample_keys : list[str] | None
@@ -182,10 +161,19 @@ def aggregate_counts(
         units only.
     report : pl.DataFrame
         Every (cell type, unit) combination: ``cell_type``, ``unit``, ``n_cells``, ``status``.
+
+    Raises
+    ------
+    ValueError
+        If unit identifiers or covariates are invalid (``unit_metadata``), cells of one sample
+        fall in several units (``check_no_pseudo_replicates``), or the layer does not hold
+        integer counts.
     """
     if sample_keys:
         check_no_pseudo_replicates(adata.obs, unit_key, sample_keys)
     meta_all = unit_metadata(adata.obs, unit_key, covariates)
+    layer = input_layer(adata, "pseudobulk") if layer is None else layer
+    require_integer_counts(adata, layer)
     units = adata.obs[unit_key].astype(str).to_numpy()
     cell_types = adata.obs[celltype_key].astype(str).to_numpy()
     counts = adata.layers[layer]
@@ -272,7 +260,9 @@ def pseudobulk_de(
         adjusted p-value among the genes with ``p_adjusted < alpha`` of the cell type, missing for
         the others.
     not_testable : pl.DataFrame
-        ``cell_type``, ``reason``.
+        ``cell_type``, ``reason``: too few units per group, or no gene passing the design-based
+        filter. Genes without a finite p-value keep a missing ``p_adjusted_global`` (BH runs over
+        the finite p-values only; with none, every value is missing).
     """
     variable, tested, reference = contrast
     z = stats.norm.ppf(0.5 + CI_LEVEL / 2)
@@ -284,6 +274,9 @@ def pseudobulk_de(
             skipped.append({"cell_type": cell_type, "reason": f"units per group {sizes}"})
             continue
         genes = filter_genes(counts, meta, variable)
+        if genes.size == 0:
+            skipped.append({"cell_type": cell_type, "reason": "no genes pass the gene filter"})
+            continue
         results, _ = run_deseq2(
             counts[genes],
             meta,

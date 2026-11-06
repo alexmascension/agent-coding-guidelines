@@ -5,14 +5,17 @@ Guideline: ``SCRNASEQ_GUIDELINES.md`` §6 (principal components).
 Procedure
 ---------
 1. ``propose_n_pcs``: proposal from the elbow of the explained-variance curve and, when the full
-   singular-value
-   spectrum is available, the Gavish-Donoho hard threshold; the larger of the two is proposed.
+   singular-value spectrum is available, the Gavish-Donoho hard threshold; the larger of the two
+   is proposed. ``criteria`` lists the criteria evaluated; when the full spectrum cannot be
+   computed, the elbow alone is used, a warning is logged, and the record states that
+   Gavish-Donoho was not evaluated (``SC-PC-002``). A spectrum without an identifiable elbow
+   (constant, non-finite, not decreasing, fewer than 3 values) raises an error.
 2. ``pc_robustness``: Leiden clustering at a fixed resolution for every number of PCs in ``p -
    delta .. p + delta``,
    compared with the clustering at ``p`` (ARI overall, best-match Jaccard per reference cluster).
 3. ``robustness_verdict``: ``p`` is robust if ARI >= ``MIN_ARI`` for every tested value and every
-   reference cluster
-   keeps Jaccard >= ``MIN_JACCARD``.
+   reference cluster (or every cluster of interest) keeps Jaccard >= ``MIN_JACCARD``. Clusters of
+   interest that are not reference clusters raise an error: they cannot be evaluated.
 
 Adapting
 --------
@@ -61,10 +64,24 @@ def elbow_index(variance_ratio: np.ndarray) -> int:
     -------
     int
         Number of components (1-based) at the elbow.
+
+    Raises
+    ------
+    ValueError
+        If the elbow is not identifiable: fewer than 3 values, non-finite values, values not in
+        non-increasing order, or a first value equal to the last (constant spectrum).
     """
-    y = np.asarray(variance_ratio, dtype=float)
+    y = np.asarray(variance_ratio, dtype=float).ravel()
     if y.size < 3:
         raise ValueError(f"need at least 3 components, got {y.size}")
+    if not np.all(np.isfinite(y)):
+        raise ValueError(
+            f"{int(np.sum(~np.isfinite(y)))} non-finite values; no elbow identifiable"
+        )
+    if np.any(np.diff(y) > 0):
+        raise ValueError("values are not in non-increasing order; pass the PCA variance ratios")
+    if not y[0] > y[-1]:
+        raise ValueError("constant spectrum (first value equals the last): no elbow identifiable")
     x = np.arange(y.size, dtype=float)
     # normalise both axes so that the distance does not depend on units
     xn = (x - x[0]) / (x[-1] - x[0])
@@ -123,7 +140,7 @@ def propose_n_pcs(
     singular_values: np.ndarray | None = None,
     shape: tuple[int, int] | None = None,
     delta: int = 5,
-) -> dict[str, int | str | None]:
+) -> dict[str, int | str | list[str] | None]:
     """Propose a number of PCs from the elbow and, if available, the Gavish-Donoho threshold.
 
     Parameters
@@ -139,19 +156,31 @@ def propose_n_pcs(
 
     Returns
     -------
-    dict[str, int | str | None]
-        ``elbow``, ``gavish_donoho`` (None if not computed), ``proposal`` (the larger of the two,
-        never truncated to
-        the computed PCs), ``n_available``, ``n_required`` (``proposal + delta``) and ``status``:
-        ``ok`` or
-        ``recompute_pca`` when more components must be computed.
+    dict[str, int | str | list[str] | None]
+        ``elbow``, ``gavish_donoho`` (None if not evaluated), ``criteria`` (the criteria
+        evaluated: ``["elbow"]`` or ``["elbow", "gavish_donoho"]``), ``proposal`` (the larger of
+        the two, never truncated to the computed PCs), ``n_available``, ``n_required``
+        (``proposal + delta``) and ``status``: ``ok`` or ``recompute_pca`` when more components
+        must be computed.
+
+    Raises
+    ------
+    ValueError
+        If the elbow is not identifiable (``elbow_index``) or ``shape`` is missing.
     """
     elbow = elbow_index(variance_ratio)
     gd = None
+    criteria = ["elbow"]
     if singular_values is not None:
         if shape is None:
             raise ValueError("shape is required when singular_values are given")
         gd = gavish_donoho_rank(singular_values, *shape)
+        criteria.append("gavish_donoho")
+    else:
+        logger.warning(
+            "Gavish-Donoho not evaluated (no full singular-value spectrum): the proposal uses the "
+            "elbow alone; record that Gavish-Donoho was not evaluated (SC-PC-002)"
+        )
     proposal = max(elbow, gd) if gd is not None else elbow
     n_available = len(variance_ratio)
     status = "ok" if proposal + delta <= n_available else "recompute_pca"
@@ -164,6 +193,7 @@ def propose_n_pcs(
     return {
         "elbow": elbow,
         "gavish_donoho": gd,
+        "criteria": criteria,
         "proposal": proposal,
         "n_available": n_available,
         "n_required": proposal + delta,
@@ -257,15 +287,38 @@ def robustness_verdict(
 ) -> dict[str, object]:
     """Summarise ``pc_robustness`` output into a decision.
 
+    Parameters
+    ----------
+    per_n, per_cluster : pl.DataFrame
+        Output of ``pc_robustness``.
+    clusters_of_interest : list[int] | None
+        Reference clusters whose Jaccard decides the verdict; None uses every reference cluster.
+    min_ari, min_jaccard : float
+        Thresholds.
+
     Returns
     -------
     dict[str, object]
         ``robust`` (bool), ``min_ari`` observed, and ``unstable_clusters``: reference clusters
-        whose Jaccard fell
-        below ``min_jaccard`` at any tested number of PCs.
+        whose Jaccard fell below ``min_jaccard`` at any tested number of PCs.
+
+    Raises
+    ------
+    ValueError
+        If ``clusters_of_interest`` is empty or names clusters absent from the reference
+        clustering (they cannot be evaluated).
     """
     selected = per_cluster
     if clusters_of_interest is not None:
+        if len(clusters_of_interest) == 0:
+            raise ValueError("clusters_of_interest is empty; pass None to use every cluster")
+        reference_clusters = set(per_cluster["ref_cluster"].to_list())
+        absent = [c for c in clusters_of_interest if c not in reference_clusters]
+        if absent:
+            raise ValueError(
+                f"clusters_of_interest {absent} are not reference clusters "
+                f"{sorted(reference_clusters)}; they cannot be evaluated"
+            )
         selected = per_cluster.filter(pl.col("ref_cluster").is_in(clusters_of_interest))
     unstable = (
         selected.group_by("ref_cluster", maintain_order=True)
