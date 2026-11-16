@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.1.0 (2026-11-05)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.2.0 (2026-11-16)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -21,7 +21,7 @@
   stay in the project root.
 * `CODE-USE-002` Everything specific to a project (stack details, layout, vocabulary, data invariants,
   conventions, interfaces, decisions) goes into `PROJECT_CONTEXT.md` (see §2, documentation
-  set).
+  set). A human reading route lives in `CODE_MAP.md` or the README and links to those facts rather than duplicating them.
 * `CODE-USE-003` Do not edit the copy of this file to adapt it to a project. Record adaptations in the
   *Overrides* section of `PROJECT_CONTEXT.md`. This keeps the copy comparable with upstream and
   lets it be updated without losing project decisions.
@@ -51,6 +51,9 @@
     readability: `SC-QC-003` (§4.2)).
   * *Why:* section numbers change when text is added or reorganized; an override that points to "§4.2, second
     bullet" silently points to another rule after an edit, while an identifier does not move.
+
+The maintainability additions in 4.2.0 draw on the resources and adaptation notes in
+`references/MAINTAINABILITY_REFERENCES.md` (upstream: `references/`; copied projects: `guidelines/references/`).
 
 ## 1. Priority order
 
@@ -126,6 +129,36 @@ omission.
 
 Keep `PROJECT_CONTEXT.md` synchronized with the code. A change that alters a convention, an
 interface, a threshold or a data invariant MUST update it in the same change.
+
+### Human reading guide
+
+* `CODE-PROJ-010` **Provide a reading route for the person maintaining the code.** Projects with several interacting
+  modules or notebooks SHOULD have a root `CODE_MAP.md`, linked from `README.md` and the *Layout* section of
+  `PROJECT_CONTEXT.md`. For a single script or small notebook, a README section or opening Markdown cell is enough.
+  Reuse an existing architecture guide when it answers the same questions. The upstream
+  `templates/CODE_MAP.template.md` is a starting point to adapt, not a guideline to copy verbatim.
+  * Include the purpose and intended reader; an ordered route through real entry points and key functions;
+    a module responsibility table; a dependency diagram with a legend; one input-to-output walkthrough;
+    and a table of common changes with the edit location, checks to run and outputs to regenerate.
+  * Cover the important external libraries and tools: why each is needed, where the project calls it and where
+    its versions are recorded. Link to the environment and API documentation; do not copy the dependency inventory.
+  * For notebooks, identify their question, reading/execution order, input artefacts, imported functions and outputs.
+    Use section headings to locate cells, not execution counts or fragile cell numbers.
+  * *Why:* knowing how to run a project does not tell a returning reader where to change its behaviour.
+    *Trade-off:* another document can drift; keep it at module level and link to contracts and decisions.
+    *Deviate when:* the route fits clearly in the README or an existing guide; link to that location instead.
+* `CODE-PROJ-011` **Map the implementation that exists.** Diagrams MUST define arrow direction and distinguish
+  imports/calls from data flow. Mark external tools and generated files. Planned connections MUST be labelled as
+  planned. An import graph alone does not establish runtime order or file dependencies.
+  * Use Mermaid or a plain-text diagram plus a short explanation. Include the main boundaries, not every helper
+    or transitive dependency. For a large project, link to a few focused maps.
+  * *Why:* an unexplained arrow can mean either "uses" or "produces", suggesting the wrong change impact.
+    *Trade-off:* a selective map omits detail; say what it covers and point to the source for the rest.
+* `CODE-PROJ-012` **Maintain the map with the change.** When an entry point, dependency boundary or documented
+  change route changes, update the affected map in the same change and verify its paths, symbols and commands.
+  Document current relationships; keep their rationale and history in `PROJECT_CONTEXT.md` or its decisions log.
+  * *Why:* stale navigation sends the maintainer to the wrong code. *Trade-off:* checking links costs time;
+    stable file paths and symbol names need less upkeep than line numbers or copied implementations.
 
 ## 3. Languages and tooling
 
@@ -204,6 +237,24 @@ interface, a threshold or a data invariant MUST update it in the same change.
 * `CODE-PRIN-005` Use descriptive names and intermediate variables when they make logic easier to follow.
   Avoid compact one-liners that reduce readability; a comprehension SHOULD have at most one
   `for` clause and one condition.
+
+* `CODE-PRIN-006` **Make the reading path explicit.** A coordinating function SHOULD read as a sequence
+  of named domain steps at a similar level of detail. Keep helpers close to their use unless they belong to an
+  existing cohesive module. Prefer explicit arguments and returned values over an opaque shared context object.
+  * *Why:* readers need to follow inputs, decisions and outputs without reconstructing hidden state across files.
+    *Trade-off:* explicit steps can take more lines; line count is not a measure of readability.
+    *Deviate when:* a framework requires context objects; keep that boundary narrow and document what it carries.
+* `CODE-PRIN-007` **Extract cohesive concepts.** Before introducing a helper, class or new
+  module, identify its responsibility and the concrete duplication, independent testing need or complexity it
+  removes. Avoid pass-through layers, generic managers and one-function files that only add navigation.
+  * *Why:* excessive fragmentation can make simple code harder to understand than a cohesive longer function.
+    *Trade-off:* some local repetition is cheaper than coupling unrelated operations; extract when the shared
+    meaning is stable. *Deviate when:* an external API or a documented architectural boundary requires a wrapper.
+* `CODE-PRIN-008` **Keep the normal path visible.** Prefer early validation and named intermediate results to
+  deeply nested branches and dense expression chains. Name scientifically meaningful stages and keep units or
+  representations visible (`raw_counts`, `log_expression`) when a value changes meaning.
+  * *Why:* explicit stages let a reader inspect where a result changes. *Trade-off:* intermediates can allocate
+    memory; use views or a documented fused operation when measurements justify it.
 
 ## 5. Changes to existing code
 
@@ -328,6 +379,14 @@ interface, a threshold or a data invariant MUST update it in the same change.
   the code. Outdated documentation is worse than missing documentation.
 * `CODE-DOC-012` Keep documentation synchronized with the implementation, including `README.md` and
   `PROJECT_CONTEXT.md` when an interface or design decision changes.
+
+* `CODE-DOC-017` **Introduce non-trivial modules.** A module docstring SHOULD state its purpose, main public
+  entry points and important side effects or boundaries. Public scientific functions SHOULD include a small
+  input/output example when their shape, units or interpretation are not obvious from the contract.
+  * Explain domain assumptions; do not narrate Python syntax or duplicate the code map in every file.
+  * *Why:* a reader opening a `.py` file directly needs to know its role and how to use it.
+    *Trade-off:* examples need maintenance; use tiny deterministic inputs and reuse a tested example when possible.
+    *Deviate when:* a trivial module or self-explanatory function needs only a short description.
 
 ### Markdown
 
@@ -687,6 +746,13 @@ interface, a threshold or a data invariant MUST update it in the same change.
 * `CODE-DEP-003` Heavy or optional dependencies go into an extra in `pyproject.toml`; the core package MUST
   import without them.
 
+* `CODE-DEP-004` **Keep dependencies directional and visible.** Reusable library modules SHOULD NOT import
+  notebooks or command-line drivers. Avoid circular imports; move a shared concept to a cohesive lower-level
+  module when necessary. Do not hide a cycle with local imports unless there is a documented reason.
+  * *Why:* a maintainer should be able to change presentation without altering the computation layer.
+    *Trade-off:* reorganizing established code can break interfaces; apply this to touched boundaries and propose
+    unrelated restructuring separately (`CODE-CHG-003`, scope of refactors).
+
 ## 19. Performance
 
 * `CODE-PERF-001` Prioritize correctness and readability; optimize when there is a meaningful expected or
@@ -730,6 +796,35 @@ interface, a threshold or a data invariant MUST update it in the same change.
 * `CODE-NB-004` Notebooks MUST run top to bottom on a fresh kernel. Commit them with outputs stripped.
 * `CODE-NB-005` Notebooks are excluded from ruff and exempt from the docstring rules.
 
+* `CODE-NB-006` **Write a navigable analysis.** Start with a Markdown cell stating the question, input sources,
+  prerequisites, expected outputs and links to the relevant code map or modules. Use named sections for setup,
+  inputs/checks, analysis, interpretation and export, omitting sections that do not apply. Each code cell SHOULD
+  perform one meaningful step, with prose explaining non-obvious choices and how to interpret the result.
+  * *Why:* code and plots alone leave the reader guessing what the analysis establishes.
+    *Trade-off:* prose can become stale; update it alongside the cells and distinguish observations from hypotheses.
+* `CODE-NB-007` **Expose what the reader can change.** After root setup and imports, put editable parameters in
+  one labelled cell (or load one tracked configuration), with units and allowed values where needed. Pass these
+  parameters explicitly to package functions; do not redefine them later or copy their defaults into many cells.
+  * Name important intermediate results. Avoid hidden inputs from other kernels, `%run` chains and ad hoc
+    `sys.path` edits; use the installed project package. Across notebooks, exchange documented files.
+  * *Why:* a single edit point makes the effect of a parameter change traceable.
+    *Trade-off:* this is a small configuration surface to maintain; keep it limited to useful analysis choices.
+* `CODE-NB-008` **Keep imported logic discoverable.** At the first non-obvious package call, identify the source
+  module and function and explain its input, output and scientific role briefly; link to its contract for details.
+  Reusable transformations, validation and statistical methods belong in `.py` modules (`CODE-NB-001`, notebook role).
+  Keep orchestration, plots and their interpretation visible in the notebook; do not duplicate package code there.
+  * *Why:* moving logic out of a notebook helps maintenance only if the reader can find and understand it.
+    *Trade-off:* readers cross a file boundary; descriptive calls and source links make that boundary explicit.
+* `CODE-NB-009` **Verify execution separately from presentation.** Before handing over a changed notebook, run
+  it top to bottom on a fresh kernel with the documented environment and a small suitable input; inspect the
+  outputs before stripping them for git (`CODE-NB-004`, fresh execution). Autoreload is a convenience, not evidence
+  of reproducibility. Record the input, command or UI action, environment and outcome in the handoff.
+  * If full execution needs unavailable data or costly compute, report exactly which sections ran and what remains
+    unverified. A smoke run does not validate full scientific results. Keep any executed review copy outside the
+    tracked notebook according to the project's output policy.
+  * *Why:* interactive state can conceal missing steps. *Trade-off:* execution costs time; use an appropriate
+    fixture and state its limits instead of claiming an unperformed full run.
+
 ## 23. Version control
 
 * `CODE-VCS-001` Each commit is one logical change; an implementation and its tests go in the same commit.
@@ -758,6 +853,15 @@ interface, a threshold or a data invariant MUST update it in the same change.
   `AGENTIC_GUIDELINES.md`, outcome over proxy). Report what was inspected.
   * *Why:* tests cover the cases someone thought of; a join that drops rows or a column renamed for a downstream
     reader can pass every test and still change the output.
+
+* `CODE-VAL-005` **Review whether a person can make the next change.** For a substantive code or notebook change,
+  trace one representative input through the changed path and identify where a likely follow-up edit belongs,
+  which test would check it and which outputs would become stale. Follow the map rather than relying on the
+  conversation. Fix confusing names, unnecessary indirection or missing navigation in the touched code.
+  * Report a brief reading route and edit point in the handoff, with checks actually run and their limitations.
+    Do not require the user to pass a comprehension test or claim that agent self-review proves human usability.
+  * *Why:* passing tests establish behaviour, not whether the owner can maintain the implementation.
+    *Trade-off:* review is subjective; use concrete edit scenarios rather than a readability score.
 
 ## 25. Working process (agents)
 

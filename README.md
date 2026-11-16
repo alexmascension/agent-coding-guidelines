@@ -7,11 +7,13 @@ The guides are written for agents but are meant to be readable by a person with 
 states what to do and why, its cost and when to deviate; claims cite the literature (`OMICS_REFERENCES.md`,
 `STATISTICS_REFERENCES.md`).
 
+For a reading route and common edit locations, see [CODE_MAP.md](CODE_MAP.md).
+
 ## Contents
 
 | File | Scope | Status |
 |---|---|---|
-| `guidelines/CODING_GUIDELINES.md` | Code, data, provenance, reproducibility, testing, project documentation (`AGENTS.md`, `PROJECT_CONTEXT.md`) | stable |
+| `guidelines/CODING_GUIDELINES.md` | Code, data, provenance, reproducibility, testing, project documentation and human reading routes (`AGENTS.md`, `PROJECT_CONTEXT.md`, `CODE_MAP.md`) | stable |
 | `guidelines/AGENTIC_GUIDELINES.md` | Agent working discipline: scope, evidence, verification, claims, decisions, unattended batches, delegation, confidential material, handoffs, iteration | new |
 | `guidelines/MANUSCRIPT_GUIDELINES.md` | Manuscripts built on the analyses: traceability of figures, tables and numbers, claims, citations, pre-submission review, revisions, writing | new |
 | `guidelines/STATISTICS_GUIDELINES.md` | Design, test choice, multiple testing, resampling, reporting | stable |
@@ -27,6 +29,8 @@ states what to do and why, its cost and when to deviate; claims cite the literat
 | `guidelines/FIGURE_GUIDELINES.md` | Figures | planned |
 | `references/` | `OMICS_REFERENCES.md` / `.bib`, `STATISTICS_REFERENCES.md` / `.bib`: references with keys used in the guides | — |
 | `recipes/` | Reference implementations and tests; coverage in `recipes/README.md` | 0.8.0 |
+| `templates/CODE_MAP.template.md` | Adaptable human reading guide: dependencies, walkthrough and common edits | new |
+| `references/MAINTAINABILITY_REFERENCES.md` | Sources and adaptation notes for readable Python and notebooks | new |
 | `CHANGELOG.md` | Changes per guide (semantic versioning per file) | — |
 | `TODO.md` | Planned work not yet in the guides, recipes or tooling | — |
 | `RULE_IDS.tsv` | Registry of rule identifiers (active and retired) | — |
@@ -53,6 +57,10 @@ TCR/BCR.
    the structure of `CODING_GUIDELINES.md` §2. Adaptations go to *Overrides* in `PROJECT_CONTEXT.md`, never into the
    copied guides; *Overrides* starts with the list of adopted guides and their versions, and refers to rules by
    their stable identifier (e.g. `SC-QC-003`; registry in `RULE_IDS.tsv`).
+   Add a human reading route following `CODING_GUIDELINES.md` §2 (`CODE-PROJ-010` to `012`): adapt
+   [`templates/CODE_MAP.template.md`](templates/CODE_MAP.template.md) into `CODE_MAP.md`, or put a short route in
+   the README for a small project. Link it from the README and `PROJECT_CONTEXT.md`; verify its paths and examples.
+   The template is adapted to the project, unlike the verbatim guidelines.
 3. For recipes, install this repository at a pinned commit (see `recipes/README.md`) or vendor the modules as
    described in `CODING_GUIDELINES.md` §26 (recipes).
 4. To update, compare the project's copies with upstream using `CHANGELOG.md`; MAJOR versions may renumber or remove

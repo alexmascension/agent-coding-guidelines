@@ -6,6 +6,28 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-16 (CODING 4.2.0)
+
+### CODING_GUIDELINES.md [4.2.0]
+
+#### Added
+
+- `CODE-PROJ-010` to `012`: a proportionate human reading guide, dependency/data-flow legends,
+  verified navigation and common-change routes, synchronized with touched boundaries.
+- `CODE-PRIN-006` to `008`: explicit reading paths, cohesive extraction and visible intermediate stages.
+- `CODE-DOC-017`, `CODE-DEP-004`: module introductions, small examples and directional dependencies.
+- `CODE-NB-006` to `009`: notebook narrative, editable parameters, discoverable package logic and honest
+  fresh-kernel execution evidence before stripping outputs.
+- `CODE-VAL-005`: a representative reading/change walkthrough in review and handoff.
+- `CODE_MAP.md`: a concrete reading route and dependency map for this repository.
+- `templates/CODE_MAP.template.md`: adaptable structure with an explicitly illustrative dependency diagram.
+- `references/MAINTAINABILITY_REFERENCES.md`: consulted resources, scope, adaptations and access limits.
+
+#### Clarified
+
+- `CODE-USE-002`: the reading guide links to authoritative project facts in `PROJECT_CONTEXT.md`.
+- README adoption instructions distinguish the adaptable template from verbatim guideline copies.
+
 ## 2026-11-06 (SCRNASEQ 5.4.0)
 
 ### SCRNASEQ_GUIDELINES.md [5.4.0]

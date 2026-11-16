@@ -190,6 +190,7 @@ CODE-DATA-009	active	CODING_GUIDELINES.md	Use Parquet for intermediate and outpu
 CODE-DEP-001	active	CODING_GUIDELINES.md	Prefer the standard library and existing project dependencies when they provide 
 CODE-DEP-002	active	CODING_GUIDELINES.md	Add a dependency when it substantially improves correctness, maintainability, pe
 CODE-DEP-003	active	CODING_GUIDELINES.md	Heavy or optional dependencies go into an extra in pyproject.toml; the core pack
+CODE-DEP-004	active	CODING_GUIDELINES.md	Keep dependencies directional and visible. Reusable library modules SHOULD NOT i
 CODE-DL-001	active	CODING_GUIDELINES.md	Every downloaded file MUST be verified against the checksum published by the arc
 CODE-DL-002	active	CODING_GUIDELINES.md	Retries restart the whole unit. MUST NOT combine a client-side retry that restar
 CODE-DL-003	active	CODING_GUIDELINES.md	Validate streamed reads record by record: every FASTQ record has its @ and + lin
@@ -216,6 +217,7 @@ CODE-DOC-013	active	CODING_GUIDELINES.md	One H1 per file; ATX headings (#), each
 CODE-DOC-014	active	CODING_GUIDELINES.md	Fenced code blocks always declare their language (python, bash, text).
 CODE-DOC-015	active	CODING_GUIDELINES.md	Inline equations use $...$; display equations use $$...$$ on their own lines.
 CODE-DOC-016	active	CODING_GUIDELINES.md	Cross-references state what they point to. A reference to a section, rule, figur
+CODE-DOC-017	active	CODING_GUIDELINES.md	Introduce non-trivial modules. A module docstring SHOULD state its purpose, main
 CODE-EXT-001	active	CODING_GUIDELINES.md	Call external tools with subprocess.run([...], check=True) using an argument lis
 CODE-EXT-002	active	CODING_GUIDELINES.md	Check that required executables exist (shutil.which) before starting long work, 
 CODE-EXT-003	active	CODING_GUIDELINES.md	Log the exact command line and the tool version for every external call that pro
@@ -248,6 +250,10 @@ CODE-NB-002	active	CODING_GUIDELINES.md	The first code cell resolves the project
 CODE-NB-003	active	CODING_GUIDELINES.md	Figures go to results/figures/<notebook-prefix>_<name>.svg (vector by default) a
 CODE-NB-004	active	CODING_GUIDELINES.md	Notebooks MUST run top to bottom on a fresh kernel. Commit them with outputs str
 CODE-NB-005	active	CODING_GUIDELINES.md	Notebooks are excluded from ruff and exempt from the docstring rules.
+CODE-NB-006	active	CODING_GUIDELINES.md	Write a navigable analysis. Start with a Markdown cell stating the question, inp
+CODE-NB-007	active	CODING_GUIDELINES.md	Expose what the reader can change. After root setup and imports, put editable pa
+CODE-NB-008	active	CODING_GUIDELINES.md	Keep imported logic discoverable. At the first non-obvious package call, identif
+CODE-NB-009	active	CODING_GUIDELINES.md	Verify execution separately from presentation. Before handing over a changed not
 CODE-NUM-001	active	CODING_GUIDELINES.md	Make units, coordinate systems, normalization conventions and statistical assump
 CODE-NUM-002	active	CODING_GUIDELINES.md	Avoid exact floating-point equality unless mathematically guaranteed; use tolera
 CODE-NUM-003	active	CODING_GUIDELINES.md	Handle NaN, null, infinity and empty inputs deliberately. In polars, null and Na
@@ -275,6 +281,9 @@ CODE-PRIN-002	active	CODING_GUIDELINES.md	Prefer simple, explicit solutions over
 CODE-PRIN-003	active	CODING_GUIDELINES.md	Give each function one clear responsibility; split large or deeply nested logic 
 CODE-PRIN-004	active	CODING_GUIDELINES.md	Extract repeated logic into reusable helpers; do not introduce abstractions unle
 CODE-PRIN-005	active	CODING_GUIDELINES.md	Use descriptive names and intermediate variables when they make logic easier to 
+CODE-PRIN-006	active	CODING_GUIDELINES.md	Make the reading path explicit. A coordinating function SHOULD read as a sequenc
+CODE-PRIN-007	active	CODING_GUIDELINES.md	Extract cohesive concepts. Before introducing a helper, class or new
+CODE-PRIN-008	active	CODING_GUIDELINES.md	Keep the normal path visible. Prefer early validation and named intermediate res
 CODE-PROJ-001	active	CODING_GUIDELINES.md	Purpose — one paragraph; link to README.md / PROJECT_SCOPE.md for detail.
 CODE-PROJ-002	active	CODING_GUIDELINES.md	Stack — languages, key libraries, external tools with versions, environment name
 CODE-PROJ-003	active	CODING_GUIDELINES.md	Layout — directories, what goes in each, where inputs and outputs live, which pa
@@ -284,6 +293,9 @@ CODE-PROJ-006	active	CODING_GUIDELINES.md	Conventions — coordinate systems, ge
 CODE-PROJ-007	active	CODING_GUIDELINES.md	Interfaces — outputs consumed by notebooks, other repositories or people; siblin
 CODE-PROJ-008	active	CODING_GUIDELINES.md	Overrides — first, the version of each adopted guideline file; then every deviat
 CODE-PROJ-009	active	CODING_GUIDELINES.md	Decisions log — dated entries: decision, rationale, affected outputs. MAY instea
+CODE-PROJ-010	active	CODING_GUIDELINES.md	Provide a reading route for the person maintaining the code. Projects with sever
+CODE-PROJ-011	active	CODING_GUIDELINES.md	Map the implementation that exists. Diagrams MUST define arrow direction and dis
+CODE-PROJ-012	active	CODING_GUIDELINES.md	Maintain the map with the change. When an entry point, dependency boundary or do
 CODE-PROV-001	active	CODING_GUIDELINES.md	Raw inputs of record are read-only. The copy of record of each raw input (data/r
 CODE-PROV-002	active	CODING_GUIDELINES.md	MUST NOT commit data, results or large binaries to git. Record how to obtain eac
 CODE-PROV-003	active	CODING_GUIDELINES.md	Each analysis run writes to its own directory (e.g. results/<run>/) containing, 
@@ -336,6 +348,7 @@ CODE-VAL-001	active	CODING_GUIDELINES.md	After modifying code, run the most rele
 CODE-VAL-002	active	CODING_GUIDELINES.md	MUST NOT claim that tests or checks passed unless they were actually run.
 CODE-VAL-003	active	CODING_GUIDELINES.md	If validation cannot be performed, state exactly what was not verified.
 CODE-VAL-004	active	CODING_GUIDELINES.md	Run what was changed, not only its tests. After changing code that produces an o
+CODE-VAL-005	active	CODING_GUIDELINES.md	Review whether a person can make the next change. For a substantive code or note
 CODE-VCS-001	active	CODING_GUIDELINES.md	Each commit is one logical change; an implementation and its tests go in the sam
 CODE-VCS-002	active	CODING_GUIDELINES.md	Commit message: a summary line in the imperative, capitalized, at most 50 charac
 CODE-VCS-003	active	CODING_GUIDELINES.md	At the end of each meaningful operation or code change, propose a commit: a summ
