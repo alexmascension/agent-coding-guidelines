@@ -310,6 +310,7 @@ CODE-REPRO-001	active	CODING_GUIDELINES.md	Expose random seeds as parameters and
 CODE-REPRO-002	active	CODING_GUIDELINES.md	Results MUST NOT depend on the number of workers, parallel execution order, file
 CODE-REPRO-003	active	CODING_GUIDELINES.md	Document operations whose results may vary across runs or environments.
 CODE-REPRO-004	active	CODING_GUIDELINES.md	Keep the environment lockfile (see §3, environment) current.
+CODE-REPRO-005	active	CODING_GUIDELINES.md	A discrete result (a selection, a ranking, a neighbour set, a label, a removed i
 CODE-ROB-001	active	CODING_GUIDELINES.md	Validate important inputs and fail early with error messages that precisely matc
 CODE-ROB-002	active	CODING_GUIDELINES.md	MUST NOT use assert to validate inputs or enforce program logic: assertions are 
 CODE-ROB-003	active	CODING_GUIDELINES.md	Handle expected edge cases explicitly (empty inputs, missing groups, single-samp
@@ -565,6 +566,8 @@ SC-CCC-004	active	SCRNASEQ_GUIDELINES.md	Results are hypotheses; support them wi
 SC-CLUST-001	active	SCRNASEQ_GUIDELINES.md	Leiden on the neighbour graph [Traag 2019].
 SC-CLUST-002	active	SCRNASEQ_GUIDELINES.md	Choose the resolution by stability:
 SC-CLUST-003	active	SCRNASEQ_GUIDELINES.md	Record resolution, PCs, number of neighbours, random seed and stability values.
+SC-CLUST-004	active	SCRNASEQ_GUIDELINES.md	A clustering that drives decisions on cells (QC removal by cluster, doublet clus
+SC-CLUST-005	active	SCRNASEQ_GUIDELINES.md	Human decisions keyed by cluster label (keep or remove, annotation, merges) MUST
 SC-DA-001	active	SCRNASEQ_GUIDELINES.md	Count cells per sample and cell type, with explicit zeros, and use donors as rep
 SC-DA-002	active	SCRNASEQ_GUIDELINES.md	Account for compositionality: proportions sum to 1, so a real increase of one ty
 SC-DA-003	active	SCRNASEQ_GUIDELINES.md	Choose the method by question and design [Yi 2024]:
