@@ -68,6 +68,9 @@ TCR/BCR.
 
 ## Development
 
+Recipes require Python 3.12 or newer; the `scrnaseq` extra requires Scanpy 1.12 or newer
+for precomputed neighbour distances. CI tests Python 3.12, 3.13 and 3.14.
+
 ```bash
 pip install -e ".[scrnaseq,bulk,dev]" pre-commit
 pre-commit install              # once per clone: the checks below run on every commit
@@ -85,7 +88,7 @@ CI (`.github/workflows/ci.yml`) runs on pushes to `main`, pull requests, weekly 
 | Job | Runs when | What |
 |---|---|---|
 | Guides and lint | always | the pre-commit hooks on all files; version and changelog check against the previous commit |
-| Recipes (Python 3.11, 3.12) | a file under `recipes/` or `tools/`, `pyproject.toml` or the CI changed | `pytest -m "not r"` (recipe and tool tests) |
+| Recipes (Python 3.12, 3.13, 3.14) | a file under `recipes/` or `tools/`, `pyproject.toml` or the CI changed | `pytest -m "not r"` (recipe and tool tests) |
 | Install from the built wheel | as above | install in a clean environment; import and package data (R scripts) |
 | Recipes backed by R | an `*.R` file changed, or a file that depends on R (`tools/ci_scope.py`) | R with scran, scDblFinder, tximport, DESeq2; `pytest -m r`, where a skip is a failure |
 

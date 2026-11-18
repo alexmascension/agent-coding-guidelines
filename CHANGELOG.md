@@ -6,6 +6,44 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-17 (CODING 4.3.0, SCRNASEQ 5.5.0, recipes 0.9.0)
+
+### CODING_GUIDELINES.md [4.3.0]
+
+#### Added
+
+- `CODE-REPRO-005`: discrete results (selections, rankings, neighbour sets, labels, removals) computed from
+  floating-point values whose order of operations may change MUST be identical across thread counts and CPUs, made
+  order-independent (exact algorithm without threaded reductions, rounding to a stated precision, explicit
+  tie-breaking) or else run with a fixed, recorded thread count and CPU; tested at two thread counts. Closes the gap
+  left by the floating-point tolerance of `CODE-REPRO-002`.
+
+### SCRNASEQ_GUIDELINES.md [5.5.0]
+
+#### Added
+
+- `SC-CLUST-004`: clusterings that drive decisions on cells use exact k-NN with a tree algorithm on the rounded
+  embedding, single-threaded, passed to scanpy as precomputed distances in its convention; approximate search and
+  scanpy's BLAS brute force only for exploration. Evidence: on brain snRNA-seq captures both scanpy options changed
+  the Leiden partition between 1 and 8 threads (ARI 0.72); the tree search was identical on three CPU models.
+- `SC-CLUST-005`: decisions keyed by cluster label are stored with a SHA-256 fingerprint of the clustering and refused
+  when it differs.
+
+### recipes/ [0.9.0]
+
+#### Changed
+
+- Require Python >=3.12 and Scanpy >=1.12 for precomputed neighbour distances. Python 3.11 is no longer
+  supported; existing 3.11 environments must be recreated with Python >=3.12.
+- CI tests recipes on Python 3.12, 3.13 and 3.14, and builds and installs the wheel on Python 3.12.
+
+#### Added
+
+- `scrnaseq/_clustering`: `tree_knn_distances` (kd-tree on the embedding rounded to 1e-6, one thread,
+  `n_neighbors - 1` neighbours, zero distances of duplicated cells kept as `ZERO_DISTANCE`), `labels_fingerprint`,
+  and `leiden_labels(..., knn="tree")`; the default `knn="approximate"` keeps the behaviour of 0.8.0 for
+  `clustering_stability` and `pc_robustness`.
+
 ## 2026-11-16 (CODING 4.2.0)
 
 ### CODING_GUIDELINES.md [4.2.0]

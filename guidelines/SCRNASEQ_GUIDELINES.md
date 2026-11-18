@@ -1,6 +1,6 @@
 # Single-cell and single-nucleus RNA-seq guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.4.0 (2026-11-06)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 5.5.0 (2026-11-17)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Bracketed keys such as `[Heumos 2023]` point to
 > `OMICS_REFERENCES.md`; keys with a dagger, e.g. `[Squair 2021†]`, point to `STATISTICS_REFERENCES.md`. Each rule is
@@ -580,6 +580,27 @@ cells that remain, and its layer from normalization (§5) onwards.
   * *Trade-off:* $N$ clusterings per resolution; the size-dependent $N$ keeps the cost bounded on large datasets.
   * Recipe: `recipes/scrnaseq/clustering_stability.py`.
 * `SC-CLUST-003` Record resolution, PCs, number of neighbours, random seed and stability values.
+* `SC-CLUST-004` A clustering that drives decisions on cells (QC removal by cluster, doublet clusters, subsetting,
+  annotation by cluster) MUST give the same partition for any thread count and CPU (`CODE-REPRO-005`): exact k-NN
+  with a tree algorithm on the embedding in float64 rounded to a stated precision (1e-6), single-threaded, passed to
+  `scanpy.pp.neighbors` as precomputed `distances` in scanpy's convention (`n_neighbors - 1` neighbours, the cell
+  itself excluded; zero distances between duplicated cells replaced by a negligible positive value, because scanpy
+  drops stored zeros); Leiden and UMAP with a fixed seed. Approximate search (pynndescent, scanpy's default) and
+  scanpy's exact brute force (`transformer="sklearn"`, distances through BLAS) are for exploration only.
+  * *Why:* the clustering is recomputed whenever the stage reruns. Observed on brain snRNA-seq captures (8-23 thousand
+    nuclei, 50 PCs, 15 neighbours, resolution 2): both scanpy options changed the partition between 1 and 8 threads
+    (ARI 0.72); the tree search gave identical graphs, partitions and UMAP on three CPU models with 1 and 8 threads.
+    umap-learn 0.6, whose parallel layout is deterministic, does not fix it: the embedding layout is not the graph that
+    Leiden uses.
+  * *Trade-off:* the tree search takes seconds to tens of seconds per capture; for atlas-scale graphs use a fixed
+    thread count and CPU, record them, and say that the partition is environment-specific.
+  * Recipe: `recipes/scrnaseq/_clustering.py` (`tree_knn_distances`; `leiden_labels(..., knn="tree")`).
+* `SC-CLUST-005` Human decisions keyed by cluster label (keep or remove, annotation, merges) MUST be stored with a
+  fingerprint of the clustering they refer to (SHA-256 of the barcode-to-label pairs sorted by barcode), and code MUST
+  refuse to apply them when the fingerprint of the current clustering differs.
+  * *Why:* any upstream change (parameters, versions, input cells) renumbers or reshapes clusters, and the decisions
+    would apply silently to other cells.
+  * Recipe: `recipes/scrnaseq/_clustering.py` (`labels_fingerprint`).
 
 ## 9. Annotation and marker genes
 

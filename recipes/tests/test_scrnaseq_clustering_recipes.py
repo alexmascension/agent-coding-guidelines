@@ -106,3 +106,65 @@ def test_pc_robustness_flags_structureless_data():
     noise = rng.normal(size=(500, 30))
     per_n, per_cluster = pc_robustness(noise, n_pcs=10, resolution=1.0, delta=3, seed=0)
     assert not robustness_verdict(per_n, per_cluster)["robust"]
+
+
+def test_tree_knn_matches_scanpy_exact_neighbours():
+    import anndata as ad
+    import scanpy as sc
+
+    from recipes.scrnaseq._clustering import tree_knn_distances
+
+    rng = np.random.default_rng(0)
+    x = np.round(rng.normal(size=(600, 10)), 6)
+    brute = ad.AnnData(obs={"i": np.arange(600)})
+    brute.obsm["emb"] = x
+    sc.pp.neighbors(brute, n_neighbors=15, use_rep="emb", transformer="sklearn")
+    tree = ad.AnnData(obs={"i": np.arange(600)})
+    sc.pp.neighbors(tree, n_neighbors=15, distances=tree_knn_distances(x, 15))
+    assert np.allclose(brute.obsp["distances"].toarray(), tree.obsp["distances"].toarray())
+    assert np.allclose(
+        brute.obsp["connectivities"].toarray(), tree.obsp["connectivities"].toarray()
+    )
+
+
+def test_tree_knn_keeps_every_neighbour_of_duplicated_cells():
+    import anndata as ad
+    import scanpy as sc
+
+    from recipes.scrnaseq._clustering import tree_knn_distances
+
+    rng = np.random.default_rng(1)
+    x = np.vstack([rng.normal(size=(300, 10)), np.repeat(rng.normal(size=(5, 10)), 20, axis=0)])
+    tmp = ad.AnnData(obs={"i": np.arange(x.shape[0])})
+    sc.pp.neighbors(tmp, n_neighbors=15, distances=tree_knn_distances(x, 15))
+    assert set(np.diff(tmp.obsp["distances"].tocsr().indptr)) == {14}
+
+
+def test_tree_knn_rejects_too_few_cells():
+    from recipes.scrnaseq._clustering import tree_knn_distances
+
+    with pytest.raises(ValueError, match="too few"):
+        tree_knn_distances(np.zeros((10, 3)), 15)
+
+
+def test_tree_leiden_does_not_depend_on_blas_threads(blobs):
+    threadpoolctl = pytest.importorskip("threadpoolctl")
+    from recipes.scrnaseq._clustering import leiden_labels
+
+    embedding = blobs["embedding"]
+    runs = []
+    for threads in (1, 4):
+        with threadpoolctl.threadpool_limits(threads):
+            runs.append(leiden_labels(embedding, embedding.shape[1], 2.0, knn="tree", seed=0))
+    assert (runs[0] == runs[1]).all()
+
+
+def test_labels_fingerprint_ignores_order_and_sees_relabelling():
+    from recipes.scrnaseq._clustering import labels_fingerprint
+
+    names, labels = ["c", "a", "b"], ["1", "0", "0"]
+    reference = labels_fingerprint(names, labels)
+    assert labels_fingerprint(["a", "b", "c"], ["0", "0", "1"]) == reference
+    assert labels_fingerprint(names, ["0", "1", "1"]) != reference
+    with pytest.raises(ValueError, match="labels"):
+        labels_fingerprint(names, labels[:2])

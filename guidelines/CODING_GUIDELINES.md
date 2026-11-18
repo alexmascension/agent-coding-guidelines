@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.2.0 (2026-11-16)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.3.0 (2026-11-17)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -688,6 +688,18 @@ interface, a threshold or a data invariant MUST update it in the same change.
     not change whether run on a laptop or a cluster.
 * `CODE-REPRO-003` Document operations whose results may vary across runs or environments.
 * `CODE-REPRO-004` Keep the environment lockfile (see §3, environment) current.
+* `CODE-REPRO-005` A discrete result (a selection, a ranking, a neighbour set, a label, a removed item) computed from
+  floating-point values whose order of operations may change (threaded BLAS, parallel reductions, approximate search)
+  MUST be identical across thread counts and CPUs. Make the step order-independent: an exact algorithm without
+  threaded reductions, inputs rounded to a stated precision before comparisons and ranking, explicit tie-breaking. If
+  that is not possible, fix and record the thread count and CPU model and say that the result is environment-specific
+  (`CODE-REPRO-003`). Test it: run the step at two thread counts (e.g. `threadpoolctl.threadpool_limits`) and compare
+  the discrete output exactly.
+  * *Why:* `CODE-REPRO-002` tolerates small floating-point differences, but a threshold, a rank or a graph turns them
+    into different decisions. Observed: with 8 instead of 1-4 threads, 1.1 % of the k-NN rows of a single-cell capture
+    changed (identical PCA, both with approximate search and with exact brute force through BLAS) and the Leiden
+    partition at resolution 2 dropped to ARI 0.72.
+  * *Trade-off:* exact single-threaded steps are slower; the rule covers steps whose discrete output is used downstream.
 
 ## 16. Testing
 

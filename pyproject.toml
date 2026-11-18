@@ -4,9 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "agent-coding-guidelines-recipes"
-version = "0.8.0"
+version = "0.9.0"
 description = "Reference implementations (recipes) for the agent coding guidelines"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = {text = "MIT"}
 dependencies = [
     "numpy", "pandas", "scipy", "polars", "statsmodels", "anndata",
@@ -15,7 +15,7 @@ dependencies = [
 
 [project.optional-dependencies]
 scrnaseq = [
-    "scanpy", "leidenalg", "python-igraph", "scikit-learn", "scikit-image",
+    "scanpy>=1.12", "leidenalg", "python-igraph", "scikit-learn", "scikit-image",
     "doubletdetection", "decoupler>=2",
     # pooled size factors; distribution name collides with the Bioconductor "scranpy" (do not install both)
     "scranPY @ git+https://github.com/sfortma2/scranPY.git@62292a039158fce0123bdec9a5e6b73ecf5db123",
