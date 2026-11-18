@@ -31,6 +31,12 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 
 ### recipes/ [0.9.0]
 
+#### Changed
+
+- Require Python >=3.12 and Scanpy >=1.12 for precomputed neighbour distances. Python 3.11 is no longer
+  supported; existing 3.11 environments must be recreated with Python >=3.12.
+- CI tests recipes on Python 3.12, 3.13 and 3.14, and builds and installs the wheel on Python 3.12.
+
 #### Added
 
 - `scrnaseq/_clustering`: `tree_knn_distances` (kd-tree on the embedding rounded to 1e-6, one thread,

@@ -55,7 +55,7 @@ validate identifiers, references and version history. Do not edit the registry a
 an active rule associated with `CODING_GUIDELINES.md` in `RULE_IDS.tsv`. `check` verifies the registry agrees
 with the guides. The version check compares the updated guide with Git and looks for its changelog heading.
 
-From the repository root with Python 3.11+ and Git available:
+From the repository root with Python 3.12+ and Git available:
 
 ```bash
 python tools/rule_ids.py assign
