@@ -13,7 +13,7 @@ For a reading route and common edit locations, see [CODE_MAP.md](CODE_MAP.md).
 
 | File | Scope | Status |
 |---|---|---|
-| `guidelines/CODING_GUIDELINES.md` | Code, data, provenance, reproducibility, testing, project documentation and human reading routes (`AGENTS.md`, `PROJECT_CONTEXT.md`, `CODE_MAP.md`) | stable |
+| `guidelines/CODING_GUIDELINES.md` | Code, data, provenance, deposits in public archives, licensing, reproducibility, testing, project documentation and human reading routes (`AGENTS.md`, `PROJECT_CONTEXT.md`, `CODE_MAP.md`) | stable |
 | `guidelines/AGENTIC_GUIDELINES.md` | Agent working discipline: scope, evidence, verification, claims, decisions, unattended batches, delegation, confidential material, handoffs, iteration | new |
 | `guidelines/MANUSCRIPT_GUIDELINES.md` | Manuscripts built on the analyses: traceability of figures, tables and numbers, claims, citations, pre-submission review, revisions, writing | new |
 | `guidelines/STATISTICS_GUIDELINES.md` | Design, test choice, multiple testing, resampling, reporting | stable |
