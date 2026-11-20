@@ -191,6 +191,13 @@ CODE-DEP-001	active	CODING_GUIDELINES.md	Prefer the standard library and existin
 CODE-DEP-002	active	CODING_GUIDELINES.md	Add a dependency when it substantially improves correctness, maintainability, pe
 CODE-DEP-003	active	CODING_GUIDELINES.md	Heavy or optional dependencies go into an extra in pyproject.toml; the core pack
 CODE-DEP-004	active	CODING_GUIDELINES.md	Keep dependencies directional and visible. Reusable library modules SHOULD NOT i
+CODE-DEPO-001	active	CODING_GUIDELINES.md	Each artefact goes to the archive that is its archive of record. Raw reads to EN
+CODE-DEPO-002	active	CODING_GUIDELINES.md	MUST NOT deposit a derived file as raw data. A BAM or CRAM aligned by the projec
+CODE-DEPO-003	active	CODING_GUIDELINES.md	A derived deposit cites every source accession it was computed from, in the depo
+CODE-DEPO-004	active	CODING_GUIDELINES.md	Every bundle carries a manifest with relative path, size, checksum and the scrip
+CODE-DEPO-005	active	CODING_GUIDELINES.md	Check the archive's size and file-count limits before building the bundle, and r
+CODE-DEPO-006	active	CODING_GUIDELINES.md	Deposits and repository link both ways. The repository records every accession a
+CODE-DEPO-007	active	CODING_GUIDELINES.md	State the re-entry point of each data deposit: which stage of the analysis it le
 CODE-DL-001	active	CODING_GUIDELINES.md	Every downloaded file MUST be verified against the checksum published by the arc
 CODE-DL-002	active	CODING_GUIDELINES.md	Retries restart the whole unit. MUST NOT combine a client-side retry that restar
 CODE-DL-003	active	CODING_GUIDELINES.md	Validate streamed reads record by record: every FASTQ record has its @ and + lin
@@ -235,6 +242,11 @@ CODE-LANG-005	active	CODING_GUIDELINES.md	R code, when needed, follows the tidyv
 CODE-LANG-006	active	CODING_GUIDELINES.md	Default Python stack (a project MAY override it in PROJECT_CONTEXT.md): polars f
 CODE-LANG-007	active	CODING_GUIDELINES.md	Environment: a conda environment plus pip install -e . of the project package. E
 CODE-LANG-008	active	CODING_GUIDELINES.md	Default layout (a project MAY override it):
+CODE-LIC-001	active	CODING_GUIDELINES.md	Choose the licence from the most restrictive obligation the project actually car
+CODE-LIC-002	active	CODING_GUIDELINES.md	Keep an inventory of dependency licences that is generated, not written by hand
+CODE-LIC-003	active	CODING_GUIDELINES.md	Re-examine the licence at defined triggers, not only when the repository is crea
+CODE-LIC-004	active	CODING_GUIDELINES.md	Licence code and data separately. Code under an OSI licence (MIT, BSD-3-Clause o
+CODE-LIC-005	active	CODING_GUIDELINES.md	A redistributed third-party artefact keeps its own licence and notice. A contain
 CODE-LOG-001	active	CODING_GUIDELINES.md	Use the logging module, not print(), in library code. tqdm progress bars are acc
 CODE-LOG-002	active	CODING_GUIDELINES.md	Functions MUST NOT write files, mutate globals or access the network unless that
 CODE-LOG-003	active	CODING_GUIDELINES.md	Avoid mutable global state. Module-level constants are encouraged; if mutable mo
@@ -311,6 +323,7 @@ CODE-REPRO-002	active	CODING_GUIDELINES.md	Results MUST NOT depend on the number
 CODE-REPRO-003	active	CODING_GUIDELINES.md	Document operations whose results may vary across runs or environments.
 CODE-REPRO-004	active	CODING_GUIDELINES.md	Keep the environment lockfile (see §3, environment) current.
 CODE-REPRO-005	active	CODING_GUIDELINES.md	A discrete result (a selection, a ranking, a neighbour set, a label, a removed i
+CODE-REPRO-006	active	CODING_GUIDELINES.md	Declare the re-entry points. The project documentation states, for each stage a 
 CODE-ROB-001	active	CODING_GUIDELINES.md	Validate important inputs and fail early with error messages that precisely matc
 CODE-ROB-002	active	CODING_GUIDELINES.md	MUST NOT use assert to validate inputs or enforce program logic: assertions are 
 CODE-ROB-003	active	CODING_GUIDELINES.md	Handle expected edge cases explicitly (empty inputs, missing groups, single-samp

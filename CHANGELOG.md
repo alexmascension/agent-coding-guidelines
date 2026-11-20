@@ -6,6 +6,33 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-20 (CODING 4.4.0)
+
+### CODING_GUIDELINES.md [4.4.0]
+
+#### Added
+
+- §13, *Deposits to public archives*: `CODE-DEPO-001` to `CODE-DEPO-007`. The guide covered the inbound direction
+  (`CODE-DL-001` to `009`, downloads from public archives) and said nothing about depositing the project's own
+  artefacts. The new rules route each artefact to its archive of record, forbid depositing derived files as raw
+  reads, require derived deposits to cite their source accessions, require a manifest per bundle, require checking
+  the archive's limits before building it, link deposits and repository both ways, and state the re-entry point of
+  each data deposit.
+- `CODE-REPRO-006`: declare the re-entry points — for each stage a third party can resume from, the deposited
+  artefact that corresponds to it, the first notebook or script that consumes it, and what cannot be reproduced from
+  there. `CODE-PIPE-004` recorded a re-entry point for a pipeline deviation; nothing covered the analysis as a whole.
+- §18, *Licensing*: `CODE-LIC-001` to `CODE-LIC-005`. Licence awareness in the guides was entirely inbound
+  (`AGENTIC_GUIDELINES.md` §10, what an agent may read; `MANUSCRIPT_GUIDELINES.md` §3, literature that may not be
+  redistributed) plus the `LICENSE` file required of published repositories. Nothing covered which licence the
+  project emits, the obligations inherited from its dependencies, or relicensing third-party artefacts in a deposit.
+  The default when obligations are unclear is the most restrictive well-known public licence present in the project;
+  `CODE-LIC-002` states explicitly that the rule flags the situation and does not resolve the legal question.
+
+#### Note
+
+The deposit family is `CODE-DEPO-*`, not `CODE-DEP-*`: §18 already uses `CODE-DEP-001` to `004` for dependencies.
+
+
 ## 2026-11-17 (CODING 4.3.0, SCRNASEQ 5.5.0, recipes 0.9.0)
 
 ### CODING_GUIDELINES.md [4.3.0]

@@ -1,6 +1,6 @@
 # Coding guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.3.0 (2026-11-17)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 4.4.0 (2026-11-20)
 >
 > The key words **MUST**, **MUST NOT**, **SHOULD**, **SHOULD NOT** and **MAY** are used as in
 > RFC 2119. MUST rules are hard constraints, reserved for conditions of validity that can be checked. SHOULD rules
@@ -653,6 +653,52 @@ interface, a threshold or a data invariant MUST update it in the same change.
     the machines that run the jobs (`CODE-DL-008`) show another order to be faster or more reliable.
 
 
+### Deposits to public archives
+
+* `CODE-DEPO-001` **Each artefact goes to the archive that is its archive of record.** Raw reads to ENA/SRA;
+  processed matrices and derived tables to BioStudies/ArrayExpress, or to a general-purpose archive (Zenodo) when no
+  domain archive fits; browsable single-cell objects to CELLxGENE Discover; code and notebooks to the repository plus
+  a snapshot with a DOI at submission; the container images that produced the results, to the same record as the code.
+  * *Why:* each archive indexes, validates and preserves one kind of object, and readers look for each where they
+    expect it. A deposit in the wrong archive is invisible to the people who would reuse it.
+  * *Trade-off:* several deposits instead of one, each with its own metadata. *Deviate when:* the domain archive does
+    not accept the organism or the modality; record the reason.
+
+* `CODE-DEPO-002` **MUST NOT deposit a derived file as raw data.** A BAM or CRAM aligned by the project, trimmed or
+  deduplicated reads are analysis outputs: what is deposited as reads is what the sequencer produced.
+  * *Why:* a read submission declares to the archive that the object is the primary observation. An aligned BAM fixes
+    a reference and a parameter set, so the archive preserves an analytical decision as if it were data.
+  * *Deviate when:* the platform's raw format is an unaligned BAM (some PacBio and 10x producers). If the derived
+    files must be public, deposit them as analysis objects linked to the study, not as reads.
+
+* `CODE-DEPO-003` **A derived deposit cites every source accession it was computed from**, in the deposit metadata and
+  in the bundle README, with the exact subset used (which samples, which runs).
+  * *Why:* a reprocessed matrix is a derived work of someone else's data. Without the accession the reader can neither
+    verify the provenance nor give the credit.
+
+* `CODE-DEPO-004` **Every bundle carries a manifest** with relative path, size, checksum and the script or notebook
+  that produced each file (`CODE-PROV-003`, run provenance). The manifest is tracked in git even though the files are
+  not (`CODE-PROV-002`, data out of git).
+  * *Why:* it is what lets a reader check that a download matches what was published, and what connects a commit to
+    the artefacts it generated.
+
+* `CODE-DEPO-005` **Check the archive's size and file-count limits before building the bundle**, and record the
+  headroom. Below about 10 % of headroom, split by a criterion that means something to a reader (per dataset, per
+  stage), never into arbitrary chunks.
+  * *Why:* discovering the limit while uploading forces the bundle and its manifest to be rebuilt. Limits differ per
+    archive and some apply per file as well as per record.
+
+* `CODE-DEPO-006` **Deposits and repository link both ways.** The repository records every accession and DOI in
+  `PROJECT_CONTEXT.md`; each deposit names the repository, the commit and the licence. Reserve the DOI before
+  submission where the archive allows it, so the manuscript can cite it.
+  * *Why:* a deposit without a commit does not say which code produced it, and a repository without accessions makes
+    the reader hunt for them in the paper.
+
+* `CODE-DEPO-007` **State the re-entry point of each data deposit**: which stage of the analysis it lets a third party
+  resume from, and what cannot be reproduced from it (`CODE-REPRO-006`, re-entry points).
+  * *Why:* a deposit of intermediate objects is only useful if the reader knows where it plugs into the code.
+
+
 ## 14. Configuration, paths and scripts
 
 * `CODE-CONF-001` The repository MUST be runnable from a fresh clone: all configuration is tracked in git, and
@@ -700,6 +746,16 @@ interface, a threshold or a data invariant MUST update it in the same change.
     changed (identical PCA, both with approximate search and with exact brute force through BLAS) and the Leiden
     partition at resolution 2 dropped to ARI 0.72.
   * *Trade-off:* exact single-threaded steps are slower; the rule covers steps whose discrete output is used downstream.
+
+* `CODE-REPRO-006` **Declare the re-entry points.** The project documentation states, for each stage a third party
+  can resume the analysis from: the deposited artefact that corresponds to it, the first notebook or script that
+  consumes it, and which parts of the analysis are out of reach from there. A project whose raw data is restricted
+  declares at least one re-entry point that does not need it.
+  * *Why:* without it, whoever downloads the deposit has to read the code to find where it plugs in, and ends up
+    repeating expensive stages the deposit already provided.
+  * *Trade-off:* it must be updated whenever the boundaries between stages move; treat it as part of that change, like
+    the lockfile (`CODE-REPRO-004`). *Deviate when:* the analysis is a single stage with no publishable intermediates.
+
 
 ## 16. Testing
 
@@ -764,6 +820,51 @@ interface, a threshold or a data invariant MUST update it in the same change.
   * *Why:* a maintainer should be able to change presentation without altering the computation layer.
     *Trade-off:* reorganizing established code can break interfaces; apply this to touched boundaries and propose
     unrelated restructuring separately (`CODE-CHG-003`, scope of refactors).
+
+
+### Licensing
+
+* `CODE-LIC-001` **Choose the licence from the most restrictive obligation the project actually carries**, not from
+  habit: the licences of the dependencies that are distributed or linked, the terms of the data redistributed in the
+  deposits, and any institutional or funder requirement. Record the decision and its inputs in `PROJECT_CONTEXT.md`.
+  * **Default when the obligations are unclear: take the most restrictive licence among those present in the
+    project**, within the set of well-known public licences (MIT, BSD, Apache-2.0, GPL, CC family). Any licence
+    outside that set is read individually before it is relied on.
+  * *Why:* the licence of a public repository is a promise to third parties. Choosing it by default and finding an
+    incompatible obligation later forces a relicensing, which needs the agreement of everyone who contributed.
+  * *Trade-off:* a conservative default can be more restrictive than necessary and limit reuse; it is reversible
+    towards a more permissive licence, which is the direction that does not need anyone's permission.
+
+* `CODE-LIC-002` **Keep an inventory of dependency licences that is generated, not written by hand**
+  (`pip-licenses`, conda metadata or equivalent), listing each distributed dependency, its licence and whether it is
+  copyleft. Regenerate it when the environment changes, alongside the lockfile (`CODE-REPRO-004`).
+  * *Why:* a single copyleft dependency changes what the project may be released under, and it is not visible by
+    reading the code.
+  * **The rule flags, it does not decide.** If the inventory finds strong copyleft, that goes to whoever handles it
+    at the institution. These guidelines state no legal conclusions, and neither should an agent applying them.
+
+* `CODE-LIC-003` **Re-examine the licence at defined triggers**, not only when the repository is created: adding a
+  dependency, redistributing third-party data, including a container image in a deposit, making a private repository
+  public, and before manuscript submission. Each trigger is an item of the release checklist.
+  * *Why:* a licence configuration that was right on day one stops being right as soon as the project takes in
+    something unplanned — which is exactly when nobody is looking at it.
+
+* `CODE-LIC-004` **Licence code and data separately.** Code under an OSI licence (MIT, BSD-3-Clause or Apache-2.0
+  unless an obligation forces otherwise); data, tables and figures under a data licence (CC0-1.0 or CC-BY-4.0), which
+  is what Zenodo, BioStudies and most journals expect.
+  * *Why:* a software licence applied to a dataset leaves the permissions on the data ambiguous, because its concepts
+    (source, object code, linking) do not apply to it.
+
+* `CODE-LIC-005` **A redistributed third-party artefact keeps its own licence and notice.** A container image, a
+  reference annotation, a barcode whitelist or a reprocessed matrix carries the upstream terms; record them next to
+  the artefact (for example in the container table of `HPC_GUIDELINES.md` `HPC-ENV-002`) and **MUST NOT** relicense
+  them under the project's licence.
+  * *Why:* including an artefact in a deposit is redistributing it. If its terms are not stated, whoever downloads it
+    does not know what they may do with it.
+  * *Observed:* an Apptainer image built from a public Docker tag had an empty `org.opencontainers.image.licenses`
+    label while bundling software from a vendor's base image with its own terms of service. Depositing that `.sif`
+    is redistribution, and the question has to be resolved before, not after.
+
 
 ## 19. Performance
 
