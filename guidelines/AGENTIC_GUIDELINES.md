@@ -1,6 +1,6 @@
 # Agentic guidelines
 
-> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.2.0 (2026-11-05)
+> Source: <https://github.com/alexmascension/agent-coding-guidelines> · Version 1.3.0 (2026-11-22)
 >
 > Key words **MUST**, **SHOULD**, **MAY** follow RFC 2119. Each rule is followed by its rationale: ***Why***
 > (mechanism), ***Trade-off*** (cost) and ***Deviate when*** (justified exceptions), where they apply.
@@ -359,6 +359,23 @@
 * `AGT-SESS-006` **When the task changes during a long session, update the handoff and propose a fresh session.**
   * *Why:* every turn of a long session re-reads the whole context, which costs more and carries stale material
     into the new task.
+* `AGT-SESS-007` **If the project's instructions name a logbook kept outside the project** (`AGT-REP-006`), a
+  record across projects of commitments, status and next steps, **update it in the same step as the event that
+  changes it, not at the end of the session.** The events: a task starts, finishes with its evidence, is blocked or
+  waits on someone; the user accepts a decision or sets a priority, deadline or commitment; a commit, merge or job
+  changes the next step; a new task appears. Record what changed and its consequence, with a link to the commit or
+  file; technical detail stays in the project. Format and identifiers follow the logbook's own instructions.
+  * *Why:* sessions end without warning (the user stops replying, the context is summarised, the window is closed),
+    so the update planned for the close is the one that is skipped. Observed: agents told that a logbook existed
+    updated it only when the user asked.
+  * *Trade-off:* several small updates per session instead of one; cheaper than reconstructing the state later.
+* `AGT-SESS-008` **When the session cannot write to the logbook**, write the update as a handoff in the logbook's
+  format, with a unique source identifier (repository, commit and scope), in the project's `handoffs/`, and say in
+  the reply that it awaits incorporation. MUST NOT report the logbook as updated without having written to it.
+* `AGT-SESS-009` **Every reply that closes a unit of work in such a project ends with a logbook line**:
+  `Logbook: <what was recorded, where>`, `Logbook: handoff <file>` or `Logbook: no change (<reason>)`.
+  * *Why:* a required slot is left out less often than a reminder in prose (`AGT-INSTR-002`), and the line shows the
+    user at a glance whether the update happened.
 
 ## 12. Iteration and idea triage
 
@@ -593,3 +610,6 @@ This section applies to instructions written for agents: briefs and prompts, rul
    agreements that permit processing where they exist.
 4. `AGT-REP-004` The models or model tiers used for delegation, if the project fixes them (§9, delegation).
 5. `AGT-REP-005` Where design documents (§13), plans (§14) and the ledgers of batches (§8) are kept.
+6. `AGT-REP-006` The logbook outside the project, if one is kept (§11, `AGT-SESS-007`): its location, the
+   project's identifier in it, and whether sessions write to it directly or through handoffs (`AGT-SESS-008`).
+   Name it also in `AGENTS.md`, which every session reads.

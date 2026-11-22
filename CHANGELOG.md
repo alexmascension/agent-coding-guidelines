@@ -6,6 +6,27 @@ versioned with [Semantic Versioning](https://semver.org/) as defined in `CODING_
 §0 (versioning).
 
 
+## 2026-11-22 (AGENTIC 1.3.0)
+
+### AGENTIC_GUIDELINES.md [1.3.0]
+
+#### Added
+
+- §11, sessions and handoffs: `AGT-SESS-007` to `AGT-SESS-009`, for projects whose instructions name a logbook kept
+  outside the project (a record across projects of commitments, status and next steps). The logbook is updated in
+  the same step as the event that changes it (a task starts, finishes, is blocked; a decision, priority or deadline
+  is set; the next step changes), not at the end of the session; a session that cannot write to it leaves a handoff
+  with a unique source identifier; every reply that closes a unit of work ends with a logbook line.
+- §17: `AGT-REP-006`, where the logbook is, the project's identifier in it and how sessions write to it; named also
+  in `AGENTS.md`.
+
+#### Note
+
+Motivating case (`AGT-INSTR-008`): the maintainer observed that agents told about his logbook (Bitácora) updated it
+only when asked, because its instructions placed the update at the close of a session, which often never happens.
+Drafted by Claude (Opus 5.5) in a Claude cloud session. The wording has not yet been tested against behaviour
+(`AGT-INSTR-004`).
+
 ## 2026-11-20 (CODING 4.4.0)
 
 ### CODING_GUIDELINES.md [4.4.0]
