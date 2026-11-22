@@ -78,6 +78,7 @@ AGT-REP-002	active	AGENTIC_GUIDELINES.md	Standing authorisations for batches (§
 AGT-REP-003	active	AGENTIC_GUIDELINES.md	Material the agent must not read and why (§10, confidential and licensed materia
 AGT-REP-004	active	AGENTIC_GUIDELINES.md	The models or model tiers used for delegation, if the project fixes them (§9, de
 AGT-REP-005	active	AGENTIC_GUIDELINES.md	Where design documents (§13), plans (§14) and the ledgers of batches (§8) are ke
+AGT-REP-006	active	AGENTIC_GUIDELINES.md	The logbook outside the project, if one is kept (§11, AGT-SESS-007): its locatio
 AGT-REV-001	active	AGENTIC_GUIDELINES.md	Review delegated work, and any result before it is integrated, with a fresh-cont
 AGT-REV-002	active	AGENTIC_GUIDELINES.md	A review states its findings so they can be acted on. Strengths first, briefly; 
 AGT-REV-003	active	AGENTIC_GUIDELINES.md	MUST NOT pre-judge findings in a reviewer's brief. A brief that contains "do not
@@ -93,6 +94,9 @@ AGT-SESS-003	active	AGENTIC_GUIDELINES.md	Update the handoff whenever that state
 AGT-SESS-004	active	AGENTIC_GUIDELINES.md	Parallel lines of work keep one handoff each, handoffs/<workstream>.md, rewritte
 AGT-SESS-005	active	AGENTIC_GUIDELINES.md	The conversation is not the archive. Sources, scripts, outputs, decisions and le
 AGT-SESS-006	active	AGENTIC_GUIDELINES.md	When the task changes during a long session, update the handoff and propose a fr
+AGT-SESS-007	active	AGENTIC_GUIDELINES.md	If the project's instructions name a logbook kept outside the project (AGT-REP-0
+AGT-SESS-008	active	AGENTIC_GUIDELINES.md	When the session cannot write to the logbook, write the update as a handoff in t
+AGT-SESS-009	active	AGENTIC_GUIDELINES.md	Every reply that closes a unit of work in such a project ends with a logbook lin
 AGT-USER-001	active	AGENTIC_GUIDELINES.md	A question about the work is not a change request. When the user asks a question
 AGT-USER-002	active	AGENTIC_GUIDELINES.md	Do the work before handing a step to the user. Before asking for a file, search 
 AGT-USER-003	active	AGENTIC_GUIDELINES.md	Put decisions so they can be answered. One or two decisions go in the reply, eac
